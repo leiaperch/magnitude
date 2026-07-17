@@ -47,6 +47,9 @@ export function buildEra(era) {
   const g = rng(era.year);
   const group = new THREE.Group();
 
+  const movers = [];      // people, carts, trams — anything that goes somewhere
+  const spinners = [];    // mill sails, turbine blades
+  const smoke = [];
   const mats = [];
   const mk = (color, opts = {}) => {
     const m = new THREE.MeshLambertMaterial({ color, flatShading: true, ...opts });
@@ -88,6 +91,19 @@ export function buildEra(era) {
   plaza.receiveShadow = true;
   group.add(plaza);
 
+  /* The river is the one thing older than the town and the reason it is here.
+   * It runs behind everything, in every era, and never moves. */
+  const river = new THREE.Mesh(new THREE.PlaneGeometry(120, 4.4), mk(0x3f5f66));
+  river.rotation.x = -Math.PI / 2;
+  river.position.set(0, 0.03, -14);
+  group.add(river);
+  for (const s of [-1, 1]) {
+    const bank = new THREE.Mesh(new THREE.PlaneGeometry(120, 0.7), mk(0x5f6b45));
+    bank.rotation.x = -Math.PI / 2;
+    bank.position.set(0, 0.04, -14 + s * 2.4);
+    group.add(bank);
+  }
+
   /* ------------------------------------------------------------ landmarks */
   const lm = (kind, x, z) => {
     switch (kind) {
@@ -103,7 +119,79 @@ export function buildEra(era) {
         add(BOX, M.stone, [x, 0, z], [3.8, 4.2, 3.8]);
         for (const [dx, dz] of [[-1.9, -1.9], [1.9, -1.9], [-1.9, 1.9], [1.9, 1.9]])
           add(BOX, M.stone, [x + dx, 0, z + dz], [1.1, 5.1, 1.1]);
+        for (let i = 0; i < 7; i++) add(BOX, M.stone, [x - 1.6 + i * 0.55, 4.2, z - 1.9], [0.3, 0.45, 0.3]);
         break;
+      case 'keep-ruin': {
+        /* quarried for the cathedral: what is left is one wall and a stump */
+        add(BOX, M.stone, [x, 0, z - 1.7], [3.6, 2.6 + g(), 0.6]);
+        add(BOX, M.stone, [x - 1.9, 0, z - 1.9], [1.1, 3.4, 1.1]);
+        add(BOX, M.stone, [x + 1.5, 0, z + 0.6], [0.9, 1.1, 0.9]);
+        for (let i = 0; i < 6; i++)
+          add(BOX, M.stone, [x - 2 + g() * 4, 0, z - 1 + g() * 3], [0.3 + g() * 0.4, 0.2 + g() * 0.3, 0.3 + g() * 0.4], g() * 3);
+        add(SPH, M.leaf, [x + 0.6, 0.4, z - 0.4], [1.4, 1.1, 1.4]);
+        break;
+      }
+      case 'bridge': {
+        /* the river stops being an obstacle and starts being a road */
+        for (let i = 0; i < 9; i++) {
+          const t = i / 8, arch = Math.sin(t * Math.PI) * 0.55;
+          add(BOX, M.stone, [x, 0.35 + arch, z - 16.4 + i * 0.62], [2.4, 0.34, 0.66]);
+        }
+        for (const dz of [-16.4, -11.5]) add(BOX, M.stone, [x, 0, dz + 0], [2.6, 0.5, 0.7]);
+        break;
+      }
+      case 'windmill': {
+        add(CYL, M.stone, [x, 0, z], [2.2, 3.2, 2.2]);
+        add(CONE, M.wood, [x, 3.2, z], [2.5, 1.1, 2.5]);
+        const sails = new THREE.Group();
+        sails.position.set(x, 3.3, z + 1.3);
+        for (let i = 0; i < 4; i++) {
+          const arm = new THREE.Mesh(BOX, M.wood);   // BOX is centred in x/z, based in y
+          arm.scale.set(0.24, 3.2, 0.1);
+          arm.rotation.z = i * Math.PI / 2;
+          arm.castShadow = true;
+          sails.add(arm);
+        }
+        group.add(sails);
+        spinners.push({ o: sails, speed: 0.55 });
+        break;
+      }
+      case 'townhall':
+        add(BOX, M.stone, [x, 0, z], [6.2, 2.6, 3.4]);
+        add(PRISM_X, mk(0x5a5f63), [x - 3.1, 2.6, z], [6.2, 1.0, 3.6]);
+        add(BOX, M.stone, [x, 0, z + 0.2], [1.5, 5.0, 1.5]);
+        add(SPH, M.lit, [x, 4.2, z + 0.98], [0.7, 0.7, 0.12]);
+        add(CONE, mk(0x5a5f63), [x, 5.0, z + 0.2], [1.8, 1.3, 1.8]);
+        break;
+      case 'station':
+        add(BOX, M.brick, [x, 0, z], [8.5, 1.9, 4.0]);
+        add(PRISM_X, mk(0x8fa3b0), [x - 4.25, 1.9, z], [8.5, 1.1, 4.2]);   // the glass train shed
+        add(BOX, M.brick, [x - 3.6, 0, z], [1.2, 3.4, 1.2]);
+        add(SPH, M.lit, [x - 3.6, 2.9, z + 0.62], [0.5, 0.5, 0.12]);       // the station clock
+        break;
+      case 'gasometer': {
+        add(CYL, mk(0x6b7178), [x, 0, z], [4.4, 3.6, 4.4]);
+        for (let i = 0; i < 8; i++) {
+          const a = (i / 8) * Math.PI * 2;
+          add(BOX, M.metal, [x + Math.cos(a) * 2.3, 0, z + Math.sin(a) * 2.3], [0.12, 4.2, 0.12]);
+        }
+        break;
+      }
+      case 'turbine': {
+        add(CYL, mk(0xe8ecec), [x, 0, z], [0.5, 9.0, 0.5]);
+        const rotor = new THREE.Group();
+        rotor.position.set(x, 9.0, z + 0.4);
+        for (let i = 0; i < 3; i++) {
+          const b = new THREE.Mesh(BOX, mk(0xf2f5f5));
+          b.scale.set(0.24, 3.6, 0.08);
+          b.rotation.z = i * (Math.PI * 2 / 3);
+          b.castShadow = true;
+          rotor.add(b);
+        }
+        group.add(rotor);
+        spinners.push({ o: rotor, speed: 0.9 });
+        break;
+      }
       case 'church':
         add(BOX, M.stone, [x, 0, z], [6.4, 1.9, 3.2]);
         add(PRISM_X, M.roof, [x - 3.2, 1.9, z], [6.4, 1.1, 3.4]);
@@ -199,6 +287,33 @@ export function buildEra(era) {
     put(span / 2 - 0.17, 0, 0.34, 0.64, M.wood);
     if (era.house.sign && g() > 0.4) put(span - 0.8, 1.05, 0.5, 0.3, mk([0xc8a13c, 0x7a8f5a, 0x9c5340][Math.floor(g() * 3)]));
 
+    /* dormers punched through the roof, once roofs are worth living under */
+    if (!flat && era.house.storeys >= 3 && g() > 0.35) {
+      const n2 = 1 + Math.floor(g() * 2);
+      for (let i = 0; i < n2; i++) {
+        const u = span * (0.28 + i * 0.42);
+        const dy = h + RIDGE[era.house.roof] * 0.34;
+        facing === 'z'
+          ? add(BOX, M.roof, [x + u, dy, z + d - 0.3], [0.4, 0.42, 0.5])
+          : add(BOX, M.roof, [x + w - 0.3, dy, z + u], [0.5, 0.42, 0.4]);
+        put(u - 0.02, dy - h + 0.08, 0.24, 0.26, g() > 0.5 ? M.lit : M.glass);
+      }
+    }
+    /* a shopfront: a wider opening and an awning, once there is a trade */
+    if (era.house.sign && g() > 0.55) {
+      put(span / 2 - 0.55, 0.12, 0.5, 0.5, M.glass);
+      const aw = mk([0xb8443a, 0x3f7f6d, 0x5b6fa8][Math.floor(g() * 3)]);
+      facing === 'z'
+        ? add(BOX, aw, [x + span / 2, 0.78, z + d + 0.24], [1.1, 0.06, 0.5])
+        : add(BOX, aw, [x + w + 0.24, 0.78, z + span / 2], [0.5, 0.06, 1.1]);
+    }
+    /* a balcony, once anyone wants to be seen on one */
+    if (era.year >= 1550 && era.house.storeys >= 3 && g() > 0.6) {
+      facing === 'z'
+        ? add(BOX, M.metal, [x + span / 2, 1.3, z + d + 0.16], [0.9, 0.06, 0.32])
+        : add(BOX, M.metal, [x + w + 0.16, 1.3, z + span / 2], [0.32, 0.06, 0.9]);
+    }
+
     /* timber framing, and a chimney once there is anything worth heating */
     if (era.house.material === 'timber')
       for (let r = 0; r < era.house.storeys; r++) put(0, 0.55 + r * 0.92, span, 0.1, M.wood);
@@ -212,19 +327,39 @@ export function buildEra(era) {
     }
   }
 
-  const N = 8;
+  const N = 9;
   for (let i = 0; i < N; i++) {
     const w = 1.35 + g() * 0.5, x = -1.6 + i * 1.85;
-    if (era.house.gap && i === 2) add(BOX, mk(0x8f8779), [x + w / 2, 0, -2.35], [w, 0.2, 1.5]);
-    else house(x, -3.1, w, 1.5, 'z');
+    if (era.house.gap && i === 2) {
+      /* the bomb site: rubble, and one wall still standing */
+      add(BOX, mk(0x8f8779), [x + w / 2, 0, -2.35], [w, 0.25, 1.5]);
+      add(BOX, M.wall, [x + 0.1, 0, -3.05], [0.22, 1.6 + g(), 1.4]);
+      for (let k = 0; k < 5; k++)
+        add(BOX, mk(0x9a9184), [x + g() * w, 0.1, -3.1 + g() * 1.5], [0.24, 0.2, 0.24], g() * 3);
+    } else house(x, -3.1, w, 1.5, 'z');
     const d = 1.35 + g() * 0.5, z = -1.6 + i * 1.85;
     house(-3.1, z, 1.5, d, 'x');
   }
 
-  /* ---------------------------------------------------------- what moves */
-  const movers = [];
-  const smoke = [];
+  /* A second rank behind each row: only their roofs clear the front ones, but
+   * that is the difference between two walls and a town. */
+  for (let i = 0; i < 7; i++) {
+    const bw = 1.5 + g() * 0.7;
+    backHouse(-1.2 + i * 2.2, -5.6, bw, 1.6);
+    backHouse(-5.6, -1.2 + i * 2.2, 1.6, bw);
+  }
+  function backHouse(x, z, w, d) {
+    const h = 0.7 + (era.house.storeys + (g() > 0.6 ? 1 : 0)) * 0.92;
+    add(BOX, M.wall, [x + w / 2, 0, z + d / 2], [w, h, d]);
+    if (era.house.roof === 'flat' || era.house.roof === 'solar')
+      add(BOX, M.roof, [x + w / 2, h, z + d / 2], [w + 0.1, 0.14, d + 0.1]);
+    else if (w >= d) add(PRISM_X, M.roof, [x, h, z + d / 2], [w, RIDGE[era.house.roof], d + 0.14]);
+    else add(PRISM_Z, M.roof, [x + w / 2, h, z], [w + 0.14, RIDGE[era.house.roof], d]);
+    if (era.smoke > 0 && RIDGE[era.house.roof] > 0)
+      add(BOX, era.house.material === 'brick' ? M.brick : M.stone, [x + w * 0.7, h, z + d * 0.4], [0.2, 0.7, 0.2]);
+  }
 
+  /* ---------------------------------------------------------- what moves */
   function propAt(kind, x, z) {
     switch (kind) {
       case 'barrel': add(CYL, M.wood, [x, 0, z], [0.42, 0.55, 0.42]); break;
@@ -280,9 +415,81 @@ export function buildEra(era) {
         for (const dx of [-0.4, 0.4]) add(BOX, M.dark, [x + dx, 0, z], [0.62, 0.62, 0.05]);
         break;
       }
+      case 'well':
+        add(CYL, M.stone, [x, 0, z], [1.3, 0.55, 1.3]);
+        for (const dx of [-0.5, 0.5]) add(BOX, M.wood, [x + dx, 0.55, z], [0.13, 1.3, 0.13]);
+        add(BOX, M.wood, [x, 1.85, z], [0.1, 0.1, 1.4], Math.PI / 2);
+        add(PRISM_X, M.roof, [x - 0.75, 1.85, z], [1.5, 0.5, 1.5]);
+        add(BOX, M.wood, [x, 1.15, z], [0.3, 0.3, 0.3]);
+        break;
+      case 'cross':                        // the market cross: the town's licence, in stone
+        for (let i = 0; i < 3; i++) add(CYL, M.stone, [x, i * 0.16, z], [2.2 - i * 0.5, 0.17, 2.2 - i * 0.5]);
+        add(BOX, M.stone, [x, 0.48, z], [0.3, 2.1, 0.3]);
+        add(BOX, M.stone, [x, 2.58, z], [0.9, 0.18, 0.24]);
+        add(SPH, M.stone, [x, 2.85, z], [0.34, 0.34, 0.34]);
+        break;
+      case 'crate':
+        add(BOX, M.wood, [x, 0, z], [0.5, 0.42, 0.5], g());
+        if (g() > 0.5) add(BOX, M.wood, [x + 0.1, 0.42, z - 0.05], [0.42, 0.36, 0.42], g());
+        break;
+      case 'hay':
+        add(CONE, mk(0xc4a24e), [x, 0, z], [1.5, 1.7, 1.5]);
+        break;
+      case 'dog':
+        add(CAP, mk(0x6b5a44), [x, 0.16, z], [0.15, 0.16, 0.15], Math.PI / 2);
+        add(SPH, mk(0x6b5a44), [x + 0.28, 0.4, z], [0.2, 0.2, 0.2]);
+        break;
+      case 'horse':
+        add(CAP, mk(0x7a5a42), [x, 0.62, z], [0.28, 0.4, 0.28], Math.PI / 2);
+        add(SPH, mk(0x7a5a42), [x + 0.72, 0.95, z], [0.26, 0.3, 0.26]);
+        for (const dx of [-0.35, 0.35]) for (const dz of [-0.2, 0.2])
+          add(BOX, mk(0x5f4632), [x + dx, 0, z + dz], [0.11, 0.65, 0.11]);
+        break;
+      case 'bench':
+        add(BOX, M.wood, [x, 0.4, z], [1.4, 0.09, 0.4]);
+        add(BOX, M.wood, [x, 0.5, z - 0.16], [1.4, 0.5, 0.08]);
+        for (const dx of [-0.55, 0.55]) add(BOX, M.dark, [x + dx, 0, z], [0.1, 0.4, 0.36]);
+        break;
+      case 'fountain':
+        add(CYL, M.stone, [x, 0, z], [2.6, 0.42, 2.6]);
+        add(CYL, mk(0x4f7f8f), [x, 0.42, z], [2.2, 0.06, 2.2]);
+        add(CYL, M.stone, [x, 0.48, z], [0.4, 1.2, 0.4]);
+        add(SPH, mk(0x8fc4d0), [x, 1.7, z], [0.5, 0.5, 0.5]);
+        break;
+      case 'tree':
+        add(CYL, M.wood, [x, 0, z], [0.3, 1.3, 0.3]);
+        add(SPH, M.leaf, [x, 1.3, z], [2.2, 2.4, 2.2]);
+        add(SPH, M.leaf, [x + 0.5, 2.1, z + 0.3], [1.4, 1.4, 1.4]);
+        break;
+      case 'planter':
+        add(BOX, mk(0x8f8579), [x, 0, z], [1.2, 0.45, 0.7]);
+        add(SPH, M.leaf, [x - 0.25, 0.45, z], [0.8, 0.7, 0.7]);
+        add(SPH, M.leaf, [x + 0.3, 0.45, z], [0.7, 0.9, 0.7]);
+        break;
+      case 'traffic-light':
+        add(BOX, M.dark, [x, 0, z], [0.14, 2.8, 0.14]);
+        add(BOX, M.dark, [x, 2.0, z], [0.3, 0.85, 0.3]);
+        for (const [i, c] of [[0, 0xd04030], [1, 0xd0a030], [2, 0x40b060]])
+          add(SPH, mk(c), [x, 2.66 - i * 0.26, z + 0.16], [0.16, 0.16, 0.08]);
+        break;
+      case 'phone-box':
+        add(BOX, mk(0xa03028), [x, 0, z], [0.8, 2.3, 0.8]);
+        add(BOX, M.glass, [x, 0.55, z + 0.41], [0.6, 1.4, 0.04]);
+        add(BOX, mk(0xa03028), [x, 2.3, z], [0.95, 0.16, 0.95]);
+        break;
+      case 'scooter':
+        add(BOX, M.metal, [x, 0.3, z], [0.75, 0.06, 0.14]);
+        add(BOX, M.metal, [x + 0.34, 0.3, z], [0.05, 0.7, 0.05]);
+        for (const dx of [-0.32, 0.34]) add(BOX, M.dark, [x + dx, 0, z], [0.28, 0.28, 0.05]);
+        break;
     }
   }
-  const slots = [[2.4, 1.2], [0.8, 3.6], [5.6, 1.8], [2.0, 6.4], [7.2, 4.4], [4.2, 8.6]];
+  /* enough room that a busy era can actually look busy */
+  const slots = [
+    [2.4, 1.2], [0.8, 3.6], [5.6, 1.8], [2.0, 6.4], [7.2, 4.4], [4.2, 8.6],
+    [9.0, 2.2], [1.4, 9.2], [6.8, 7.4], [10.4, 6.0], [3.2, 3.0], [8.2, 9.8],
+    [11.6, 3.6], [0.4, 6.8], [5.0, 11.2], [9.6, 11.0],
+  ];
   (era.street || []).forEach((k, i) => {
     const s = slots[i % slots.length];
     propAt(k, s[0] + (g() - 0.5) * 0.8, s[1] + (g() - 0.5) * 0.8);
@@ -318,11 +525,17 @@ export function buildEra(era) {
       m.t = (m.t + m.speed * 0.016 * 0.3) % 1;
       const back = m.t > 0.5;
       const u = back ? 1 - (m.t - 0.5) * 2 : m.t * 2;
-      const v = m.from + (m.to - m.from) * u;
-      if (m.axis === 'x') { m.o.position.x = v; m.o.rotation.y = back ? Math.PI : 0; }
-      else { m.o.position.z = v; m.o.rotation.y = back ? -Math.PI / 2 : Math.PI / 2; }
+      m.o.position[m.axis] = m.from + (m.to - m.from) * u;
+      /* Face the way you are actually going: that depends on the leg of the
+       * round trip *and* on whether the destination is behind the start.
+       * Local +X is forward, so +Z needs a -90° turn, not +90°. */
+      const dir = Math.sign(m.to - m.from) * (back ? -1 : 1);
+      m.o.rotation.y = m.axis === 'x'
+        ? (dir >= 0 ? 0 : Math.PI)
+        : (dir >= 0 ? -Math.PI / 2 : Math.PI / 2);
       if (m.bob !== undefined) m.o.position.y = Math.abs(Math.sin(time * 5 + m.bob)) * 0.06;
     }
+    for (const s of spinners) s.o.rotation.z = time * s.speed;
     for (const s of smoke) {
       s.t = (s.t + s.speed * 0.008) % 1;
       s.o.position.set(s.x + s.t * 1.6, 5 + s.t * 7, s.z + s.t * 0.9);

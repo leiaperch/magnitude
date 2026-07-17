@@ -44,14 +44,24 @@ for (const era of ages.eras) {
     }
   });
 
-  /* animation must move things, and never to NaN */
-  const walker = built.group.children.find(o => o.isGroup);
-  const before = walker ? walker.position.clone() : null;
+  /* animation must move things, and never to NaN. Some groups are spinners
+   * (mill sails, turbine blades) which turn without going anywhere, so ask
+   * whether *anything* moved or turned rather than picking one at random. */
+  const groups = built.group.children.filter(o => o.isGroup);
+  const before = groups.map(o => ({ p: o.position.clone(), r: o.rotation.z }));
   for (let i = 0; i < 40; i++) built.tick(i * 0.1);
   built.group.traverse(o => {
     if (!isFinite(o.position.x) || !isFinite(o.position.y) || !isFinite(o.position.z)) bad.push(`${tag}: NaN position after tick`);
   });
-  if (before && walker.position.equals(before)) bad.push(`${tag}: nothing moved after 40 ticks`);
+  const stirred = groups.some((o, i) => !o.position.equals(before[i].p) || o.rotation.z !== before[i].r);
+  if (groups.length && !stirred) bad.push(`${tag}: ${groups.length} animated groups and none of them moved`);
+
+  /* walkers must face where they are heading */
+  for (const m of groups) {
+    const ry = ((m.rotation.y % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+    const ok = [0, Math.PI / 2, Math.PI, 3 * Math.PI / 2].some(a => Math.abs(ry - a) < 1e-6);
+    if (!ok && m.rotation.z === 0) bad.push(`${tag}: a mover faces ${(ry * 57.3).toFixed(1)}°, not an axis`);
+  }
 
   if (ms > 120) bad.push(`${tag}: took ${ms}ms to build`);
   built.dispose();

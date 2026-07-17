@@ -3,201 +3,940 @@
   "eras": [
     {
       "year": 1000,
-      "en": { "name": "The wooden burg", "note": "Sixty souls, a palisade, and a lord's tower of oak on a heap of earth." },
-      "fr": { "name": "Le bourg de bois", "note": "Soixante âmes, une palissade, et la tour de chêne d'un seigneur sur un tas de terre." },
-      "sky": ["#8fb6d8", "#d9e6ec"], "hill": "#6d8a4e", "ground": "mud",
-      "skyline": ["motte"],
-      "house": { "material": "wood", "storeys": 1, "roof": "thatch", "window": "hole" },
-      "street": ["barrel", "pig"], "crowd": 3, "smoke": 1
+      "en": {
+        "name": "The wooden burg",
+        "note": "Sixty souls, a palisade, and a lord's tower of oak on a heap of earth."
+      },
+      "fr": {
+        "name": "Le bourg de bois",
+        "note": "Soixante âmes, une palissade, et la tour de chêne d'un seigneur sur un tas de terre."
+      },
+      "sky": [
+        "#8fb6d8",
+        "#d9e6ec"
+      ],
+      "hill": "#6d8a4e",
+      "ground": "mud",
+      "skyline": [
+        "motte"
+      ],
+      "house": {
+        "material": "wood",
+        "storeys": 1,
+        "roof": "thatch",
+        "window": "hole"
+      },
+      "street": [
+        "well",
+        "barrel",
+        "pig",
+        "crate",
+        "hay",
+        "dog",
+        "tree"
+      ],
+      "crowd": 5,
+      "smoke": 1
     },
     {
       "year": 1050,
-      "en": { "name": "Motte and bailey", "note": "The lord's tower doubles as the only stone-cold promise of safety for a day's walk." },
-      "fr": { "name": "Motte et basse-cour", "note": "La tour du seigneur est la seule promesse de sécurité à une journée de marche." },
-      "sky": ["#8fb6d8", "#d9e6ec"], "hill": "#6d8a4e", "ground": "mud",
-      "skyline": ["motte", "palisade"],
-      "house": { "material": "wood", "storeys": 1, "roof": "thatch", "window": "hole" },
-      "street": ["barrel", "cart", "pig"], "crowd": 4, "smoke": 1
+      "en": {
+        "name": "Motte and bailey",
+        "note": "The lord's tower doubles as the only stone-cold promise of safety for a day's walk."
+      },
+      "fr": {
+        "name": "Motte et basse-cour",
+        "note": "La tour du seigneur est la seule promesse de sécurité à une journée de marche."
+      },
+      "sky": [
+        "#8fb6d8",
+        "#d9e6ec"
+      ],
+      "hill": "#6d8a4e",
+      "ground": "mud",
+      "skyline": [
+        "motte",
+        "palisade"
+      ],
+      "house": {
+        "material": "wood",
+        "storeys": 1,
+        "roof": "thatch",
+        "window": "hole"
+      },
+      "street": [
+        "well",
+        "barrel",
+        "cart",
+        "pig",
+        "crate",
+        "hay",
+        "dog",
+        "tree",
+        "horse"
+      ],
+      "crowd": 6,
+      "smoke": 1
     },
     {
       "year": 1100,
-      "en": { "name": "Stone arrives", "note": "The wooden tower burns down once too often. What replaces it will outlive every house in this picture." },
-      "fr": { "name": "La pierre arrive", "note": "La tour de bois brûle une fois de trop. Ce qui la remplace survivra à toutes les maisons de cette image." },
-      "sky": ["#93b8d6", "#dbe7ec"], "hill": "#6d8a4e", "ground": "mud",
-      "skyline": ["keep"],
-      "house": { "material": "wood", "storeys": 1, "roof": "thatch", "window": "shutter" },
-      "street": ["barrel", "cart"], "crowd": 4, "smoke": 1
+      "en": {
+        "name": "Stone arrives",
+        "note": "The wooden tower burns down once too often. What replaces it will outlive every house in this picture."
+      },
+      "fr": {
+        "name": "La pierre arrive",
+        "note": "La tour de bois brûle une fois de trop. Ce qui la remplace survivra à toutes les maisons de cette image."
+      },
+      "sky": [
+        "#93b8d6",
+        "#dbe7ec"
+      ],
+      "hill": "#6d8a4e",
+      "ground": "mud",
+      "skyline": [
+        "keep"
+      ],
+      "house": {
+        "material": "wood",
+        "storeys": 1,
+        "roof": "thatch",
+        "window": "shutter"
+      },
+      "street": [
+        "well",
+        "barrel",
+        "cart",
+        "crate",
+        "hay",
+        "horse",
+        "tree",
+        "dog"
+      ],
+      "crowd": 6,
+      "smoke": 1
     },
     {
       "year": 1150,
-      "en": { "name": "The market charter", "note": "A scrap of parchment lets the town hold a market. Everything else on this page follows from it." },
-      "fr": { "name": "La charte de marché", "note": "Un bout de parchemin autorise le marché. Tout le reste de cette page en découle." },
-      "sky": ["#93b8d6", "#dbe7ec"], "hill": "#6d8a4e", "ground": "mud",
-      "skyline": ["keep"],
-      "house": { "material": "wood", "storeys": 2, "roof": "thatch", "window": "shutter" },
-      "street": ["stall", "barrel", "cart"], "crowd": 6, "smoke": 1
+      "en": {
+        "name": "The market charter",
+        "note": "A scrap of parchment lets the town hold a market. Everything else on this page follows from it."
+      },
+      "fr": {
+        "name": "La charte de marché",
+        "note": "Un bout de parchemin autorise le marché. Tout le reste de cette page en découle."
+      },
+      "sky": [
+        "#93b8d6",
+        "#dbe7ec"
+      ],
+      "hill": "#6d8a4e",
+      "ground": "mud",
+      "skyline": [
+        "keep",
+        "windmill"
+      ],
+      "house": {
+        "material": "wood",
+        "storeys": 2,
+        "roof": "thatch",
+        "window": "shutter"
+      },
+      "street": [
+        "well",
+        "cross",
+        "stall",
+        "barrel",
+        "cart",
+        "crate",
+        "pig",
+        "horse",
+        "tree",
+        "dog"
+      ],
+      "crowd": 9,
+      "smoke": 1
     },
     {
       "year": 1200,
-      "en": { "name": "The stone bridge", "note": "The river stops being an obstacle and starts being a road. The town doubles." },
-      "fr": { "name": "Le pont de pierre", "note": "La rivière cesse d'être un obstacle et devient une route. Le bourg double." },
-      "sky": ["#93b8d6", "#dbe7ec"], "hill": "#6d8a4e", "ground": "mud",
-      "skyline": ["keep", "church"],
-      "house": { "material": "timber", "storeys": 2, "roof": "thatch", "window": "shutter" },
-      "street": ["stall", "stall", "cart"], "crowd": 7, "smoke": 1
+      "en": {
+        "name": "The stone bridge",
+        "note": "The river stops being an obstacle and starts being a road. The town doubles."
+      },
+      "fr": {
+        "name": "Le pont de pierre",
+        "note": "La rivière cesse d'être un obstacle et devient une route. Le bourg double."
+      },
+      "sky": [
+        "#93b8d6",
+        "#dbe7ec"
+      ],
+      "hill": "#6d8a4e",
+      "ground": "mud",
+      "skyline": [
+        "keep",
+        "church",
+        "bridge"
+      ],
+      "house": {
+        "material": "timber",
+        "storeys": 2,
+        "roof": "thatch",
+        "window": "shutter"
+      },
+      "street": [
+        "well",
+        "cross",
+        "stall",
+        "stall",
+        "cart",
+        "barrel",
+        "crate",
+        "horse",
+        "tree",
+        "dog",
+        "hay"
+      ],
+      "crowd": 11,
+      "smoke": 1
     },
     {
       "year": 1250,
-      "en": { "name": "The cathedral begins", "note": "The masons who lay the first stone know they will not see the last one. Nobody finds this strange." },
-      "fr": { "name": "La cathédrale commence", "note": "Les maçons qui posent la première pierre savent qu'ils ne verront pas la dernière. Personne ne trouve cela étrange." },
-      "sky": ["#97bad7", "#dde8ec"], "hill": "#6d8a4e", "ground": "mud",
-      "skyline": ["keep", "cathedral-build"],
-      "house": { "material": "timber", "storeys": 2, "roof": "tile", "window": "shutter" },
-      "street": ["stall", "stall", "barrel", "cart"], "crowd": 8, "smoke": 2
+      "en": {
+        "name": "The cathedral begins",
+        "note": "The masons who lay the first stone know they will not see the last one. Nobody finds this strange."
+      },
+      "fr": {
+        "name": "La cathédrale commence",
+        "note": "Les maçons qui posent la première pierre savent qu'ils ne verront pas la dernière. Personne ne trouve cela étrange."
+      },
+      "sky": [
+        "#97bad7",
+        "#dde8ec"
+      ],
+      "hill": "#6d8a4e",
+      "ground": "mud",
+      "skyline": [
+        "keep",
+        "cathedral-build",
+        "bridge"
+      ],
+      "house": {
+        "material": "timber",
+        "storeys": 2,
+        "roof": "tile",
+        "window": "shutter"
+      },
+      "street": [
+        "well",
+        "cross",
+        "stall",
+        "stall",
+        "barrel",
+        "cart",
+        "crate",
+        "horse",
+        "tree",
+        "dog",
+        "hay",
+        "pig"
+      ],
+      "crowd": 13,
+      "smoke": 2
     },
     {
       "year": 1300,
-      "en": { "name": "The height of the fair", "note": "Wool, salt, a lute, and more people in this street than the parish has fields to feed." },
-      "fr": { "name": "L'apogée de la foire", "note": "De la laine, du sel, un luth, et plus de monde dans cette rue que la paroisse n'a de champs pour le nourrir." },
-      "sky": ["#9dbfd9", "#e1ebee"], "hill": "#6d8a4e", "ground": "mud",
-      "skyline": ["keep", "cathedral-build"],
-      "house": { "material": "timber", "storeys": 3, "roof": "tile", "window": "shutter" },
-      "street": ["stall", "stall", "stall", "barrel", "cart"], "crowd": 11, "smoke": 2
+      "en": {
+        "name": "The height of the fair",
+        "note": "Wool, salt, a lute, and more people in this street than the parish has fields to feed."
+      },
+      "fr": {
+        "name": "L'apogée de la foire",
+        "note": "De la laine, du sel, un luth, et plus de monde dans cette rue que la paroisse n'a de champs pour le nourrir."
+      },
+      "sky": [
+        "#9dbfd9",
+        "#e1ebee"
+      ],
+      "hill": "#6d8a4e",
+      "ground": "mud",
+      "skyline": [
+        "keep",
+        "cathedral-build",
+        "windmill"
+      ],
+      "house": {
+        "material": "timber",
+        "storeys": 3,
+        "roof": "tile",
+        "window": "shutter"
+      },
+      "street": [
+        "well",
+        "cross",
+        "stall",
+        "stall",
+        "stall",
+        "barrel",
+        "cart",
+        "crate",
+        "horse",
+        "horse",
+        "dog",
+        "tree",
+        "hay",
+        "pig",
+        "bench"
+      ],
+      "crowd": 18,
+      "smoke": 2
     },
     {
       "year": 1350,
-      "en": { "name": "The plague", "note": "Between this slice and the last one, one person in three is gone. The stalls are still standing. Nobody is at them." },
-      "fr": { "name": "La peste", "note": "Entre cette tranche et la précédente, une personne sur trois a disparu. Les étals sont encore là. Personne n'y est." },
-      "sky": ["#8a9aa8", "#c9d2d6"], "hill": "#5f7748", "ground": "mud",
-      "skyline": ["keep", "cathedral-build"],
-      "house": { "material": "timber", "storeys": 3, "roof": "tile", "window": "shutter" },
-      "street": ["stall", "barrel"], "crowd": 2, "smoke": 1
+      "en": {
+        "name": "The plague",
+        "note": "Between this slice and the last one, one person in three is gone. The stalls are still standing. Nobody is at them."
+      },
+      "fr": {
+        "name": "La peste",
+        "note": "Entre cette tranche et la précédente, une personne sur trois a disparu. Les étals sont encore là. Personne n'y est."
+      },
+      "sky": [
+        "#8a9aa8",
+        "#c9d2d6"
+      ],
+      "hill": "#5f7748",
+      "ground": "mud",
+      "skyline": [
+        "keep",
+        "cathedral-build",
+        "windmill"
+      ],
+      "house": {
+        "material": "timber",
+        "storeys": 3,
+        "roof": "tile",
+        "window": "shutter"
+      },
+      "street": [
+        "well",
+        "cross",
+        "stall",
+        "barrel",
+        "cart",
+        "crate",
+        "dog",
+        "tree"
+      ],
+      "crowd": 3,
+      "smoke": 1
     },
     {
       "year": 1400,
-      "en": { "name": "Rebuilding", "note": "Fewer hands, so wages rise. The survivors' houses are the best this town has ever built." },
-      "fr": { "name": "La reconstruction", "note": "Moins de bras, donc les salaires montent. Les maisons des survivants sont les plus belles que le bourg ait bâties." },
-      "sky": ["#97bad7", "#dde8ec"], "hill": "#6d8a4e", "ground": "mud",
-      "skyline": ["keep", "cathedral-build"],
-      "house": { "material": "timber", "storeys": 3, "roof": "tile", "window": "lead" },
-      "street": ["stall", "stall", "cart"], "crowd": 6, "smoke": 2
+      "en": {
+        "name": "Rebuilding",
+        "note": "Fewer hands, so wages rise. The survivors' houses are the best this town has ever built — and the castle, with nobody left to fear, is quietly becoming a quarry."
+      },
+      "fr": {
+        "name": "La reconstruction",
+        "note": "Moins de bras, donc les salaires montent. Les maisons des survivants sont les plus belles que le bourg ait bâties, et le château, plus personne n'ayant peur, devient tranquillement une carrière."
+      },
+      "sky": [
+        "#97bad7",
+        "#dde8ec"
+      ],
+      "hill": "#6d8a4e",
+      "ground": "mud",
+      "skyline": [
+        "keep-ruin",
+        "cathedral-build",
+        "windmill"
+      ],
+      "house": {
+        "material": "timber",
+        "storeys": 3,
+        "roof": "tile",
+        "window": "lead"
+      },
+      "street": [
+        "well",
+        "cross",
+        "stall",
+        "stall",
+        "cart",
+        "barrel",
+        "crate",
+        "horse",
+        "tree",
+        "dog",
+        "bench"
+      ],
+      "crowd": 10,
+      "smoke": 2
     },
     {
       "year": 1450,
-      "en": { "name": "The cathedral finished", "note": "Two hundred years and six generations after the first stone. It is the tallest thing anyone here will see in their life." },
-      "fr": { "name": "La cathédrale achevée", "note": "Deux cents ans et six générations après la première pierre. C'est la plus haute chose que quiconque ici verra de sa vie." },
-      "sky": ["#9dbfd9", "#e1ebee"], "hill": "#6d8a4e", "ground": "cobble",
-      "skyline": ["keep", "cathedral"],
-      "house": { "material": "timber", "storeys": 3, "roof": "tile", "window": "lead" },
-      "street": ["stall", "stall", "cart"], "crowd": 8, "smoke": 2
+      "en": {
+        "name": "The cathedral finished",
+        "note": "Two hundred years and six generations after the first stone. Look at the castle: it is going into the cathedral, one cartload at a time."
+      },
+      "fr": {
+        "name": "La cathédrale achevée",
+        "note": "Deux cents ans et six générations après la première pierre. Regardez le château : il part dans la cathédrale, une charretée à la fois."
+      },
+      "sky": [
+        "#9dbfd9",
+        "#e1ebee"
+      ],
+      "hill": "#6d8a4e",
+      "ground": "cobble",
+      "skyline": [
+        "keep-ruin",
+        "cathedral",
+        "windmill"
+      ],
+      "house": {
+        "material": "timber",
+        "storeys": 3,
+        "roof": "tile",
+        "window": "lead"
+      },
+      "street": [
+        "well",
+        "cross",
+        "stall",
+        "stall",
+        "cart",
+        "barrel",
+        "horse",
+        "tree",
+        "dog",
+        "bench",
+        "crate"
+      ],
+      "crowd": 13,
+      "smoke": 2
     },
     {
       "year": 1500,
-      "en": { "name": "Print and glass", "note": "Glass in the windows, a printed sheet on the door. Both were unthinkable luxuries two slices ago." },
-      "fr": { "name": "L'imprimé et le verre", "note": "Du verre aux fenêtres, une feuille imprimée sur la porte. Deux luxes impensables deux tranches plus tôt." },
-      "sky": ["#9dbfd9", "#e1ebee"], "hill": "#6d8a4e", "ground": "cobble",
-      "skyline": ["keep", "cathedral"],
-      "house": { "material": "timber", "storeys": 3, "roof": "tile", "window": "lead", "sign": true },
-      "street": ["stall", "stall", "barrel"], "crowd": 8, "smoke": 2
+      "en": {
+        "name": "Print and glass",
+        "note": "Glass in the windows, a printed sheet on the door. The castle is gone entirely — its stones are the walls around you, and the town hall now runs the place."
+      },
+      "fr": {
+        "name": "L'imprimé et le verre",
+        "note": "Du verre aux fenêtres, une feuille imprimée sur la porte. Le château a totalement disparu : ses pierres sont les murs autour de vous, et c'est l'hôtel de ville qui tient la place désormais."
+      },
+      "sky": [
+        "#9dbfd9",
+        "#e1ebee"
+      ],
+      "hill": "#6d8a4e",
+      "ground": "cobble",
+      "skyline": [
+        "cathedral",
+        "townhall",
+        "windmill"
+      ],
+      "house": {
+        "material": "timber",
+        "storeys": 3,
+        "roof": "tile",
+        "window": "lead",
+        "sign": true
+      },
+      "street": [
+        "well",
+        "cross",
+        "stall",
+        "stall",
+        "cart",
+        "barrel",
+        "horse",
+        "tree",
+        "bench",
+        "crate",
+        "dog"
+      ],
+      "crowd": 13,
+      "smoke": 2
     },
     {
       "year": 1550,
-      "en": { "name": "Renaissance fronts", "note": "The rich re-face their timber houses in stone, to look like somewhere in Italy they will never visit." },
-      "fr": { "name": "Façades Renaissance", "note": "Les riches replaquent leurs maisons de bois en pierre, pour ressembler à une Italie qu'ils ne verront jamais." },
-      "sky": ["#a2c2da", "#e3ecee"], "hill": "#6d8a4e", "ground": "cobble",
-      "skyline": ["keep", "cathedral"],
-      "house": { "material": "stone", "storeys": 3, "roof": "tile", "window": "lead", "sign": true },
-      "street": ["stall", "cart"], "crowd": 7, "smoke": 2
+      "en": {
+        "name": "Renaissance fronts",
+        "note": "The rich re-face their timber houses in stone, to look like somewhere in Italy they will never visit."
+      },
+      "fr": {
+        "name": "Façades Renaissance",
+        "note": "Les riches replaquent leurs maisons de bois en pierre, pour ressembler à une Italie qu'ils ne verront jamais."
+      },
+      "sky": [
+        "#a2c2da",
+        "#e3ecee"
+      ],
+      "hill": "#6d8a4e",
+      "ground": "cobble",
+      "skyline": [
+        "cathedral",
+        "townhall",
+        "windmill"
+      ],
+      "house": {
+        "material": "stone",
+        "storeys": 3,
+        "roof": "tile",
+        "window": "lead",
+        "sign": true
+      },
+      "street": [
+        "fountain",
+        "cross",
+        "stall",
+        "cart",
+        "barrel",
+        "horse",
+        "tree",
+        "bench",
+        "crate"
+      ],
+      "crowd": 11,
+      "smoke": 2
     },
     {
       "year": 1600,
-      "en": { "name": "The wars of religion", "note": "The shutters are closed in the middle of the day. The cathedral has lost its saints to a hammer." },
-      "fr": { "name": "Les guerres de religion", "note": "Les volets sont clos en plein jour. La cathédrale a perdu ses saints sous un marteau." },
-      "sky": ["#8d9db0", "#cdd6dc"], "hill": "#62794c", "ground": "cobble",
-      "skyline": ["keep", "cathedral"],
-      "house": { "material": "stone", "storeys": 3, "roof": "tile", "window": "shutter" },
-      "street": ["barrel"], "crowd": 2, "smoke": 1
+      "en": {
+        "name": "The wars of religion",
+        "note": "The shutters are closed in the middle of the day. The cathedral has lost its saints to a hammer."
+      },
+      "fr": {
+        "name": "Les guerres de religion",
+        "note": "Les volets sont clos en plein jour. La cathédrale a perdu ses saints sous un marteau."
+      },
+      "sky": [
+        "#8d9db0",
+        "#cdd6dc"
+      ],
+      "hill": "#62794c",
+      "ground": "cobble",
+      "skyline": [
+        "cathedral",
+        "townhall",
+        "windmill"
+      ],
+      "house": {
+        "material": "stone",
+        "storeys": 3,
+        "roof": "tile",
+        "window": "shutter"
+      },
+      "street": [
+        "fountain",
+        "cross",
+        "barrel",
+        "crate",
+        "dog",
+        "tree"
+      ],
+      "crowd": 3,
+      "smoke": 1
     },
     {
       "year": 1650,
-      "en": { "name": "Brick and order", "note": "After the fires, the town forbids thatch. Every roof in view changes within one lifetime." },
-      "fr": { "name": "La brique et l'ordre", "note": "Après les incendies, le bourg interdit le chaume. Tous les toits changent en une seule vie." },
-      "sky": ["#a2c2da", "#e3ecee"], "hill": "#6d8a4e", "ground": "cobble",
-      "skyline": ["keep", "cathedral"],
-      "house": { "material": "brick", "storeys": 3, "roof": "tile", "window": "lead", "sign": true },
-      "street": ["stall", "cart", "barrel"], "crowd": 7, "smoke": 2
+      "en": {
+        "name": "Brick and order",
+        "note": "After the fires, the town forbids thatch. Every roof in view changes within one lifetime."
+      },
+      "fr": {
+        "name": "La brique et l'ordre",
+        "note": "Après les incendies, le bourg interdit le chaume. Tous les toits changent en une seule vie."
+      },
+      "sky": [
+        "#a2c2da",
+        "#e3ecee"
+      ],
+      "hill": "#6d8a4e",
+      "ground": "cobble",
+      "skyline": [
+        "cathedral",
+        "townhall",
+        "windmill"
+      ],
+      "house": {
+        "material": "brick",
+        "storeys": 3,
+        "roof": "tile",
+        "window": "lead",
+        "sign": true
+      },
+      "street": [
+        "fountain",
+        "cross",
+        "stall",
+        "cart",
+        "barrel",
+        "horse",
+        "tree",
+        "bench",
+        "crate",
+        "dog"
+      ],
+      "crowd": 12,
+      "smoke": 2
     },
     {
       "year": 1700,
-      "en": { "name": "The paved street", "note": "Setts, a gutter, and an oil lamp the town pays a man to light every dusk." },
-      "fr": { "name": "La rue pavée", "note": "Des pavés, un caniveau, et une lampe à huile qu'un homme est payé pour allumer chaque soir." },
-      "sky": ["#a6c5dc", "#e5edef"], "hill": "#6d8a4e", "ground": "setts",
-      "skyline": ["keep", "cathedral"],
-      "house": { "material": "brick", "storeys": 3, "roof": "slate", "window": "sash", "sign": true },
-      "street": ["stall", "lamp-oil", "cart"], "crowd": 7, "smoke": 2
+      "en": {
+        "name": "The paved street",
+        "note": "Setts, a gutter, and an oil lamp the town pays a man to light every dusk."
+      },
+      "fr": {
+        "name": "La rue pavée",
+        "note": "Des pavés, un caniveau, et une lampe à huile qu'un homme est payé pour allumer chaque soir."
+      },
+      "sky": [
+        "#a6c5dc",
+        "#e5edef"
+      ],
+      "hill": "#6d8a4e",
+      "ground": "setts",
+      "skyline": [
+        "cathedral",
+        "townhall",
+        "bridge"
+      ],
+      "house": {
+        "material": "brick",
+        "storeys": 3,
+        "roof": "slate",
+        "window": "sash",
+        "sign": true
+      },
+      "street": [
+        "fountain",
+        "cross",
+        "stall",
+        "lamp-oil",
+        "cart",
+        "horse",
+        "tree",
+        "bench",
+        "barrel",
+        "crate"
+      ],
+      "crowd": 12,
+      "smoke": 2
     },
     {
       "year": 1750,
-      "en": { "name": "The coach road", "note": "A scheduled coach. For the first time, you can know when you will arrive somewhere." },
-      "fr": { "name": "La route de poste", "note": "Une diligence à horaire. Pour la première fois, on peut savoir quand on arrivera quelque part." },
-      "sky": ["#a6c5dc", "#e5edef"], "hill": "#6d8a4e", "ground": "setts",
-      "skyline": ["keep", "cathedral"],
-      "house": { "material": "brick", "storeys": 4, "roof": "slate", "window": "sash", "sign": true },
-      "street": ["carriage", "lamp-oil", "stall"], "crowd": 8, "smoke": 2
+      "en": {
+        "name": "The coach road",
+        "note": "A scheduled coach. For the first time, you can know when you will arrive somewhere."
+      },
+      "fr": {
+        "name": "La route de poste",
+        "note": "Une diligence à horaire. Pour la première fois, on peut savoir quand on arrivera quelque part."
+      },
+      "sky": [
+        "#a6c5dc",
+        "#e5edef"
+      ],
+      "hill": "#6d8a4e",
+      "ground": "setts",
+      "skyline": [
+        "cathedral",
+        "townhall",
+        "windmill"
+      ],
+      "house": {
+        "material": "brick",
+        "storeys": 4,
+        "roof": "slate",
+        "window": "sash",
+        "sign": true
+      },
+      "street": [
+        "fountain",
+        "cross",
+        "carriage",
+        "lamp-oil",
+        "stall",
+        "horse",
+        "tree",
+        "bench",
+        "barrel",
+        "crate",
+        "dog"
+      ],
+      "crowd": 13,
+      "smoke": 2
     },
     {
       "year": 1800,
-      "en": { "name": "The first chimney", "note": "One brick stack on the edge of town, and it is already taller than the cathedral that took two centuries." },
-      "fr": { "name": "La première cheminée", "note": "Une cheminée de brique en bord de ville, et elle dépasse déjà la cathédrale qui prit deux siècles." },
-      "sky": ["#a8bfcc", "#e0e6e4"], "hill": "#68824a", "ground": "setts",
-      "skyline": ["cathedral", "chimney"],
-      "house": { "material": "brick", "storeys": 4, "roof": "slate", "window": "sash", "sign": true },
-      "street": ["carriage", "lamp-oil", "stall", "cart"], "crowd": 9, "smoke": 3
+      "en": {
+        "name": "The first chimney",
+        "note": "One brick stack on the edge of town, and it is already taller than the cathedral that took two centuries."
+      },
+      "fr": {
+        "name": "La première cheminée",
+        "note": "Une cheminée de brique en bord de ville, et elle dépasse déjà la cathédrale qui prit deux siècles."
+      },
+      "sky": [
+        "#a8bfcc",
+        "#e0e6e4"
+      ],
+      "hill": "#68824a",
+      "ground": "setts",
+      "skyline": [
+        "cathedral",
+        "chimney",
+        "windmill"
+      ],
+      "house": {
+        "material": "brick",
+        "storeys": 4,
+        "roof": "slate",
+        "window": "sash",
+        "sign": true
+      },
+      "street": [
+        "fountain",
+        "cross",
+        "carriage",
+        "lamp-oil",
+        "stall",
+        "cart",
+        "horse",
+        "tree",
+        "bench",
+        "barrel",
+        "crate"
+      ],
+      "crowd": 14,
+      "smoke": 3
     },
     {
       "year": 1850,
-      "en": { "name": "Rails and gaslight", "note": "The air is brown, the street is lit all night, and the town is three hours from the capital instead of three days." },
-      "fr": { "name": "Le rail et le gaz", "note": "L'air est brun, la rue est éclairée toute la nuit, et la capitale est à trois heures au lieu de trois jours." },
-      "sky": ["#b3b6ab", "#ddddd2"], "hill": "#61764a", "ground": "setts",
-      "skyline": ["cathedral", "chimney", "chimney"],
-      "house": { "material": "brick", "storeys": 4, "roof": "slate", "window": "sash", "sign": true },
-      "street": ["carriage", "lamp-gas", "stall", "cart"], "crowd": 12, "smoke": 4
+      "en": {
+        "name": "Rails and gaslight",
+        "note": "The air is brown, the street is lit all night, and the town is three hours from the capital instead of three days."
+      },
+      "fr": {
+        "name": "Le rail et le gaz",
+        "note": "L'air est brun, la rue est éclairée toute la nuit, et la capitale est à trois heures au lieu de trois jours."
+      },
+      "sky": [
+        "#b3b6ab",
+        "#ddddd2"
+      ],
+      "hill": "#61764a",
+      "ground": "setts",
+      "skyline": [
+        "cathedral",
+        "chimney",
+        "station"
+      ],
+      "house": {
+        "material": "brick",
+        "storeys": 4,
+        "roof": "slate",
+        "window": "sash",
+        "sign": true
+      },
+      "street": [
+        "fountain",
+        "carriage",
+        "lamp-gas",
+        "lamp-gas",
+        "stall",
+        "cart",
+        "horse",
+        "tree",
+        "bench",
+        "crate",
+        "barrel",
+        "dog"
+      ],
+      "crowd": 18,
+      "smoke": 4
     },
     {
       "year": 1900,
-      "en": { "name": "Trams and wires", "note": "Electric light, an electric tram, and a photograph of this exact street that still exists." },
-      "fr": { "name": "Le tram et les fils", "note": "La lumière électrique, un tramway, et une photographie de cette rue exacte qui existe encore." },
-      "sky": ["#adbdc4", "#dfe6e2"], "hill": "#64794c", "ground": "asphalt",
-      "skyline": ["cathedral", "chimney"],
-      "house": { "material": "render", "storeys": 4, "roof": "slate", "window": "sash", "sign": true },
-      "street": ["tram", "lamp-electric", "stall", "bike"], "crowd": 12, "smoke": 3
+      "en": {
+        "name": "Trams and wires",
+        "note": "Electric light, an electric tram, and a photograph of this exact street that still exists."
+      },
+      "fr": {
+        "name": "Le tram et les fils",
+        "note": "La lumière électrique, un tramway, et une photographie de cette rue exacte qui existe encore."
+      },
+      "sky": [
+        "#adbdc4",
+        "#dfe6e2"
+      ],
+      "hill": "#64794c",
+      "ground": "asphalt",
+      "skyline": [
+        "cathedral",
+        "gasometer",
+        "station"
+      ],
+      "house": {
+        "material": "render",
+        "storeys": 4,
+        "roof": "slate",
+        "window": "sash",
+        "sign": true
+      },
+      "street": [
+        "fountain",
+        "tram",
+        "lamp-electric",
+        "lamp-electric",
+        "stall",
+        "bike",
+        "bench",
+        "tree",
+        "phone-box",
+        "crate",
+        "dog",
+        "horse"
+      ],
+      "crowd": 18,
+      "smoke": 3
     },
     {
       "year": 1950,
-      "en": { "name": "Concrete and cars", "note": "The gap in the row is where a bomb fell. What fills it will be flat-roofed, and nobody will love it." },
-      "fr": { "name": "Le béton et l'auto", "note": "Le trou dans la rangée est l'endroit où une bombe est tombée. Ce qui le comblera aura un toit plat, et personne ne l'aimera." },
-      "sky": ["#a9c1d0", "#e2e9e8"], "hill": "#68824a", "ground": "asphalt",
-      "skyline": ["cathedral", "chimney", "crane"],
-      "house": { "material": "concrete", "storeys": 3, "roof": "flat", "window": "picture", "gap": true },
-      "street": ["car", "lamp-electric", "bike"], "crowd": 7, "smoke": 2
+      "en": {
+        "name": "Concrete and cars",
+        "note": "The gap in the row is where a bomb fell. What fills it will be flat-roofed, and nobody will love it."
+      },
+      "fr": {
+        "name": "Le béton et l'auto",
+        "note": "Le trou dans la rangée est l'endroit où une bombe est tombée. Ce qui le comblera aura un toit plat, et personne ne l'aimera."
+      },
+      "sky": [
+        "#a9c1d0",
+        "#e2e9e8"
+      ],
+      "hill": "#68824a",
+      "ground": "asphalt",
+      "skyline": [
+        "cathedral",
+        "crane",
+        "chimney"
+      ],
+      "house": {
+        "material": "concrete",
+        "storeys": 3,
+        "roof": "flat",
+        "window": "picture",
+        "gap": true
+      },
+      "street": [
+        "fountain",
+        "car",
+        "lamp-electric",
+        "bike",
+        "bench",
+        "tree",
+        "phone-box",
+        "traffic-light",
+        "crate",
+        "dog"
+      ],
+      "crowd": 11,
+      "smoke": 2
     },
     {
       "year": 2000,
-      "en": { "name": "The tower block", "note": "The cathedral is now the fourth tallest thing here, and the loudest thing in the street has no horse in it." },
-      "fr": { "name": "La tour", "note": "La cathédrale n'est plus que la quatrième plus haute chose ici, et le plus bruyant dans la rue n'a pas de cheval dedans." },
-      "sky": ["#a6c6de", "#e6eef0"], "hill": "#6d8a4e", "ground": "asphalt",
-      "skyline": ["cathedral", "tower"],
-      "house": { "material": "render", "storeys": 4, "roof": "flat", "window": "picture", "sign": true },
-      "street": ["car", "car", "lamp-electric", "bike"], "crowd": 9, "smoke": 0
+      "en": {
+        "name": "The tower block",
+        "note": "The cathedral is now the fourth tallest thing here, and the loudest thing in the street has no horse in it."
+      },
+      "fr": {
+        "name": "La tour",
+        "note": "La cathédrale n'est plus que la quatrième plus haute chose ici, et le plus bruyant dans la rue n'a pas de cheval dedans."
+      },
+      "sky": [
+        "#a6c6de",
+        "#e6eef0"
+      ],
+      "hill": "#6d8a4e",
+      "ground": "asphalt",
+      "skyline": [
+        "cathedral",
+        "tower",
+        "gasometer"
+      ],
+      "house": {
+        "material": "render",
+        "storeys": 4,
+        "roof": "flat",
+        "window": "picture",
+        "sign": true
+      },
+      "street": [
+        "fountain",
+        "car",
+        "car",
+        "lamp-electric",
+        "bike",
+        "bench",
+        "tree",
+        "planter",
+        "traffic-light",
+        "phone-box",
+        "dog"
+      ],
+      "crowd": 14,
+      "smoke": 0
     },
     {
       "year": 2050,
-      "en": { "name": "Not yet", "note": "The only slice on this page that has not happened. Everything above it is evidence; this one is a hope with solar panels on it." },
-      "fr": { "name": "Pas encore", "note": "La seule tranche de cette page qui n'a pas eu lieu. Tout ce qui précède est une preuve ; celle-ci est un espoir avec des panneaux solaires dessus." },
-      "sky": ["#a9cadf", "#e8f0f0"], "hill": "#74914f", "ground": "asphalt",
-      "skyline": ["cathedral", "tower-solar"],
-      "house": { "material": "render", "storeys": 4, "roof": "solar", "window": "picture", "sign": true, "trees": true },
-      "street": ["bike", "bike", "lamp-electric"], "crowd": 8, "smoke": 0
+      "en": {
+        "name": "Not yet",
+        "note": "The only slice on this page that has not happened. Everything above it is evidence; this one is a hope with solar panels on it."
+      },
+      "fr": {
+        "name": "Pas encore",
+        "note": "La seule tranche de cette page qui n'a pas eu lieu. Tout ce qui précède est une preuve ; celle-ci est un espoir avec des panneaux solaires dessus."
+      },
+      "sky": [
+        "#a9cadf",
+        "#e8f0f0"
+      ],
+      "hill": "#74914f",
+      "ground": "asphalt",
+      "skyline": [
+        "cathedral",
+        "tower-solar",
+        "turbine"
+      ],
+      "house": {
+        "material": "render",
+        "storeys": 4,
+        "roof": "solar",
+        "window": "picture",
+        "sign": true,
+        "trees": true
+      },
+      "street": [
+        "fountain",
+        "bike",
+        "bike",
+        "scooter",
+        "lamp-electric",
+        "bench",
+        "tree",
+        "tree",
+        "planter",
+        "planter",
+        "dog",
+        "scooter"
+      ],
+      "crowd": 13,
+      "smoke": 0
     }
   ]
 }
