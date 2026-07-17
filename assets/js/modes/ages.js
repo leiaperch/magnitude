@@ -82,6 +82,38 @@ export class Ages {
     this.backdrop.quaternion.copy(this.camera.quaternion);
     this.scene.add(this.backdrop);
 
+    /* Distant land: three ridges of low hills ringing the town, deep enough to
+     * sit in the fog so they read as haze, not as objects. Shared and tinted
+     * per era like the sky, so the seam never has to cut a hillside in half. */
+    this.hills = [];
+    /* The arc is centred away from the camera and must stay under π: cos+sin
+     * only stays negative — i.e. behind the town — across a span of π, and any
+     * wider brings the ends round into the foreground. */
+    const AWAY = -Math.PI * 0.75;
+    for (let ring = 0; ring < 3; ring++) {
+      const r = 46 + ring * 15, seg = 40, arc = Math.PI * 0.86;
+      const pos = [], col = [];
+      for (let i = 0; i <= seg; i++) {
+        const a = AWAY - arc / 2 + (i / seg) * arc;
+        const rr = r + Math.sin(a * 5 + ring * 2) * 5 + Math.sin(a * 11 + ring) * 2.5;
+        const hgt = 6 + Math.sin(a * 7 + ring * 3) * 3.5 + Math.sin(a * 3) * 2 + ring * 2.5;
+        const x = Math.cos(a) * rr, z = Math.sin(a) * rr;
+        pos.push(x, 0, z, x, hgt, z);
+        col.push(1, 1, 1, 1, 1, 1);
+      }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+      geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+      const idx = [];
+      for (let i = 0; i < seg; i++) { const b = i * 2; idx.push(b, b + 1, b + 2, b + 1, b + 3, b + 2); }
+      geo.setIndex(idx);
+      const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide, fog: false }));
+      mesh.position.set(TARGET.x, 0, TARGET.z);
+      mesh.renderOrder = -1 + ring * 0.001;
+      this.scene.add(mesh);
+      this.hills.push({ mesh, ring });
+    }
+
     this.planePast = new THREE.Plane(RIGHT.clone().negate(), 0);
     this.planeFuture = new THREE.Plane(RIGHT.clone(), 0);
 
@@ -139,7 +171,20 @@ export class Ages {
     col.needsUpdate = true;
     this.fog.color.copy(bot);
     this.hemi.color.copy(top);
-    this.hemi.groundColor.copy(new THREE.Color(a.hill).lerp(new THREE.Color(b.hill), u));
+    const hill = new THREE.Color(a.hill).lerp(new THREE.Color(b.hill), u);
+    this.hemi.groundColor.copy(hill);
+
+    /* nearer ring = more of its own colour, farther ring = more sky (deeper haze) */
+    for (const h of this.hills) {
+      const base = hill.clone().lerp(bot, 0.35 + h.ring * 0.22);
+      const cc = h.mesh.geometry.getAttribute('color');
+      for (let i = 0; i < cc.count; i++) {
+        const foot = i % 2 === 0;                 // lower verts a touch darker
+        const c = foot ? base.clone().multiplyScalar(0.92) : base;
+        cc.setXYZ(i, c.r, c.g, c.b);
+      }
+      cc.needsUpdate = true;
+    }
   }
 
   /* progress: 0..1 across the whole track. Returns the era now being read. */
@@ -175,13 +220,22 @@ export class Ages {
     this.future.tick(time);
     const r = this.renderer;
     r.clear();
-    this.past.group.visible = true; this.future.group.visible = false;
+
+    /* Every cached era lives in the same scene, so hide all of them and show
+     * exactly the two this frame is about. Leaving one visible is invisible
+     * while you scroll forwards — the leftover is the era you are heading into
+     * anyway — and paints a ghost town the moment you scroll back. */
+    for (const e of this.built.values()) e.group.visible = false;
+
+    this.past.group.visible = true;
     r.clippingPlanes = [this.planePast];
     r.render(this.scene, this.camera);
-    this.past.group.visible = false; this.future.group.visible = true;
+    this.past.group.visible = false;
+
+    this.future.group.visible = true;
     r.clippingPlanes = [this.planeFuture];
     r.render(this.scene, this.camera);
-    this.past.group.visible = false;
+    this.future.group.visible = false;
   }
 
   show(on) {

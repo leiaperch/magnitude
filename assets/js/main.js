@@ -137,9 +137,12 @@ function updateHUD() {
     document.documentElement.style.setProperty('--accent', accent);
   }
 
+  /* This beat is a fixed overlay, so it must never share the screen with the
+   * intro. In the log modes its band sits decades into the track; ages had it
+   * on slice 0 — which is exactly where the intro still is. */
   el.human.style.opacity = (
     state.mode === 't' ? weightOf(v, 17.55, 17.80, 0.035) :
-    state.mode === 'a' ? weightOf(v, -1, 0.6, 0.5) :
+    state.mode === 'a' ? weightOf(v, 0.4, 2.0, 0.5) :
                          weightOf(v, -2.4, 1.6)).toFixed(3);
 }
 
