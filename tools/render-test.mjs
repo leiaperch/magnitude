@@ -22,7 +22,7 @@ for (const era of ages.eras) {
   if (svg.length < 4000) bad.push(`${tag}: suspiciously empty (${svg.length} chars)`);
   for (const m of svg.matchAll(/fill="([^"]+)"/g)) {
     const v = m[1];
-    if (!/^(#[0-9a-f]{3,8}|none|url\(#[\w-]+\))$/i.test(v)) bad.push(`${tag}: odd fill ${v}`);
+    if (!/^(#[0-9a-f]{6}|none|url\(#[\w-]+\)|rgb\([\d\s.\/]+\))$/i.test(v)) bad.push(`${tag}: odd fill ${v}`);
   }
   // the drawing must be deterministic: same era, same picture
   if (drawEra(era) !== svg) bad.push(`${tag}: not deterministic`);

@@ -96,11 +96,18 @@ GROUNDS = {'mud', 'cobble', 'setts', 'asphalt'}
 
 dio = rd('assets/js/modes/diorama.js')
 for name in SKYLINE:
-    if "'%s'" % name not in dio and re.search(r'\b%s\b' % re.escape(name), dio) is None:
+    if not re.search(r"case '%s':" % re.escape(name), dio):
         bad.append('diorama.js cannot draw skyline "%s"' % name)
 for name in PROPS:
-    if not re.search(r"'?%s'?:\s*\(x, y" % re.escape(name), dio):
+    if not re.search(r"case '%s':" % re.escape(name), dio):
         bad.append('diorama.js has no prop "%s"' % name)
+
+# diorama.js has no CSS selectors in it, so every '#...' literal is a colour —
+# and a mistyped one survives silently if it is only ever overwritten.
+for m in re.finditer(r"'(#[^']*)'", dio):
+    v = m.group(1)
+    if v != '#' and not re.fullmatch(r'#[0-9a-fA-F]{6}', v):
+        bad.append('diorama.js: "%s" is not a six-digit hex colour' % v)
 
 ages = jd('assets/data/ages.json')
 years = [e['year'] for e in ages['eras']]

@@ -8,7 +8,7 @@ Same page, same scrollbar, three different axes — switch with the button top r
 |---|---|---|
 | **Meters** | log₁₀ metres, 10⁻¹⁶ → 10²⁷ | A continuous zoom from inside a proton to the edge of the observable universe. 13 shader scenes. |
 | **Years** | log₁₀ seconds since the Big Bang | The plasma, recombination, the dark ages, the first stars, the Sun. |
-| **Ages** | 50-year slices, 1000 → 2050 | One town square, redrawn every fifty years. The camera never moves; only the town does. |
+| **Ages** | 50-year slices, 1000 → 2050 | One town square in flat-shaded fake 3D, redrawn every fifty years. The camera never moves; only the town does. |
 
 The first two are logarithmic and share one fragment shader — every ~900 px of
 scroll multiplies the field of view by ten. The third deliberately is not: a log
@@ -42,8 +42,15 @@ tools/                the checks below
 ```
 
 Nothing in the ages mode is a picture. Each era is a list of parameters — what
-the roofs are made of, what stands on the hill, what moves in the street — turned
-into SVG on the fly, from a seed, so the same year always draws the same town.
+the roofs are made of, what stands on the skyline, what moves in the street —
+turned into SVG on the fly, from a seed, so the same year always draws the same
+town.
+
+The look is axonometric and flat-shaded: every volume is a box with a top face
+and two sides, lit from one fixed direction (top brightest, the y-facing side
+lit, the x-facing side in shadow), sorted back to front by `x+y`, with distance
+washing each face toward the sky colour. About 530 shapes per era, so the whole
+thousand years costs roughly a megabyte of generated SVG and never a request.
 
 ## Checks
 
