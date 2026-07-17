@@ -1,0 +1,126 @@
+/* MAGNITUDE — tokens, page shell, intro & outro */
+
+:root {
+  color-scheme: dark;
+  --black: #030407;
+  --ink: #e9edf5;
+  --dim: #6c7689;
+  --faint: #3a4152;
+  --accent: #b48cff;
+  --mono: 'Cascadia Code', ui-monospace, 'SF Mono', Consolas, monospace;
+  --serif: Charter, 'Iowan Old Style', Georgia, serif;
+  --air: system-ui, 'Segoe UI', 'Helvetica Neue', sans-serif;
+}
+
+* { box-sizing: border-box; }
+html { scrollbar-color: var(--accent) #0a0d14; }
+body {
+  margin: 0; background: var(--black); color: var(--ink);
+  font-family: var(--serif); font-size: 16px; line-height: 1.6;
+  overflow-x: hidden;
+}
+::selection { background: var(--accent); color: var(--black); }
+:focus-visible { outline: 1.5px solid var(--accent); outline-offset: 3px; }
+h1, h2, h3, p { margin: 0; }
+button { font: inherit; }
+
+#stage {
+  position: fixed; inset: 0; width: 100%; height: 100%;
+  z-index: 0; display: block;
+}
+
+/* ---------------- intro ---------------- */
+#intro {
+  position: relative; z-index: 2; min-height: 100svh;
+  display: grid; place-content: center; text-align: center;
+  padding: 24px; gap: 0;
+}
+#intro .over {
+  font-family: var(--mono); font-size: 11px; letter-spacing: .42em;
+  text-transform: uppercase; color: var(--dim); margin-bottom: 30px;
+}
+#intro h1 {
+  font-family: var(--air); font-weight: 100;
+  font-size: clamp(52px, 12vw, 150px);
+  letter-spacing: clamp(.18em, 2.5vw, .34em); text-indent: clamp(.18em, 2.5vw, .34em);
+  text-transform: uppercase; line-height: 1;
+  color: var(--ink);
+}
+#intro .sub {
+  margin: 34px auto 0; max-width: 46ch;
+  font-size: clamp(15px, 1.6vw, 18px); color: color-mix(in oklab, var(--ink) 80%, var(--dim));
+  text-wrap: balance;
+}
+#intro .sub b { color: var(--ink); font-weight: 400; font-style: italic; }
+#intro .rules {
+  margin: 40px auto 0; display: flex; gap: 34px; justify-content: center; flex-wrap: wrap;
+  font-family: var(--mono); font-size: 11px; letter-spacing: .1em; color: var(--dim);
+}
+#intro .rules b { color: var(--accent); font-weight: 400; }
+#intro .cue {
+  margin-top: 58px; font-family: var(--mono); font-size: 10px; letter-spacing: .34em;
+  text-transform: uppercase; color: var(--dim);
+}
+#intro .cue::after {
+  content: ''; display: block; width: 1px; height: 46px; margin: 14px auto 0;
+  background: linear-gradient(var(--accent), transparent);
+}
+@media (prefers-reduced-motion: no-preference) {
+  #intro .cue::after { animation: sink 2.4s ease-in-out infinite; }
+  @keyframes sink { 50% { transform: translateY(9px); opacity: .35; } }
+}
+@supports (animation-timeline: view()) {
+  #intro .fadeout {
+    animation: intro-out linear both;
+    animation-timeline: view();
+    animation-range: exit 0% exit 80%;
+  }
+  @keyframes intro-out { to { opacity: 0; filter: blur(6px); } }
+}
+
+/* ---------------- the 43-decade track ---------------- */
+#track { position: relative; z-index: 2; }
+
+sup { font-size: .68em; }
+
+
+/* the one scale rendered in HTML */
+#human {
+  position: fixed; inset: 0; z-index: 1; display: grid; place-content: center;
+  text-align: center; padding: 24px; opacity: 0; pointer-events: none;
+}
+#human .halo {
+  font-family: var(--air); font-weight: 100; text-transform: uppercase;
+  font-size: clamp(30px, 6vw, 64px); letter-spacing: .3em; text-indent: .3em;
+  color: var(--ink);
+}
+#human p {
+  margin: 22px auto 0; max-width: 44ch; font-size: 15.5px;
+  color: color-mix(in oklab, var(--ink) 82%, var(--dim));
+}
+#human .fn { margin-top: 16px; font-family: var(--mono); font-size: 11px; color: var(--dim); letter-spacing: .05em; }
+
+/* ---------------- outro ---------------- */
+#outro {
+  position: relative; z-index: 2; min-height: 160svh;
+  display: grid; place-content: center; text-align: center; padding: 24px;
+}
+#outro h2 {
+  font-family: var(--air); font-weight: 100; text-transform: uppercase;
+  font-size: clamp(34px, 7vw, 84px); letter-spacing: .22em; text-indent: .22em;
+  line-height: 1.15; color: var(--ink);
+}
+#outro .big-num {
+  margin-top: 26px; font-family: var(--mono); font-size: clamp(15px, 2.4vw, 22px);
+  color: var(--accent); letter-spacing: .06em;
+}
+#outro p { margin: 26px auto 0; max-width: 52ch; font-size: 15.5px; color: color-mix(in oklab, var(--ink) 80%, var(--dim)); }
+#outro p b { color: var(--ink); font-weight: 400; font-style: italic; }
+#outro .fine { margin-top: 44px; font-family: var(--mono); font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--dim); }
+#outro a { color: var(--accent); }
+
+/* the whole page respects a reduced-motion preference */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: .01s !important; transition-duration: .01s !important; }
+}

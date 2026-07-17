@@ -1,0 +1,44 @@
+/* MAGNITUDE — the ages diorama: two slices of the same square, and the seam between them */
+
+#ages {
+  position: fixed; inset: 0; z-index: 0;
+  background: #0a0d12;
+}
+#ages .slice {
+  position: absolute; inset: 0;
+  display: block;
+}
+#ages .slice svg { width: 100%; height: 100%; display: block; }
+
+/* The later era owns the right-hand part of the frame, so left always reads
+   older than right. clip-path is set per frame from the scroll position. */
+#ages .future { clip-path: inset(0 0 0 100%); will-change: clip-path; }
+
+#ages .seam {
+  position: absolute; top: 0; bottom: 0; width: 0;
+  border-left: 2px solid color-mix(in oklab, var(--ink) 70%, transparent);
+  box-shadow: 0 0 24px rgb(0 0 0 / .45);
+  opacity: 0; transition: opacity .25s;
+  pointer-events: none;
+}
+#ages .seam b {
+  position: absolute; top: 18px;
+  font-family: var(--mono); font-size: 11px; font-weight: 400; letter-spacing: .16em;
+  color: var(--ink); background: color-mix(in oklab, #0a0d12 68%, transparent);
+  padding: 4px 9px; border-radius: 3px;
+  font-variant-numeric: tabular-nums;
+}
+#ages .y-past { right: 10px; }
+#ages .y-future { left: 10px; }
+
+/* the shader canvas and the diorama never show at the same time */
+body[data-mode="a"] #stage { display: none; }
+body:not([data-mode="a"]) #ages { display: none; }
+
+/* the ages readout counts years, not powers of ten */
+body[data-mode="a"] #readout .exp { letter-spacing: .04em; }
+
+.noscript-note {
+  position: fixed; inset: auto 24px 24px; z-index: 9;
+  font-family: var(--mono); font-size: 12px; color: var(--ink);
+}

@@ -1,0 +1,156 @@
+[
+  {
+    "at": -11.0,
+    "side": "r",
+    "en": {
+      "title": "Electroweak era",
+      "meas": "t ≈ 10⁻¹¹ s",
+      "body": "The universe is a trillionth of a second old and hotter than 10¹⁵ K. The four forces have just finished separating; everything that exists is <b>a plasma of quarks, gluons and light</b>."
+    },
+    "fr": {
+      "title": "Ère électrofaible",
+      "meas": "t ≈ 10⁻¹¹ s",
+      "body": "L’univers a un billionième de seconde et dépasse 10¹⁵ K. Les quatre forces viennent de finir de se séparer ; tout ce qui existe est <b>un plasma de quarks, de gluons et de lumière</b>."
+    }
+  },
+  {
+    "at": -4.8,
+    "side": "l",
+    "en": {
+      "title": "Confinement",
+      "meas": "t ≈ 10 µs",
+      "body": "Cooling below two trillion kelvin, quarks lock together three by three. The first protons and neutrons appear — <b>nothing since has ever been hot enough to unbind them</b>."
+    },
+    "fr": {
+      "title": "Confinement",
+      "meas": "t ≈ 10 µs",
+      "body": "En passant sous deux mille milliards de kelvins, les quarks se verrouillent trois par trois. Les premiers protons et neutrons apparaissent : <b>rien, depuis, n’a jamais été assez chaud pour les défaire</b>."
+    }
+  },
+  {
+    "at": 0.1,
+    "side": "r",
+    "en": {
+      "title": "One second",
+      "meas": "t + 1 s",
+      "body": "Neutrinos stop interacting and fly free. They are still passing through you — about <b>60 billion per square centimeter per second</b>, almost unchanged since this moment."
+    },
+    "fr": {
+      "title": "Une seconde",
+      "meas": "t + 1 s",
+      "body": "Les neutrinos cessent d’interagir et filent, libres. Ils vous traversent encore, environ <b>60 milliards par centimètre carré et par seconde</b>, presque inchangés depuis cet instant."
+    }
+  },
+  {
+    "at": 2.26,
+    "side": "l",
+    "en": {
+      "title": "Three minutes",
+      "meas": "t + 180 s",
+      "body": "In about a quarter of an hour the universe forges the hydrogen and helium of everything that will ever exist: three quarters, one quarter. <b>The recipe has not changed since.</b>"
+    },
+    "fr": {
+      "title": "Trois minutes",
+      "meas": "t + 180 s",
+      "body": "En un quart d’heure environ, l’univers forge l’hydrogène et l’hélium de tout ce qui existera : trois quarts, un quart. <b>La recette n’a pas changé depuis.</b>"
+    }
+  },
+  {
+    "at": 12.2,
+    "side": "r",
+    "en": {
+      "title": "Matter takes over",
+      "meas": "t + 50,000 yr",
+      "body": "Until here, light outweighed matter. From this crossover on, matter rules gravity and can begin, <b>slowly, to clump</b>."
+    },
+    "fr": {
+      "title": "La matière l’emporte",
+      "meas": "t + 50 000 ans",
+      "body": "Jusqu’ici, la lumière pesait plus lourd que la matière. À partir de ce croisement, la matière gouverne la gravité et peut commencer, <b>lentement, à s’agglutiner</b>."
+    }
+  },
+  {
+    "at": 13.08,
+    "side": "l",
+    "en": {
+      "title": "First light",
+      "meas": "t + 380,000 yr",
+      "body": "The fog of electrons clears; photons fly free. That first light is still everywhere — stretched a thousandfold into microwaves, <b>the oldest thing you can observe</b>."
+    },
+    "fr": {
+      "title": "Première lumière",
+      "meas": "t + 380 000 ans",
+      "body": "Le brouillard d’électrons se dissipe ; les photons filent, libres. Cette première lumière est encore partout, étirée mille fois en micro-ondes : <b>la chose la plus ancienne que l’on puisse observer</b>."
+    }
+  },
+  {
+    "at": 15.1,
+    "side": "r",
+    "en": {
+      "title": "The dark ages",
+      "meas": "t + ~40 Myr",
+      "body": "For tens of millions of years there is not a single star. The universe is a slowly cooling cloud of neutral hydrogen — <b>completely dark, everywhere</b>."
+    },
+    "fr": {
+      "title": "Les âges sombres",
+      "meas": "t + ~40 Ma",
+      "body": "Pendant des dizaines de millions d’années, pas une seule étoile. L’univers est un nuage d’hydrogène neutre qui refroidit lentement : <b>entièrement noir, partout</b>."
+    }
+  },
+  {
+    "at": 16.0,
+    "side": "l",
+    "en": {
+      "title": "First stars",
+      "meas": "t + ~300 Myr",
+      "body": "The first stars are monsters, a hundred solar masses, dead within a few million years. Their ashes are the first elements heavier than lithium — <b>every atom of carbon in your body included</b>."
+    },
+    "fr": {
+      "title": "Premières étoiles",
+      "meas": "t + ~300 Ma",
+      "body": "Les premières étoiles sont des monstres, cent masses solaires, mortes en quelques millions d’années. Leurs cendres sont les premiers éléments plus lourds que le lithium : <b>chaque atome de carbone de votre corps compris</b>."
+    }
+  },
+  {
+    "at": 16.6,
+    "side": "r",
+    "en": {
+      "title": "Young galaxies",
+      "meas": "t + 1 Gyr",
+      "body": "Gravity has braided matter into filaments; galaxies light up at the crossings. Reionization completes — <b>the universe becomes transparent for good</b>."
+    },
+    "fr": {
+      "title": "Jeunes galaxies",
+      "meas": "t + 1 Ga",
+      "body": "La gravité a tressé la matière en filaments ; les galaxies s’allument aux croisements. La réionisation s’achève : <b>l’univers devient transparent pour de bon</b>."
+    }
+  },
+  {
+    "at": 17.46,
+    "side": "l",
+    "en": {
+      "title": "The Sun ignites",
+      "meas": "t + 9.2 Gyr",
+      "body": "In a recycled cloud enriched by generations of dead stars, a disk collapses: the Sun ignites and planets accrete from the leftovers, <b>in barely 100 million years</b>."
+    },
+    "fr": {
+      "title": "Le Soleil s’allume",
+      "meas": "t + 9,2 Ga",
+      "body": "Dans un nuage recyclé, enrichi par des générations d’étoiles mortes, un disque s’effondre : le Soleil s’allume et les planètes s’accrètent dans les restes, <b>en à peine 100 millions d’années</b>."
+    }
+  },
+  {
+    "at": 17.5,
+    "side": "r",
+    "en": {
+      "title": "Life",
+      "meas": "t + 10 Gyr",
+      "body": "Barely 200 million years after the oceans condense, chemistry starts copying itself. It has not stopped since — <b>you are the current draft</b>."
+    },
+    "fr": {
+      "title": "La vie",
+      "meas": "t + 10 Ga",
+      "body": "À peine 200 millions d’années après la condensation des océans, la chimie se met à se copier elle-même. Elle n’a jamais cessé depuis : <b>vous êtes le brouillon en cours</b>."
+    }
+  }
+]

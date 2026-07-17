@@ -1,0 +1,254 @@
+[
+  {
+    "at": -15.7,
+    "side": "r",
+    "en": {
+      "title": "Quantum foam",
+      "meas": "≲10⁻¹⁶ m",
+      "body": "Below this depth, distance itself gets blurry. The scrollbar could keep going down another nineteen decades to the Planck length (1.6×10⁻³⁵ m) — but nothing measurable lives there, so <b>this is where the journey starts</b>."
+    },
+    "fr": {
+      "title": "Écume quantique",
+      "meas": "≲10⁻¹⁶ m",
+      "body": "Sous cette profondeur, la distance elle-même devient floue. La barre de défilement pourrait descendre encore dix-neuf décades jusqu’à la longueur de Planck (1,6×10⁻³⁵ m), mais rien de mesurable n’y vit : <b>c’est donc ici que le voyage commence</b>."
+    }
+  },
+  {
+    "at": -14.9,
+    "side": "l",
+    "en": {
+      "title": "The proton",
+      "meas": "0.84 fm",
+      "body": "Three quarks, bound by gluons that flicker in and out of existence. A proton's charge radius is 0.84 femtometers, and <b>99.9% of your mass is this glue</b>, not the quarks themselves."
+    },
+    "fr": {
+      "title": "Le proton",
+      "meas": "0,84 fm",
+      "body": "Trois quarks, liés par des gluons qui scintillent entre existence et néant. Le rayon de charge d’un proton fait 0,84 femtomètre, et <b>99,9 % de votre masse est cette colle</b>, pas les quarks eux-mêmes."
+    }
+  },
+  {
+    "at": -13.9,
+    "side": "r",
+    "en": {
+      "title": "The nucleus",
+      "meas": "~10⁻¹⁴ m",
+      "body": "A gold nucleus — 79 protons, 118 neutrons — is about 14 fm across. Everything around it, for the next four decades of your scroll, is <b>empty</b>."
+    },
+    "fr": {
+      "title": "Le noyau",
+      "meas": "~10⁻¹⁴ m",
+      "body": "Un noyau d’or, 79 protons et 118 neutrons, mesure environ 14 fm. Tout ce qui l’entoure, pendant les quatre prochaines décades de votre défilement, est <b>vide</b>."
+    }
+  },
+  {
+    "at": -10.2,
+    "side": "l",
+    "en": {
+      "title": "The atom",
+      "meas": "~1 Å",
+      "body": "You crossed four powers of ten of vacuum to get here. Blow a hydrogen atom up to the size of a stadium and its nucleus is <b>a pea at midfield</b>. The cloud you see is probability, not stuff."
+    },
+    "fr": {
+      "title": "L’atome",
+      "meas": "~1 Å",
+      "body": "Vous avez traversé quatre puissances de dix de vide pour arriver ici. Gonflez un atome d’hydrogène à la taille d’un stade et son noyau est <b>un petit pois au rond central</b>. Le nuage que vous voyez est de la probabilité, pas de la matière."
+    }
+  },
+  {
+    "at": -8.8,
+    "side": "r",
+    "en": {
+      "title": "The double helix",
+      "meas": "2 nm wide",
+      "body": "DNA is two nanometers across, but unspooled, the copy in each of your cells runs <b>about two meters</b>. You carry roughly 40 trillion copies of this molecule."
+    },
+    "fr": {
+      "title": "La double hélice",
+      "meas": "2 nm de large",
+      "body": "L’ADN fait deux nanomètres de large, mais déroulée, la copie contenue dans chacune de vos cellules court sur <b>environ deux mètres</b>. Vous portez à peu près 40 000 milliards d’exemplaires de cette molécule."
+    }
+  },
+  {
+    "at": -7.1,
+    "side": "l",
+    "en": {
+      "title": "Below light",
+      "meas": "~100 nm",
+      "body": "A virus is around 100 nanometers — smaller than the wavelengths of visible light (380–700 nm). Everything you have seen so far is, strictly speaking, <b>invisible</b>: no microscope using light can ever show it."
+    },
+    "fr": {
+      "title": "Sous la lumière",
+      "meas": "~100 nm",
+      "body": "Un virus fait environ 100 nanomètres, moins que les longueurs d’onde de la lumière visible (380 à 700 nm). Tout ce que vous avez vu jusqu’ici est, au sens strict, <b>invisible</b> : aucun microscope à lumière ne pourra jamais le montrer."
+    }
+  },
+  {
+    "at": -5.9,
+    "side": "r",
+    "en": {
+      "title": "The cell",
+      "meas": "~10 µm",
+      "body": "An E. coli is 2 µm; a red blood cell 7.8 µm. At this scale water feels like honey and <b>swimming means corkscrewing</b> — inertia stops mattering."
+    },
+    "fr": {
+      "title": "La cellule",
+      "meas": "~10 µm",
+      "body": "Un colibacille fait 2 µm, un globule rouge 7,8 µm. À cette échelle, l’eau a la consistance du miel et <b>nager revient à se visser dans l’eau</b> : l’inertie ne compte plus."
+    }
+  },
+  {
+    "at": -4.1,
+    "side": "l",
+    "en": {
+      "title": "The pixel",
+      "meas": "~10⁻⁴ m",
+      "body": "A human hair is ~70 µm. On a typical laptop panel, one pixel is about a tenth of a millimeter — you just scrolled past <b>the grain of the very screen</b> you're reading. Each one is three colored lamps pretending to be white."
+    },
+    "fr": {
+      "title": "Le pixel",
+      "meas": "~10⁻⁴ m",
+      "body": "Un cheveu humain fait ~70 µm. Sur un écran portable classique, un pixel mesure environ un dixième de millimètre : vous venez de dépasser <b>le grain de l’écran même</b> que vous lisez. Chacun est trois petites lampes colorées qui se font passer pour du blanc."
+    }
+  },
+  {
+    "at": 3.6,
+    "side": "r",
+    "en": {
+      "title": "The city",
+      "meas": "~10⁴ m",
+      "body": "Ten kilometers frames a city — Paris inside the Périphérique is about that wide. From here the human world reads as texture: rooftops, field boundaries, and the river that explains <b>why the town was built exactly there</b>. This is the largest scale a person can walk across in an afternoon."
+    },
+    "fr": {
+      "title": "La ville",
+      "meas": "~10⁴ m",
+      "body": "Dix kilomètres cadrent une ville : Paris intra-périphérique fait à peu près cette largeur. D’ici, le monde humain se lit comme une texture, toits, limites de champs, et la rivière qui explique <b>pourquoi la ville s’est construite exactement là</b>. C’est la plus grande échelle qu’une personne peut traverser à pied en un après-midi."
+    }
+  },
+  {
+    "at": 6.9,
+    "side": "l",
+    "en": {
+      "title": "The planet",
+      "meas": "1.27×10⁷ m",
+      "body": "Earth, 12,756 km across. Every person who has ever lived — around 117 billion of us — fits inside this frame. The International Space Station orbits a mere 400 km up: <b>at this zoom, its altitude is a few pixels</b>."
+    },
+    "fr": {
+      "title": "La planète",
+      "meas": "1,27×10⁷ m",
+      "body": "La Terre, 12 756 km de diamètre. Toutes les personnes qui ont jamais vécu, environ 117 milliards, tiennent dans ce cadre. La Station spatiale internationale orbite à peine 400 km plus haut : <b>à ce zoom, son altitude fait quelques pixels</b>."
+    }
+  },
+  {
+    "at": 8.9,
+    "side": "r",
+    "en": {
+      "title": "The star",
+      "meas": "1.39×10⁹ m",
+      "body": "The Sun is 1.39 million kilometers across — wide enough that <b>the Moon's entire orbit around Earth would fit inside it</b>, with room to spare."
+    },
+    "fr": {
+      "title": "L’étoile",
+      "meas": "1,39×10⁹ m",
+      "body": "Le Soleil mesure 1,39 million de kilomètres, assez large pour que <b>l’orbite entière de la Lune autour de la Terre tienne dedans</b>, avec de la marge."
+    }
+  },
+  {
+    "at": 11.1,
+    "side": "l",
+    "en": {
+      "title": "One AU",
+      "meas": "1.496×10¹¹ m",
+      "body": "The Earth–Sun distance: one astronomical unit. Light — the fastest thing permitted — needs <b>8 minutes 19 seconds</b> to cross it. Check the readout: the light-time of your viewport is now measured in minutes."
+    },
+    "fr": {
+      "title": "Une UA",
+      "meas": "1,496×10¹¹ m",
+      "body": "La distance Terre-Soleil : une unité astronomique. La lumière, la chose la plus rapide permise, met <b>8 minutes 19 secondes</b> à la traverser. Regardez l’affichage : le temps-lumière de votre cadre se compte désormais en minutes."
+    }
+  },
+  {
+    "at": 13.2,
+    "side": "r",
+    "en": {
+      "title": "The system",
+      "meas": "~10¹³ m",
+      "body": "Voyager 1, launched 1977, is the farthest human-made object: roughly 25 billion kilometers out. After half a century of falling through space, <b>it is still inside this single frame</b>."
+    },
+    "fr": {
+      "title": "Le système",
+      "meas": "~10¹³ m",
+      "body": "Voyager 1, lancée en 1977, est l’objet humain le plus lointain : environ 25 milliards de kilomètres. Après un demi-siècle de chute à travers l’espace, <b>elle est toujours à l’intérieur de ce seul cadre</b>."
+    }
+  },
+  {
+    "at": 16.1,
+    "side": "l",
+    "en": {
+      "title": "The neighborhood",
+      "meas": "~10¹⁶ m",
+      "body": "A light-year is 9.46×10¹⁵ m. The nearest star, Proxima Centauri, sits 4.2 light-years away — <b>40 trillion kilometers of nothing</b> between us and the next hydrogen furnace."
+    },
+    "fr": {
+      "title": "Le voisinage",
+      "meas": "~10¹⁶ m",
+      "body": "Une année-lumière fait 9,46×10¹⁵ m. L’étoile la plus proche, Proxima du Centaure, est à 4,2 années-lumière : <b>40 000 milliards de kilomètres de rien</b> entre nous et la fournaise d’hydrogène suivante."
+    }
+  },
+  {
+    "at": 20.8,
+    "side": "r",
+    "en": {
+      "title": "The galaxy",
+      "meas": "~10²¹ m",
+      "body": "The Milky Way: 100,000 light-years, a few hundred billion stars, all orbiting a black hole of 4.3 million solar masses. The Sun's lap takes 230 million years — <b>it has gone around about 20 times, ever</b>."
+    },
+    "fr": {
+      "title": "La galaxie",
+      "meas": "~10²¹ m",
+      "body": "La Voie lactée : 100 000 années-lumière, quelques centaines de milliards d’étoiles, toutes en orbite autour d’un trou noir de 4,3 millions de masses solaires. Le tour du Soleil prend 230 millions d’années : <b>il en a bouclé une vingtaine, en tout et pour tout</b>."
+    }
+  },
+  {
+    "at": 22.9,
+    "side": "l",
+    "en": {
+      "title": "The Local Group",
+      "meas": "~10²³ m",
+      "body": "Andromeda, 2.5 million light-years away, is approaching at 110 km/s. In four billion years the two spirals merge. From here on, <b>galaxies are the dust</b>."
+    },
+    "fr": {
+      "title": "Le Groupe local",
+      "meas": "~10²³ m",
+      "body": "Andromède, à 2,5 millions d’années-lumière, approche à 110 km/s. Dans quatre milliards d’années, les deux spirales fusionnent. À partir d’ici, <b>les galaxies sont la poussière</b>."
+    }
+  },
+  {
+    "at": 24.7,
+    "side": "r",
+    "en": {
+      "title": "The web",
+      "meas": "~10²⁵ m",
+      "body": "Matter settles into filaments strung between voids — the largest structure there is. Our supercluster, Laniakea, spans 520 million light-years and holds <b>a hundred thousand galaxies</b>, and it is one thread among millions."
+    },
+    "fr": {
+      "title": "La toile",
+      "meas": "~10²⁵ m",
+      "body": "La matière se range en filaments tendus entre des vides : la plus grande structure qui soit. Notre superamas, Laniakea, s’étend sur 520 millions d’années-lumière et contient <b>cent mille galaxies</b>, et ce n’est qu’un fil parmi des millions."
+    }
+  },
+  {
+    "at": 26.3,
+    "side": "l",
+    "en": {
+      "title": "The horizon",
+      "meas": "8.8×10²⁶ m",
+      "body": "The observable universe: 93 billion light-years across, holding hundreds of billions of galaxies. Not the edge of everything — just the edge of <b>what light has had time to bring us</b>."
+    },
+    "fr": {
+      "title": "L’horizon",
+      "meas": "8,8×10²⁶ m",
+      "body": "L’univers observable : 93 milliards d’années-lumière, des centaines de milliards de galaxies. Pas le bord de tout, seulement le bord de <b>ce que la lumière a eu le temps de nous apporter</b>."
+    }
+  }
+]

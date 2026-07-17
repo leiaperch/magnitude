@@ -1,0 +1,104 @@
+{
+  "e": {
+    "en": {
+      "over": "An instrument for one journey",
+      "sub": "The observable universe fits in one scrollbar. This page is <b>43 powers of ten</b> long — it begins inside a proton and ends at the edge of everything that light has had time to show us.",
+      "rules": [["SCALE", "10⁻¹⁶ → 10²⁷ m"], ["EXCHANGE RATE", "~900 px per ×10"], ["RENDERING", "live, nothing recorded"]],
+      "cue": "Scroll to zoom out",
+      "wordmark": "<b>MAGNITUDE</b> / 43 DECADES",
+      "lightLabel": "light crosses this frame in",
+      "humanHalo": "You are here",
+      "humanBody": "10⁰ — one meter. A chair, a dog, an open laptop, you. Of the forty-three scales on this page, this is the only one rendered in HTML — because it is the only scale where browsers, and their users, exist.",
+      "humanFn": "every other scale is a fragment shader",
+      "outroH2": "The scrollbar<br>ends here",
+      "outroBig": "8.8 × 10²⁶ m · 93,000,000,000 light-years",
+      "outroLede": "You just traveled the full width of the observable universe with your thumb. A property of logarithms worth sitting with: <b>the final 900 pixels of that scroll covered nine times more distance than the previous forty-two decades combined.</b>",
+      "outroStats": "Exchange rate at the top of the page: one pixel ≈ 10⁻¹⁶ m, far less than a proton. At the bottom: one pixel ≈ 10²³ m, about <b>ten million light-years per pixel</b>.",
+      "fine": "Magnitude · no libraries · <a href=\"#top\">fall back to the quantum foam</a>"
+    },
+    "fr": {
+      "over": "Un instrument pour un seul voyage",
+      "sub": "L’univers observable tient dans une barre de défilement. Cette page mesure <b>43 puissances de dix</b> : elle commence à l’intérieur d’un proton et s’achève au bord de tout ce que la lumière a eu le temps de nous montrer.",
+      "rules": [["ÉCHELLE", "10⁻¹⁶ → 10²⁷ m"], ["TAUX DE CHANGE", "~900 px par ×10"], ["RENDU", "en direct, rien d’enregistré"]],
+      "cue": "Défilez pour dézoomer",
+      "wordmark": "<b>MAGNITUDE</b> / 43 DÉCADES",
+      "lightLabel": "la lumière traverse ce cadre en",
+      "humanHalo": "Vous êtes ici",
+      "humanBody": "10⁰, un mètre. Une chaise, un chien, un ordinateur ouvert, vous. Des quarante-trois échelles de cette page, celle-ci est la seule rendue en HTML : c’est la seule où existent les navigateurs, et leurs utilisateurs.",
+      "humanFn": "toutes les autres échelles sont des fragment shaders",
+      "outroH2": "La barre de défilement<br>s’arrête ici",
+      "outroBig": "8,8 × 10²⁶ m · 93 000 000 000 années-lumière",
+      "outroLede": "Vous venez de parcourir toute la largeur de l’univers observable avec votre pouce. Une propriété des logarithmes qui mérite qu’on s’y arrête : <b>les 900 derniers pixels de ce défilement ont couvert neuf fois plus de distance que les quarante-deux décades précédentes réunies.</b>",
+      "outroStats": "Taux de change en haut de la page : un pixel ≈ 10⁻¹⁶ m, bien moins qu’un proton. En bas : un pixel ≈ 10²³ m, environ <b>dix millions d’années-lumière par pixel</b>.",
+      "fine": "Magnitude · sans bibliothèque · <a href=\"#top\">retomber dans l’écume quantique</a>"
+    }
+  },
+  "t": {
+    "en": {
+      "over": "An instrument for one journey",
+      "sub": "The universe is 13.8 billion years old. In this mode the page is <b>30 powers of ten of seconds</b> long: it begins in the plasma of the first trillionth of a second and ends now, at the moment you are reading it.",
+      "rules": [["SPAN", "10⁻¹² s → 13.8 Gyr"], ["EXCHANGE RATE", "~900 px per ×10"], ["RENDERING", "live, nothing recorded"]],
+      "cue": "Scroll forward from the Big Bang",
+      "wordmark": "<b>MAGNITUDE</b> / 30 DECADES OF TIME",
+      "lightLabel": "the universe’s temperature:",
+      "humanHalo": "This is now",
+      "humanBody": "t + 13.8 billion years. Of every epoch on this page, this is the only one in which someone can read it.",
+      "humanFn": "the thirty decades before this one had no witnesses",
+      "outroH2": "The scrollbar<br>ends now",
+      "outroBig": "t + 4.35 × 10¹⁷ s · 13,800,000,000 years",
+      "outroLede": "You just scrolled through all of time. The logarithm works the other way here: <b>the last 900 pixels hold 90% of the universe’s entire history, and all of human existence fits in the final six thousandths of a pixel.</b>",
+      "outroStats": "That last part is why this page has a third mode. Counting forward from the Big Bang, everything people have ever done is thinner than a hair on this scrollbar.",
+      "fine": "Magnitude · no libraries · <a href=\"#top\">back to the first trillionth of a second</a>"
+    },
+    "fr": {
+      "over": "Un instrument pour un seul voyage",
+      "sub": "L’univers a 13,8 milliards d’années. Dans ce mode, la page mesure <b>30 puissances de dix de secondes</b> : elle commence dans le plasma du premier billionième de seconde et s’achève maintenant, à l’instant où vous la lisez.",
+      "rules": [["ÉTENDUE", "10⁻¹² s → 13,8 Ga"], ["TAUX DE CHANGE", "~900 px par ×10"], ["RENDU", "en direct, rien d’enregistré"]],
+      "cue": "Défilez depuis le Big Bang",
+      "wordmark": "<b>MAGNITUDE</b> / 30 DÉCADES DE TEMPS",
+      "lightLabel": "température de l’univers :",
+      "humanHalo": "C’est maintenant",
+      "humanBody": "t + 13,8 milliards d’années. De toutes les époques de cette page, celle-ci est la seule où quelqu’un peut la lire.",
+      "humanFn": "les trente décades précédentes n’avaient pas de témoins",
+      "outroH2": "La barre de défilement<br>s’arrête maintenant",
+      "outroBig": "t + 4,35 × 10¹⁷ s · 13 800 000 000 ans",
+      "outroLede": "Vous venez de faire défiler tout le temps. Le logarithme joue ici dans l’autre sens : <b>les 900 derniers pixels contiennent 90 % de toute l’histoire de l’univers, et l’existence humaine entière tient dans les six derniers millièmes de pixel.</b>",
+      "outroStats": "C’est précisément pour cela que cette page a un troisième mode. Compté depuis le Big Bang, tout ce que les humains ont jamais fait est plus fin qu’un cheveu sur cette barre.",
+      "fine": "Magnitude · sans bibliothèque · <a href=\"#top\">revenir au premier billionième de seconde</a>"
+    }
+  },
+  "a": {
+    "en": {
+      "over": "One square, every fifty years",
+      "sub": "The other two modes crush human history into nothing. So this one drops the logarithm: <b>one slice every 50 years</b>, from the year 1000 to 2050, always the same town square. The camera never moves. Only the town does.",
+      "rules": [["SLICES", "22 · one per 50 years"], ["VIEWPOINT", "fixed, for a thousand years"], ["LEFT / RIGHT", "the older / the later era"]],
+      "cue": "Scroll to age the town",
+      "wordmark": "<b>MAGNITUDE</b> / 22 SLICES OF ONE SQUARE",
+      "lightLabel": "",
+      "humanHalo": "The year 1000",
+      "humanBody": "Sixty people, a wooden tower, and a river. Everything that happens to this square for the next thousand years happens between here and the bottom of the page.",
+      "humanFn": "each scroll of 820 pixels is fifty years",
+      "outroH2": "The square<br>catches up with you",
+      "outroBig": "1000 → 2050 · 22 slices · one viewpoint",
+      "outroLede": "Halfway through any step you are looking at two eras of the same street at once: the older on the left, the later on the right. <b>The cathedral takes six slices to build and is never rebuilt; the tower block appears between two of them.</b>",
+      "outroStats": "Nothing here is a photograph. Every slice is drawn from a list of parameters — what the roofs are made of, what stands on the hill, what moves in the street — and redrawn from scratch each time you cross into it.",
+      "fine": "Magnitude · no libraries · <a href=\"#top\">back to the year 1000</a>"
+    },
+    "fr": {
+      "over": "Une place, tous les cinquante ans",
+      "sub": "Les deux autres modes écrasent l’histoire humaine jusqu’à la faire disparaître. Celui-ci abandonne donc le logarithme : <b>une tranche tous les 50 ans</b>, de l’an 1000 à 2050, toujours la même place. La caméra ne bouge jamais. La ville, si.",
+      "rules": [["TRANCHES", "22 · une par 50 ans"], ["POINT DE VUE", "fixe, pendant mille ans"], ["GAUCHE / DROITE", "l’époque ancienne / la suivante"]],
+      "cue": "Défilez pour vieillir la ville",
+      "wordmark": "<b>MAGNITUDE</b> / 22 TRANCHES D’UNE PLACE",
+      "lightLabel": "",
+      "humanHalo": "L’an 1000",
+      "humanBody": "Soixante personnes, une tour de bois, et une rivière. Tout ce qui arrivera à cette place pendant mille ans arrive entre ici et le bas de la page.",
+      "humanFn": "chaque 820 pixels de défilement valent cinquante ans",
+      "outroH2": "La place<br>vous rattrape",
+      "outroBig": "1000 → 2050 · 22 tranches · un seul point de vue",
+      "outroLede": "À mi-chemin de chaque pas, vous regardez deux époques de la même rue en même temps : l’ancienne à gauche, la suivante à droite. <b>La cathédrale met six tranches à se construire et n’est jamais rebâtie ; la tour, elle, apparaît entre deux.</b>",
+      "outroStats": "Rien ici n’est une photographie. Chaque tranche est dessinée depuis une liste de paramètres — de quoi sont faits les toits, ce qui se dresse sur la colline, ce qui circule dans la rue — et redessinée entièrement quand vous y entrez.",
+      "fine": "Magnitude · sans bibliothèque · <a href=\"#top\">revenir à l’an 1000</a>"
+    }
+  }
+}

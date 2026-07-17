@@ -1,0 +1,112 @@
+/* MAGNITUDE — heads-up display: readout, ruler, controls */
+
+/* ---------------- HUD ---------------- */
+#hud { position: fixed; inset: 0; z-index: 3; pointer-events: none; opacity: 0; transition: opacity .8s; }
+#hud.on { opacity: 1; }
+
+#wordmark {
+  position: fixed; top: 20px; left: 24px;
+  font-family: var(--mono); font-size: 11px; letter-spacing: .38em; text-transform: uppercase;
+  color: var(--dim);
+}
+#wordmark b { color: var(--ink); font-weight: 400; }
+
+#sound, #voyage {
+  position: fixed; top: 14px; pointer-events: auto;
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--dim); background: none; border: 1px solid var(--faint); border-radius: 3px;
+  padding: 8px 14px; cursor: pointer; transition: color .3s, border-color .3s;
+  z-index: 4;
+}
+#sound { right: 20px; }
+#voyage { right: 128px; }
+#lang, #mode {
+  position: fixed; top: 14px; right: 236px; pointer-events: auto;
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--dim); background: none; border: 1px solid var(--faint); border-radius: 3px;
+  padding: 8px 14px; cursor: pointer; transition: color .3s, border-color .3s;
+  z-index: 4;
+}
+#mode { right: 314px; color: var(--accent); border-color: color-mix(in oklab, var(--accent) 45%, transparent); }
+#sound:hover, #sound[aria-pressed="true"],
+#lang:hover, #mode:hover,
+#voyage:hover, #voyage[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); }
+@media (max-width: 680px) {
+  #mode { top: 56px; right: 20px; }
+  #lang { top: 56px; right: auto; left: 20px; }
+}
+@media (prefers-reduced-motion: reduce) { #voyage { display: none; } }
+
+#scene-name {
+  position: fixed; left: 24px; bottom: 108px; max-width: 60vw;
+  font-family: var(--air); font-weight: 100; text-transform: uppercase;
+  font-size: clamp(22px, 3.6vw, 44px); letter-spacing: .24em; line-height: 1.1;
+  color: var(--ink); transition: opacity .5s;
+}
+#scene-sub {
+  position: fixed; left: 25px; bottom: 84px;
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .22em; text-transform: uppercase;
+  color: var(--accent); transition: color .6s;
+}
+
+#readout {
+  position: fixed; right: 24px; bottom: 84px; text-align: right;
+  font-family: var(--mono); font-variant-numeric: tabular-nums;
+}
+#readout .exp { font-size: clamp(20px, 3vw, 32px); color: var(--ink); letter-spacing: .02em; }
+#readout .exp sup { color: var(--accent); transition: color .6s; }
+#readout .pretty { margin-top: 3px; font-size: 11.5px; color: var(--dim); letter-spacing: .04em; }
+#readout .light { margin-top: 2px; font-size: 11.5px; color: var(--dim); letter-spacing: .04em; }
+#readout .light b { color: var(--ink); font-weight: 400; }
+
+.scale-obj {
+  margin-top: 7px; pointer-events: auto; display: inline-block;
+  font-family: var(--mono); font-size: 11.5px; letter-spacing: .04em; text-align: right;
+  color: var(--accent); background: none; border: none;
+  border-bottom: 1px dashed color-mix(in oklab, var(--accent) 45%, transparent);
+  padding: 0 0 2px; cursor: pointer; transition: color .6s, border-color .6s;
+  font-variant-numeric: tabular-nums;
+}
+#goto {
+  position: fixed; right: 24px; bottom: 150px; z-index: 6;
+  width: min(320px, calc(100vw - 48px)); max-height: 44vh; overflow-y: auto;
+  background: color-mix(in oklab, var(--black) 80%, transparent);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--faint); border-radius: 6px; padding: 8px 0;
+  scrollbar-width: thin; scrollbar-color: var(--faint) transparent;
+}
+#goto-title {
+  font-family: var(--mono); font-size: 10px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--dim); padding: 8px 16px 10px;
+}
+#goto button {
+  display: flex; justify-content: space-between; gap: 14px; width: 100%; text-align: left;
+  background: none; border: none; font-family: var(--mono); font-size: 12px; color: var(--ink);
+  padding: 7px 16px; cursor: pointer;
+}
+#goto button small { color: var(--dim); font-size: 10.5px; }
+#goto button:hover { background: color-mix(in oklab, var(--accent) 14%, transparent); color: var(--accent); }
+
+#ruler {
+  position: fixed; left: 24px; right: 24px; bottom: 34px; height: 30px;
+}
+#ruler .line { position: absolute; left: 0; right: 0; top: 14px; height: 1px; background: var(--faint); }
+#ruler .tick {
+  position: absolute; top: 10px; width: 1px; height: 9px; background: var(--faint);
+  font-family: var(--mono); font-size: 9px; color: var(--dim); letter-spacing: .05em;
+}
+#ruler .tick span { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); white-space: nowrap; }
+#ruler .tick.major { background: var(--dim); }
+#cursor {
+  position: absolute; top: 4px; width: 2px; height: 21px; margin-left: -1px;
+  background: var(--accent); transition: background .6s;
+  box-shadow: 0 0 12px var(--accent);
+}
+
+@media (max-width: 720px) {
+  #scene-name { bottom: 128px; letter-spacing: .14em; }
+  #scene-sub { bottom: 108px; }
+  #readout { right: 16px; bottom: 168px; }
+  #ruler { left: 16px; right: 16px; }
+  #wordmark { left: 16px; }
+}
