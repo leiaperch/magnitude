@@ -14,7 +14,7 @@
       "outroBig": "8.8 × 10²⁶ m · 93,000,000,000 light-years",
       "outroLede": "You just traveled the full width of the observable universe with your thumb. A property of logarithms worth sitting with: <b>the final 900 pixels of that scroll covered nine times more distance than the previous forty-two decades combined.</b>",
       "outroStats": "Exchange rate at the top of the page: one pixel ≈ 10⁻¹⁶ m, far less than a proton. At the bottom: one pixel ≈ 10²³ m, about <b>ten million light-years per pixel</b>.",
-      "fine": "Magnitude · no libraries · <a href=\"#top\">fall back to the quantum foam</a>"
+      "fine": "Magnitude · three.js and nothing else ·<a href=\"#top\">fall back to the quantum foam</a>"
     },
     "fr": {
       "over": "Un instrument pour un seul voyage",
@@ -30,7 +30,7 @@
       "outroBig": "8,8 × 10²⁶ m · 93 000 000 000 années-lumière",
       "outroLede": "Vous venez de parcourir toute la largeur de l’univers observable avec votre pouce. Une propriété des logarithmes qui mérite qu’on s’y arrête : <b>les 900 derniers pixels de ce défilement ont couvert neuf fois plus de distance que les quarante-deux décades précédentes réunies.</b>",
       "outroStats": "Taux de change en haut de la page : un pixel ≈ 10⁻¹⁶ m, bien moins qu’un proton. En bas : un pixel ≈ 10²³ m, environ <b>dix millions d’années-lumière par pixel</b>.",
-      "fine": "Magnitude · sans bibliothèque · <a href=\"#top\">retomber dans l’écume quantique</a>"
+      "fine": "Magnitude · three.js et rien d’autre ·<a href=\"#top\">retomber dans l’écume quantique</a>"
     }
   },
   "t": {
@@ -48,7 +48,7 @@
       "outroBig": "t + 4.35 × 10¹⁷ s · 13,800,000,000 years",
       "outroLede": "You just scrolled through all of time. The logarithm works the other way here: <b>the last 900 pixels hold 90% of the universe’s entire history, and all of human existence fits in the final six thousandths of a pixel.</b>",
       "outroStats": "That last part is why this page has a third mode. Counting forward from the Big Bang, everything people have ever done is thinner than a hair on this scrollbar.",
-      "fine": "Magnitude · no libraries · <a href=\"#top\">back to the first trillionth of a second</a>"
+      "fine": "Magnitude · three.js and nothing else ·<a href=\"#top\">back to the first trillionth of a second</a>"
     },
     "fr": {
       "over": "Un instrument pour un seul voyage",
@@ -64,14 +64,14 @@
       "outroBig": "t + 4,35 × 10¹⁷ s · 13 800 000 000 ans",
       "outroLede": "Vous venez de faire défiler tout le temps. Le logarithme joue ici dans l’autre sens : <b>les 900 derniers pixels contiennent 90 % de toute l’histoire de l’univers, et l’existence humaine entière tient dans les six derniers millièmes de pixel.</b>",
       "outroStats": "C’est précisément pour cela que cette page a un troisième mode. Compté depuis le Big Bang, tout ce que les humains ont jamais fait est plus fin qu’un cheveu sur cette barre.",
-      "fine": "Magnitude · sans bibliothèque · <a href=\"#top\">revenir au premier billionième de seconde</a>"
+      "fine": "Magnitude · three.js et rien d’autre ·<a href=\"#top\">revenir au premier billionième de seconde</a>"
     }
   },
   "a": {
     "en": {
       "over": "One square, every fifty years",
-      "sub": "The other two modes crush human history into nothing. So this one drops the logarithm: <b>one slice every 50 years</b>, from the year 1000 to 2050, always the same town square. The camera never moves. Only the town does.",
-      "rules": [["SLICES", "22 · one per 50 years"], ["VIEWPOINT", "fixed, for a thousand years"], ["LEFT / RIGHT", "the older / the later era"]],
+      "sub": "The other two modes crush human history into nothing. So this one drops the logarithm: <b>one slice every 50 years</b>, from the year 1000 to 2050, always the same town square, built in real 3D. The camera never moves. Only the town does.",
+      "rules": [["SLICES", "22 · one per 50 years"], ["CAMERA", "one angle, a thousand years"], ["THE SEAM", "a clipping plane, not a fade"]],
       "cue": "Scroll to age the town",
       "wordmark": "<b>MAGNITUDE</b> / 22 SLICES OF ONE SQUARE",
       "lightLabel": "",
@@ -80,14 +80,14 @@
       "humanFn": "each scroll of 820 pixels is fifty years",
       "outroH2": "The square<br>catches up with you",
       "outroBig": "1000 → 2050 · 22 slices · one viewpoint",
-      "outroLede": "Halfway through any step you are looking at two eras of the same street at once: the older on the left, the later on the right. <b>The cathedral takes six slices to build and is never rebuilt; the tower block appears between two of them.</b>",
-      "outroStats": "Nothing here is a photograph. Every slice is drawn from a list of parameters — what the roofs are made of, what stands on the hill, what moves in the street — and redrawn from scratch each time you cross into it.",
-      "fine": "Magnitude · no libraries · <a href=\"#top\">back to the year 1000</a>"
+      "outroLede": "Halfway through any step you are looking at two eras of the same street at once: the older on the left, the later on the right, lit by the same sun. <b>The cathedral takes six slices to build and is never rebuilt; the tower block appears between two of them.</b>",
+      "outroStats": "Nothing here is a photograph or a drawing. Every slice is real geometry, built from a list of parameters — what the roofs are made of, what stands on the skyline, what moves in the street — and the seam between two of them is a clipping plane, so the towns are never composited: they are simply both there, and the light does not notice the century.",
+      "fine": "Magnitude · three.js and nothing else ·<a href=\"#top\">back to the year 1000</a>"
     },
     "fr": {
       "over": "Une place, tous les cinquante ans",
-      "sub": "Les deux autres modes écrasent l’histoire humaine jusqu’à la faire disparaître. Celui-ci abandonne donc le logarithme : <b>une tranche tous les 50 ans</b>, de l’an 1000 à 2050, toujours la même place. La caméra ne bouge jamais. La ville, si.",
-      "rules": [["TRANCHES", "22 · une par 50 ans"], ["POINT DE VUE", "fixe, pendant mille ans"], ["GAUCHE / DROITE", "l’époque ancienne / la suivante"]],
+      "sub": "Les deux autres modes écrasent l’histoire humaine jusqu’à la faire disparaître. Celui-ci abandonne donc le logarithme : <b>une tranche tous les 50 ans</b>, de l’an 1000 à 2050, toujours la même place, bâtie en vraie 3D. La caméra ne bouge jamais. La ville, si.",
+      "rules": [["TRANCHES", "22 · une par 50 ans"], ["CAMÉRA", "un seul angle, mille ans"], ["LE JOINT", "un plan de coupe, pas un fondu"]],
       "cue": "Défilez pour vieillir la ville",
       "wordmark": "<b>MAGNITUDE</b> / 22 TRANCHES D’UNE PLACE",
       "lightLabel": "",
@@ -96,9 +96,9 @@
       "humanFn": "chaque 820 pixels de défilement valent cinquante ans",
       "outroH2": "La place<br>vous rattrape",
       "outroBig": "1000 → 2050 · 22 tranches · un seul point de vue",
-      "outroLede": "À mi-chemin de chaque pas, vous regardez deux époques de la même rue en même temps : l’ancienne à gauche, la suivante à droite. <b>La cathédrale met six tranches à se construire et n’est jamais rebâtie ; la tour, elle, apparaît entre deux.</b>",
-      "outroStats": "Rien ici n’est une photographie. Chaque tranche est dessinée depuis une liste de paramètres — de quoi sont faits les toits, ce qui se dresse sur la colline, ce qui circule dans la rue — et redessinée entièrement quand vous y entrez.",
-      "fine": "Magnitude · sans bibliothèque · <a href=\"#top\">revenir à l’an 1000</a>"
+      "outroLede": "À mi-chemin de chaque pas, vous regardez deux époques de la même rue en même temps : l’ancienne à gauche, la suivante à droite, sous le même soleil. <b>La cathédrale met six tranches à se construire et n’est jamais rebâtie ; la tour, elle, apparaît entre deux.</b>",
+      "outroStats": "Rien ici n’est une photographie ni un dessin. Chaque tranche est de la vraie géométrie, bâtie depuis une liste de paramètres — de quoi sont faits les toits, ce qui se dresse à l’horizon, ce qui circule dans la rue — et le joint entre deux d’entre elles est un plan de coupe : les deux villes ne sont jamais composées, elles sont simplement là toutes les deux, et la lumière ne remarque pas le siècle.",
+      "fine": "Magnitude · three.js et rien d’autre ·<a href=\"#top\">revenir à l’an 1000</a>"
     }
   }
 }

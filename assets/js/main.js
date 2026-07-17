@@ -330,8 +330,9 @@ function frame(now) {
 
   updateHUD();
   drone.follow(state.shown, axis());
-  if (state.mode !== 'a' && !document.hidden) {
-    renderer.render({ time: t, e: state.shown, mode: state.mode === 't' ? 1 : 0, pointer: smooth, ping });
+  if (!document.hidden) {
+    if (state.mode === 'a') ages.render(t);
+    else renderer.render({ time: t, e: state.shown, mode: state.mode === 't' ? 1 : 0, pointer: smooth, ping });
   }
   requestAnimationFrame(frame);
 }
@@ -369,7 +370,7 @@ async function boot() {
   document.addEventListener('click', e => { if (!e.target.closest('#goto')) el.goto.hidden = true; });
   addEventListener('keydown', e => { if (e.key === 'Escape') el.goto.hidden = true; });
   addEventListener('scroll', () => { readScroll(); updateHash(); }, { passive: true });
-  addEventListener('resize', () => { buildCards(); readScroll(); });
+  addEventListener('resize', () => { buildCards(); readScroll(); ages.resize(); });
   for (const ev of ['wheel', 'touchmove', 'keydown']) {
     addEventListener(ev, () => { if (state.cruising) setCruise(false); }, { passive: true });
   }

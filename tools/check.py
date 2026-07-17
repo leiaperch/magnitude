@@ -4,7 +4,7 @@
 
 The page is split across HTML, CSS, JS modules, GLSL and JSON, so most ways of
 breaking it are a name that stops matching across two files. This walks those
-seams: imports, fetches, DOM slots, and the vocabulary the diorama can actually
+seams: imports, fetches, DOM slots, and the vocabulary the town builder can actually
 draw. Run it before pushing:  python tools/check.py
 """
 import re, io, os, glob, json, sys
@@ -84,7 +84,7 @@ for fn, n in [('space', 18), ('time', 11)]:
                 if not r.get(lang, {}).get(k):
                     bad.append('%s card %s: no %s.%s' % (fn, r['at'], lang, k))
 
-# --- the ages only ask the diorama for shapes it can draw --------------------
+# --- the ages only ask town3d for shapes it can build --------------------
 SKYLINE = {'motte', 'palisade', 'keep', 'church', 'cathedral', 'cathedral-build',
            'chimney', 'crane', 'tower', 'tower-solar'}
 PROPS = {'barrel', 'pig', 'stall', 'cart', 'carriage', 'tram', 'car', 'bike',
@@ -94,20 +94,24 @@ ROOFS = {'thatch', 'tile', 'slate', 'flat', 'solar'}
 WINDOWS = {'hole', 'shutter', 'lead', 'sash', 'picture'}
 GROUNDS = {'mud', 'cobble', 'setts', 'asphalt'}
 
-dio = rd('assets/js/modes/diorama.js')
+town = rd('assets/js/modes/town3d.js')
 for name in SKYLINE:
-    if not re.search(r"case '%s':" % re.escape(name), dio):
-        bad.append('diorama.js cannot draw skyline "%s"' % name)
+    if not re.search(r"case '%s':" % re.escape(name), town):
+        bad.append('town3d.js cannot build skyline "%s"' % name)
 for name in PROPS:
-    if not re.search(r"case '%s':" % re.escape(name), dio):
-        bad.append('diorama.js has no prop "%s"' % name)
+    if not re.search(r"case '%s':" % re.escape(name), town):
+        bad.append('town3d.js has no prop "%s"' % name)
+for name, table in [('wall', WALLS), ('roof', ROOFS), ('ground', GROUNDS)]:
+    block = town[town.index('%s: {' % name):]
+    block = block[:block.index('}')]
+    for k in table:
+        if '%s:' % k not in block:
+            bad.append('town3d.js PALETTE.%s has no "%s"' % (name, k))
 
-# diorama.js has no CSS selectors in it, so every '#...' literal is a colour —
-# and a mistyped one survives silently if it is only ever overwritten.
-for m in re.finditer(r"'(#[^']*)'", dio):
-    v = m.group(1)
-    if v != '#' and not re.fullmatch(r'#[0-9a-fA-F]{6}', v):
-        bad.append('diorama.js: "%s" is not a six-digit hex colour' % v)
+# town3d has no CSS selectors in it, so every 0x… is a colour: catch a typo
+for m in re.finditer(r'0x([0-9a-zA-Z]+)', town):
+    if not re.fullmatch(r'[0-9a-fA-F]{6}', m.group(1)):
+        bad.append('town3d.js: 0x%s is not a six-digit colour' % m.group(1))
 
 ages = jd('assets/data/ages.json')
 years = [e['year'] for e in ages['eras']]
@@ -139,7 +143,7 @@ for e in ages['eras']:
 frag = rd('assets/glsl/scene.frag')
 for gone in ['scAges', 'agesTown']:
     if gone in frag:
-        bad.append('scene.frag still holds %s (ages is SVG now)' % gone)
+        bad.append('scene.frag still holds %s (ages is 3D now)' % gone)
 if 'uMode' not in frag:
     bad.append('scene.frag lost its uMode uniform')
 
