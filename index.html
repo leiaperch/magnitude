@@ -306,9 +306,10 @@ sup { font-size: .68em; }
   </article>
   <article class="card" data-e="3.6" data-side="r">
     <div class="tag"><span>The city</span><span class="m">~10⁴ m</span></div>
-    <p>Ten kilometers frames a city. Manhattan's grid blocks are ~80 m apart; Central
-    Park is 4 km end to end. This is the largest scale a human can <b>walk across in an
-    afternoon</b>.</p>
+    <p>Ten kilometers frames a city — Paris inside the Périphérique is about that wide.
+    From here the human world reads as texture: rooftops, field boundaries, and the
+    river that explains <b>why the town was built exactly there</b>. This is the largest
+    scale a person can walk across in an afternoon.</p>
   </article>
   <article class="card" data-e="6.9" data-side="l">
     <div class="tag"><span>The planet</span><span class="m">1.27×10⁷ m</span></div>
@@ -427,8 +428,8 @@ const SCENES = [
   ['The cell',          'machinery in honey',                 -7.6,  -4.6, '#a8e063'],
   ['The screen',        'three lamps pretending to be white', -4.8,  -2.4, '#7fd3ff'],
   ['The visible',       'the human meter',                    -2.4,   1.6, '#ffd9a0'],
-  ['The city',          'lights seen from above',              1.6,   5.2, '#ffb84d'],
-  ['The planet',        'a wet rock, well lit',                5.2,   8.4, '#6fb7ff'],
+  ['The city',          'rooftops, hedgerows, one river',      1.4,   5.6, '#dfc47c'],
+  ['The planet',        'a wet rock, well lit',                4.8,   8.4, '#6fb7ff'],
   ['The system',        'one star, some leftovers',            8.4,  14.2, '#ffd166'],
   ['The neighborhood',  'stars, and the space between',       14.2,  19.4, '#cdd8ff'],
   ['The galaxy',        'a slow white whirlpool',             19.4,  23.2, '#b7c6ff'],
@@ -761,21 +762,95 @@ vec3 scHuman(vec2 uv, float t) {
   }
   return col;
 }
-/* ---------- 7 city — sprawl at night, the way it looks from orbit ---------- */
+/* ---------- 7 city — daylight satellite imagery, the atlas look ----------
+   Countryside patchwork, hedgerows, a river with its riparian trees, a
+   highway, and an urban fabric on a warped grid: terracotta roofs in the
+   old core, pale industrial slabs at the edge, cast shadows, traffic,
+   then clouds and haze as altitude grows. */
+float roadGrid(vec2 q, float spacing, float width) {
+  vec2 g = abs(fract(q / spacing) - 0.5) * spacing;
+  float d = min(g.x, g.y);
+  float aa = fwidth(d) + 1e-4;
+  return smoothstep(width + aa, width - aa, d);
+}
 vec3 scCity(vec2 uv, float t) {
-  vec2 p = rot(0.3) * uv * zoomFor(3.9) * 2.1;
-  float coast = fbm(p * 0.85 + 3.7);
-  float land = smoothstep(0.42, 0.52, coast);
-  float art = ridge(p * 2.4 + 11.0);                       // arterial roads as light filaments
-  float roads = smoothstep(0.78, 0.98, art);
-  float density = exp(-length(p + vec2(0.25, -0.1)) * 0.85) * (0.35 + 0.65 * fbm(p * 1.7 + 5.0));
-  vec3 col = vec3(1.0, 0.60, 0.24) * roads * density * land * 1.7;
-  float sp = pow(noise(p * 34.0 + t * 0.02), 13.0) * 9.0;   // individual lamps, round
-  col += vec3(1.0, 0.82, 0.5) * sp * density * land * smoothstep(0.45, 0.85, art);
-  col += vec3(0.05, 0.028, 0.014) * density * land;        // diffuse skyglow
-  col += vec3(0.006, 0.011, 0.018) * (1.0 - land);         // dark water
-  col += vec3(0.028, 0.042, 0.058) * (1.0 - land) * pow(noise(p * 6.0 + t * 0.12), 3.0);
-  return col;
+  vec2 p = rot(0.25) * uv * zoomFor(3.9) * 2.6;
+
+  /* countryside patchwork with hedgerows */
+  vec2 fscale = vec2(2.6, 4.2);
+  float fh = hash(floor(p * fscale + vec2(0.0, 17.0)));
+  vec3 field = mix(vec3(0.36, 0.42, 0.21), vec3(0.60, 0.55, 0.35), fh);
+  field = mix(field, vec3(0.44, 0.30, 0.19), step(0.80, fh));            // ploughed earth
+  field *= 0.90 + 0.10 * noise(p * 34.0);                                // soil grain
+  vec2 fg = abs(fract(p * fscale) - 0.5);
+  field *= 1.0 - smoothstep(0.455, 0.5, max(fg.x, fg.y)) * 0.5;          // hedgerows
+  float forest = smoothstep(0.56, 0.72, fbm(p * 0.7 + 23.0));
+  vec3 col = mix(field, vec3(0.13, 0.20, 0.10) * (0.8 + 0.4 * noise(p * 26.0)), forest);
+
+  /* the river and its dark tree line */
+  float mea = (fbm(vec2(p.x * 0.35, 3.1)) - 0.5) * 2.2;
+  float rd = abs(p.y - mea);
+  col = mix(col, vec3(0.11, 0.19, 0.09), smoothstep(0.15, 0.055, rd) * 0.75);
+  float river = smoothstep(0.05, 0.032, rd);
+  col = mix(col, vec3(0.12, 0.18, 0.17), river);
+
+  /* highway skirting the town */
+  float hwd = abs(p.x * 0.62 + p.y * 0.45 - 0.85 - (fbm(vec2(p.y * 0.3, 8.0)) - 0.5) * 1.1);
+  float hwm = smoothstep(0.030, 0.016, hwd);
+
+  /* urban mask: dense core near the river bend, ragged edges */
+  vec2 pc = p - vec2(0.35, -0.15);
+  float urb = smoothstep(0.15, 0.42, exp(-dot(pc, pc) * 0.5) * (0.45 + 0.55 * fbm(p * 1.1 + 3.0)));
+  float core = exp(-dot(pc, pc) * 2.6);
+
+  /* street network: a grid bent by the terrain */
+  vec2 q = p + (vec2(fbm(p * 0.9 + 4.0), fbm(p * 0.9 + 9.0)) - 0.5) * 0.55;
+  float av = roadGrid(q, 0.85, 0.014);
+  float st = roadGrid(q, 0.17, 0.005);
+
+  /* parcels, roofs, walls' shadows */
+  vec2 cellId = floor(q / 0.17);
+  vec2 inner = fract(q / 0.17);
+  vec2 m0 = 0.10 + 0.10 * vec2(hash(cellId + 2.0), hash(cellId + 5.0));
+  float bld = step(m0.x, inner.x) * step(inner.x, 1.0 - m0.x * 0.6)
+            * step(m0.y, inner.y) * step(inner.y, 1.0 - m0.y)
+            * step(0.10, hash(cellId + 9.0));
+  float park = step(0.93, hash(cellId + 13.0));
+  float ph = hash(floor(q * vec2(17.0, 12.0)) + cellId);
+  vec3 roof = mix(vec3(0.50, 0.485, 0.46), vec3(0.585, 0.33, 0.22), smoothstep(0.2, 0.7, core) * step(0.2, ph));
+  roof = mix(roof, vec3(0.74, 0.74, 0.72), step(0.88, ph) * (1.0 - smoothstep(0.1, 0.5, core)));
+  roof *= 0.80 + 0.40 * hash(floor(q * vec2(17.0, 12.0)) + 31.0);
+  float edgeSh = smoothstep(0.10, 0.0, inner.x - m0.x) + smoothstep(0.10, 0.0, (1.0 - m0.y) - inner.y);
+  roof *= 1.0 - 0.32 * clamp(edgeSh, 0.0, 1.0);
+
+  vec2 qs = q + vec2(0.030, -0.030);                      // sun from the south-west
+  vec2 cellS = floor(qs / 0.17);
+  vec2 innerS = fract(qs / 0.17);
+  vec2 mS = 0.10 + 0.10 * vec2(hash(cellS + 2.0), hash(cellS + 5.0));
+  float bldS = step(mS.x, innerS.x) * step(innerS.x, 1.0 - mS.x * 0.6)
+             * step(mS.y, innerS.y) * step(innerS.y, 1.0 - mS.y)
+             * step(0.10, hash(cellS + 9.0));
+
+  vec3 lot = vec3(0.40, 0.39, 0.36) * (0.9 + 0.2 * noise(q * 60.0));
+  lot = mix(lot, vec3(0.19, 0.29, 0.14), park);
+  vec3 fab = mix(lot, roof, bld * (1.0 - park));
+  fab *= 1.0 - bldS * (1.0 - bld) * 0.32;                 // cast shadows on lots and streets
+  fab = mix(fab, vec3(0.49, 0.49, 0.475), st);
+  fab = mix(fab, vec3(0.56, 0.56, 0.545), av);
+  float traf = av * pow(noise(q * 60.0 + vec2(t * 0.9, 0.0)), 10.0) * 6.0 * smoothstep(3.4, 2.4, uE);
+  fab += vec3(0.85) * traf;
+
+  col = mix(col, fab, urb * (1.0 - river));
+  col = mix(col, vec3(0.57, 0.57, 0.555), hwm * (1.0 - urb * 0.35));
+
+  /* altitude: cumulus with offset shadows, then blue haze */
+  float alt = smoothstep(3.4, 5.5, uE);
+  float clN = fbm(p * 0.35 + vec2(t * 0.015, 0.0) + 31.0);
+  float clS = fbm((p + vec2(0.4, -0.34)) * 0.35 + vec2(t * 0.015, 0.0) + 31.0);
+  col *= 1.0 - smoothstep(0.60, 0.78, clS) * alt * 0.35;
+  col = mix(col, vec3(0.94, 0.95, 0.965), smoothstep(0.60, 0.78, clN) * alt);
+  col = mix(col, vec3(0.60, 0.68, 0.79), smoothstep(2.8, 5.6, uE) * 0.42);
+  return col * 0.92;
 }
 /* ---------- 8 planet ---------- */
 vec3 scPlanet(vec2 uv, float t) {
@@ -891,8 +966,8 @@ void main() {
   w = wband(e,  -7.6,  -4.6); if (w > 0.002) col += w * scCell(uv, t);
   w = wband(e,  -4.8,  -2.4); if (w > 0.002) col += w * scScreen(uv, t);
   w = wband(e,  -2.4,   1.6); if (w > 0.002) col += w * scHuman(uv, t);
-  w = wband(e,   1.6,   5.2); if (w > 0.002) col += w * scCity(uv, t);
-  w = wband(e,   5.2,   8.4); if (w > 0.002) col += w * scPlanet(uv, t);
+  w = wband(e,   1.4,   5.6); if (w > 0.002) col += w * scCity(uv, t);
+  w = wband(e,   4.8,   8.4); if (w > 0.002) col += w * scPlanet(uv, t);
   w = wband(e,   8.4,  14.2); if (w > 0.002) col += w * scSystem(uv, t);
   w = wband(e,  14.2,  19.4); if (w > 0.002) col += w * scStars(uv, t);
   w = wband(e,  19.4,  23.2); if (w > 0.002) col += w * scGalaxy(uv, t);
