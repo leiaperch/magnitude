@@ -432,7 +432,7 @@ const SCENES = [
   ['The planet',        'a wet rock, well lit',                4.8,   8.4, '#6fb7ff'],
   ['The system',        'one star, some leftovers',            8.4,  14.2, '#ffd166'],
   ['The neighborhood',  'stars, and the space between',       14.2,  19.4, '#cdd8ff'],
-  ['The galaxy',        'a slow white whirlpool',             19.4,  23.2, '#b7c6ff'],
+  ['The galaxy',        'dust lanes and pink nurseries',      19.4,  23.2, '#b7c6ff'],
   ['The cosmic web',    'filaments of everything',            23.2,  26.9, '#ff7a6e'],
 ];
 const weightOf = (e, lo, hi) =>
@@ -624,6 +624,11 @@ float wband(float e, float lo, float hi) {
 /* local zoom: content drawn at its own scale keeps shrinking as uE grows */
 float zoomFor(float eCenter) { return pow(10.0, clamp(uE - eCenter, -2.2, 2.2)); }
 
+float sdSeg(vec2 p, vec2 a, vec2 b) {
+  vec2 pa = p - a, ba = b - a;
+  float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0);
+  return length(pa - ba * h);
+}
 /* round stars with soft halos; scans 3x3 neighbor cells so no glow is ever
    clipped into a square. The brightest get diffraction spikes. */
 vec3 starLayer(vec2 p, float thresh, float t) {
@@ -663,22 +668,36 @@ vec3 scFoam(vec2 uv, float t) {
   col += pair * vec3(0.8, 0.6, 1.0) * 0.8;
   return col;
 }
-/* ---------- 1 nucleus ---------- */
+/* ---------- 1 nucleus — shaded nucleons packed in a gluon field ---------- */
 vec3 scNucleus(vec2 uv, float t) {
   vec2 p = uv * zoomFor(-14.6) * 2.4;
-  float field = 0.0;
+  vec3 col = vec3(0.0);
+  float glow = 0.0;
+  float bestD = 1e9; vec2 bestC = vec2(0.0); float bestI = 0.0;
   for (int i = 0; i < 7; i++) {
     float fi = float(i);
     vec2 c = 0.55 * vec2(sin(fi * 2.4 + t * 0.6 + sin(t * 0.9 + fi)),
                          cos(fi * 1.7 - t * 0.5)) * (0.4 + 0.35 * hash1(fi));
-    field += 0.045 / (dot(p - c, p - c) + 0.012);
+    float d = length(p - c);
+    glow += 0.010 / (d * d + 0.02);
+    if (d < bestD) { bestD = d; bestC = c; bestI = fi; }
   }
-  float body = smoothstep(1.0, 2.6, field);
-  float rim = smoothstep(0.9, 1.15, field) - smoothstep(1.3, 2.2, field);
-  float gluon = fbm(p * 6.0 + t * 1.4);
-  vec3 col = body * mix(vec3(0.9, 0.32, 0.10), vec3(1.0, 0.75, 0.35), gluon);
-  col += rim * vec3(1.0, 0.5, 0.2) * 0.7;
-  return col * 0.9;
+  float RN = 0.26;
+  if (bestD < RN) {
+    vec2 q = (p - bestC) / RN;
+    float z = sqrt(max(1.0 - dot(q, q), 0.0));
+    vec3 n = vec3(q, z);
+    vec3 L = normalize(vec3(-0.5, 0.6, 0.7));
+    float dif = clamp(dot(n, L), 0.0, 1.0);
+    float spec = pow(clamp(dot(reflect(-L, n), vec3(0.0, 0.0, 1.0)), 0.0, 1.0), 30.0);
+    vec3 base = mix(vec3(0.82, 0.28, 0.11), vec3(0.72, 0.74, 0.78), step(0.5, mod(bestI, 2.0)));
+    float flick = 0.85 + 0.30 * fbm(q * 3.0 + t * 1.5 + bestI);
+    col = base * (dif * 0.9 + 0.08) * flick + spec * vec3(1.0, 0.9, 0.8) * 0.45;
+    col += vec3(1.0, 0.5, 0.2) * pow(1.0 - z, 2.0) * 0.30;      // rim bleeding into the field
+  }
+  col += vec3(1.0, 0.45, 0.15) * glow * 0.26 * (0.75 + 0.25 * sin(t * 3.0));
+  col += vec3(0.85, 0.45, 0.9) * pow(fbm(p * 5.0 + t * 1.2), 6.0) * glow * 0.8;   // gluon shimmer
+  return col;
 }
 /* ---------- 2 atom ---------- */
 vec3 scAtom(vec2 uv, float t) {
@@ -693,43 +712,102 @@ vec3 scAtom(vec2 uv, float t) {
   col += spark * vec3(0.5, 0.9, 1.0) * exp(-r * 1.5) * 0.8;
   return col;
 }
-/* ---------- 3 helix ---------- */
+/* ---------- 3 helix — B-DNA: asymmetric grooves, base pairs, depth ---------- */
 vec3 scHelix(vec2 uv, float t) {
   vec2 p = rot(0.5) * uv * zoomFor(-8.7) * 2.0;
-  float ph = p.x * 4.6 + t * 0.35;
+  float ph = p.x * 4.6 + t * 0.25;
   vec3 col = vec3(0.0);
-  for (int k = 0; k < 2; k++) {
-    float s = sin(ph + float(k) * PI);
-    float depth = 0.6 + 0.4 * cos(ph + float(k) * PI);
-    float d = abs(p.y - s * 0.42);
-    col += vec3(0.20, 0.9, 0.62) * depth * 0.030 / (d * d + 0.006);
-  }
-  float rung = smoothstep(0.14, 0.0, abs(fract(ph / PI * 2.0) - 0.5) - 0.28);
-  float inside = smoothstep(0.44, 0.30, abs(p.y));
-  col += vec3(0.55, 0.85, 0.65) * rung * inside * 0.35;
-  col *= exp(-abs(p.y) * 0.8);
-  return col * 0.8;
+  /* out-of-focus solvent behind */
+  col += vec3(0.015, 0.045, 0.035) * fbm(p * 2.0 + t * 0.05);
+  col += vec3(0.05, 0.13, 0.10) * pow(noise(p * 5.0 + vec2(t * 0.1, 3.0)), 10.0) * 3.0;
+
+  float amp = 0.40;
+  const float GAP = 2.1;                          // B-DNA strand offset: 2.1 rad, not pi
+  float y1 = sin(ph) * amp,       z1 = cos(ph);
+  float y2 = sin(ph + GAP) * amp, z2 = cos(ph + GAP);
+
+  /* base pairs: one rung per 1/10.5 turn, two-tone (purine/pyrimidine) */
+  float spacing = 6.28318 / 10.5;
+  float k = floor(ph / spacing + 0.5);
+  float phk = k * spacing;
+  float dx = abs(ph - phk) / 4.6;
+  float ya = sin(phk) * amp, yb = sin(phk + GAP) * amp;
+  float lo = min(ya, yb), hi = max(ya, yb);
+  float inRung = step(lo, p.y) * step(p.y, hi);
+  float rz = (cos(phk) + cos(phk + GAP)) * 0.5;
+  float rung = smoothstep(0.016, 0.007, dx) * inRung;
+  float hf = step((lo + hi) * 0.5, p.y);
+  vec3 baseA = mix(vec3(0.95, 0.62, 0.20), vec3(0.30, 0.72, 0.95), step(0.5, hash1(k)));
+  vec3 baseB = mix(vec3(0.85, 0.32, 0.42), vec3(0.42, 0.88, 0.52), step(0.5, hash1(k + 31.0)));
+  col += mix(baseA, baseB, hf) * rung * (0.40 + 0.30 * rz);
+  /* phosphate beads where each rung meets its strand */
+  col += vec3(0.25, 0.9, 0.65) * exp(-length(vec2(dx, p.y - ya)) * 90.0) * (0.55 + 0.45 * cos(phk));
+  col += vec3(0.20, 0.75, 0.85) * exp(-length(vec2(dx, p.y - yb)) * 90.0) * (0.55 + 0.45 * cos(phk + GAP));
+
+  /* the two backbones, drawn back-to-front so crossings occlude correctly */
+  float w1 = 0.030 + 0.013 * z1;
+  float s1 = smoothstep(w1, w1 * 0.25, abs(p.y - y1));
+  float w2 = 0.030 + 0.013 * z2;
+  float s2 = smoothstep(w2, w2 * 0.25, abs(p.y - y2));
+  vec3 c1 = vec3(0.20, 0.85, 0.60) * (0.55 + 0.45 * z1);
+  vec3 c2 = vec3(0.16, 0.70, 0.80) * (0.55 + 0.45 * z2);
+  if (z1 < z2) { col = mix(col, c1, s1); col = mix(col, c2, s2); }
+  else         { col = mix(col, c2, s2); col = mix(col, c1, s1); }
+
+  col *= exp(-abs(p.y) * 0.55);                    // depth-of-field falloff
+  return col * 0.85;
 }
-/* ---------- 4 cell ---------- */
+/* ---------- 4 cell — fluorescence micrograph: membrane, nucleus with
+   chromatin and nucleolus, mitochondria as orange rods, cytoskeleton ---------- */
 vec3 scCell(vec2 uv, float t) {
-  vec2 p = uv * zoomFor(-6.0) * 1.4;
+  vec2 p = uv * zoomFor(-6.0) * 1.5;
   float r = length(p);
-  float wob = fbm(normalize(p + 0.001) * 2.0 + t * 0.15) * 0.14;
-  float R = 0.82 + wob;
-  vec3 col = vec3(0.0);
-  float mem = exp(-abs(r - R) * 26.0);
-  col += vec3(0.55, 0.85, 0.30) * mem * 1.1;
-  float inside = smoothstep(R, R - 0.06, r);
-  col += inside * vec3(0.06, 0.13, 0.05);
-  float nuc = 0.05 / (dot(p - vec2(0.16, -0.05), p - vec2(0.16, -0.05)) + 0.045);
-  col += inside * vec3(0.35, 0.6, 0.22) * smoothstep(0.6, 1.6, nuc);
-  for (int i = 0; i < 5; i++) {
-    float fi = float(i) + 1.0;
-    vec2 c = 0.5 * vec2(sin(fi * 2.1 + t * 0.22), cos(fi * 3.3 + t * 0.17));
-    col += inside * vec3(0.5, 0.75, 0.3) * 0.010 / (dot(p - c, p - c) + 0.01);
+  vec2 dir = normalize(p + 1e-4);
+
+  /* irregular, slowly breathing outline */
+  float R = 0.80 + 0.14 * fbm(dir * 2.3 + t * 0.10) - 0.05 * fbm(dir * 5.0 - t * 0.06);
+  float dEdge = r - R;
+  float inside = smoothstep(0.015, -0.03, dEdge);
+
+  vec3 col = vec3(0.004, 0.006, 0.010);                           // dark-field background
+  col += vec3(0.018, 0.03, 0.024) * fbm(p * 1.2 + 7.0) * (1.0 - inside);  // blurred neighbors
+
+  /* membrane stain: bright uneven rim with a soft halo */
+  float mem = exp(-abs(dEdge) * 60.0) * (0.7 + 0.5 * fbm(dir * 6.0 + 1.0));
+  col += vec3(0.25, 0.95, 0.55) * mem * 0.8;
+  col += vec3(0.10, 0.50, 0.30) * exp(-abs(dEdge) * 14.0) * 0.30;
+
+  /* cytoplasm: endoplasmic granularity, denser toward the membrane */
+  float er = fbm(p * 9.0 + vec2(t * 0.05, 0.0));
+  col += inside * vec3(0.05, 0.20, 0.15) * (0.35 + 0.65 * er) * smoothstep(-0.7, 0.0, dEdge);
+  /* cytoskeleton filaments */
+  col += inside * vec3(0.10, 0.36, 0.27) * pow(ridge(p * 3.5 + 5.0), 6.0) * 0.4;
+
+  /* nucleus: offset oval, envelope, chromatin, one bright nucleolus */
+  vec2 np = rot(0.4) * ((p - vec2(0.16, -0.08)) * vec2(1.0, 1.25));
+  float nr = length(np);
+  float NR = 0.30 + 0.03 * fbm(normalize(np + 1e-4) * 3.0 + 2.0);
+  float nIn = smoothstep(0.01, -0.02, nr - NR);
+  float chrom = fbm(np * 12.0 + 4.0);
+  col = mix(col, vec3(0.15, 0.20, 0.62) * (0.35 + 0.75 * chrom), nIn * inside * 0.92);
+  col += vec3(0.30, 0.40, 1.0) * exp(-abs(nr - NR) * 70.0) * inside * 0.5;
+  col += vec3(0.50, 0.55, 1.0) * pow(exp(-length(np - vec2(0.08, 0.05)) * 24.0), 2.0) * inside * 0.8;
+
+  /* mitochondria: orange rods scattered through the cytoplasm */
+  for (int i = 0; i < 9; i++) {
+    float fi = float(i);
+    vec2 c = vec2(sin(fi * 2.4 + 1.7), cos(fi * 1.9 + 4.2)) * (0.30 + 0.28 * hash1(fi + 8.0));
+    float ang = hash1(fi + 3.0) * 6.28318 + t * 0.04;
+    vec2 ax = vec2(cos(ang), sin(ang)) * (0.055 + 0.03 * hash1(fi));
+    float dm = sdSeg(p, c - ax, c + ax);
+    float body = smoothstep(0.030, 0.012, dm);
+    col = mix(col, vec3(1.0, 0.55, 0.15) * (0.65 + 0.35 * noise(p * 40.0 + fi)), body * inside * (1.0 - nIn));
+    col += vec3(1.0, 0.50, 0.10) * exp(-dm * 30.0) * 0.10 * inside * (1.0 - nIn);
   }
-  float stream = fbm(p * 5.0 + vec2(t * 0.35, -t * 0.2));
-  col += inside * vec3(0.2, 0.4, 0.12) * smoothstep(0.62, 0.8, stream) * 0.5;
+
+  /* vesicles drifting in the cytosol */
+  col += inside * (1.0 - nIn) * vec3(0.45, 0.85, 0.65)
+       * pow(noise(p * 16.0 + vec2(9.0, t * 0.1)), 12.0) * 2.5;
   return col;
 }
 /* ---------- 5 subpixels ---------- */
@@ -925,15 +1003,23 @@ vec3 scPlanet(vec2 uv, float t) {
     vec3 L = normalize(vec3(-0.55, 0.35, 0.75));
     float diff = clamp(dot(n, L), 0.0, 1.0);
     vec2 sph = vec2(atan(n.x, n.z) + t * 0.02, asin(n.y));
-    float land = fbm(sph * 2.6 + 7.0);
-    float isLand = smoothstep(0.52, 0.56, land);
-    vec3 ocean = vec3(0.05, 0.16, 0.38);
-    vec3 ground = mix(vec3(0.10, 0.22, 0.08), vec3(0.35, 0.30, 0.18), fbm(sph * 6.0));
+    /* domain-warped coastlines: peninsulas, archipelagos, fjords */
+    vec2 wsph = sph + 0.35 * vec2(fbm(sph * 3.1 + 13.0) - 0.5, fbm(sph * 3.1 + 27.0) - 0.5);
+    float land = fbm(wsph * 2.6 + 7.0);
+    float isLand = smoothstep(0.52, 0.55, land);
+    float shelf = smoothstep(0.42, 0.52, land) * (1.0 - isLand);         // shallow seas
+    vec3 ocean = mix(vec3(0.035, 0.12, 0.30), vec3(0.10, 0.34, 0.44), shelf);
+    vec3 ground = mix(vec3(0.10, 0.22, 0.08), vec3(0.36, 0.31, 0.18), fbm(wsph * 6.0));
+    ground = mix(ground, vec3(0.55, 0.47, 0.31), smoothstep(0.62, 0.76, land));  // arid interiors
     vec3 surf = mix(ocean, ground, isLand);
     float ice = smoothstep(1.02, 1.24, abs(sph.y));
     surf = mix(surf, vec3(0.82, 0.88, 0.94), ice * 0.9);
     float cloud = smoothstep(0.52, 0.74, fbm(sph * 3.4 + vec2(t * 0.045, 0.0)) * 0.85
                                        + fbm(sph * 7.0 - vec2(t * 0.03, 0.0)) * 0.35);
+    vec2 coff = vec2(0.05, -0.04);
+    float cloudSh = smoothstep(0.52, 0.74, fbm((sph + coff) * 3.4 + vec2(t * 0.045, 0.0)) * 0.85
+                                         + fbm((sph + coff) * 7.0 - vec2(t * 0.03, 0.0)) * 0.35);
+    surf *= 1.0 - cloudSh * 0.30 * (1.0 - cloud);                        // clouds shade the ground
     surf = mix(surf, vec3(0.93), cloud * 0.9);
     float spec = pow(clamp(dot(reflect(-L, n), vec3(0, 0, 1)), 0.0, 1.0), 24.0) * (1.0 - isLand) * (1.0 - cloud) * (1.0 - ice);
     float twilight = smoothstep(-0.04, 0.28, diff);
@@ -981,34 +1067,64 @@ vec3 scStars(vec2 uv, float t) {
   }
   return col;
 }
-/* ---------- 11 galaxy ---------- */
+/* ---------- 11 galaxy — the Hubble look: clumpy arms, dark dust lanes,
+   pink HII nurseries, blue young clusters, a warm Sersic bulge ---------- */
 vec3 scGalaxy(vec2 uv, float t) {
-  vec2 p = rot(0.4) * (uv * zoomFor(21.0)) * vec2(1.0, 1.9) * 1.25;
+  vec2 p0 = rot(0.4) * (uv * zoomFor(21.0));
+  vec2 p = p0 * vec2(1.0, 1.9) * 1.25;                        // inclination
   float r = length(p) + 1e-4;
   float th = atan(p.y, p.x);
-  float arm = pow(0.5 + 0.5 * cos(2.0 * th - log(r) * 5.5 + t * 0.03), 2.4);
-  float disk = exp(-r * 2.0);
-  float dust = fbm(p * 5.0 + 11.0);
-  vec3 col = vec3(0.65, 0.72, 1.0) * arm * disk * 1.5;
-  col *= 0.45 + 0.55 * smoothstep(0.25, 0.75, dust);
-  col += vec3(1.0, 0.85, 0.6) * exp(-r * 7.0) * 1.6;                 // bulge
-  float sp = pow(noise(p * 26.0 + 4.0), 10.0) * 6.0;
-  col += vec3(0.85, 0.9, 1.0) * sp * arm * disk * 2.0;
-  col += starLayer(p * 34.0, 0.985, t) * disk * 0.8;         // foreground stars of our own galaxy
+  float sw = th - log(r) * 4.6 + t * 0.02;                    // spiral coordinate
+  vec2 swp = vec2(cos(2.0 * sw), sin(2.0 * sw));              // periodic → no seam
+  float armRaw = 0.5 + 0.5 * cos(2.0 * sw);
+  float clump = fbm(swp * 1.8 + vec2(r * 5.0, 0.0) + 5.0);
+  float arm = pow(armRaw, 2.0) * (0.35 + 0.95 * clump);
+  float disk = exp(-r * 1.9);
+
+  /* older yellow population inside, young blue outside */
+  vec3 dcol = mix(vec3(0.95, 0.85, 0.65), vec3(0.55, 0.65, 1.0), smoothstep(0.15, 0.75, r));
+  vec3 col = dcol * (arm * 1.5 + 0.16) * disk;
+
+  /* dust lanes in silhouette along the arms' inner edges */
+  float dust = ridge(swp * 1.4 + vec2(0.0, r * 8.0) + 11.0);
+  float dustM = smoothstep(0.70, 0.94, dust) * smoothstep(0.05, 0.3, r) * disk;
+  col = mix(col, col * vec3(0.35, 0.22, 0.16), dustM * smoothstep(0.2, 0.8, armRaw));
+
+  /* HII star nurseries: pink knots strung along the arms */
+  float hii = pow(noise(swp * 3.0 + vec2(r * 14.0, 0.0) + 3.0), 9.0) * 5.0;
+  col += vec3(1.0, 0.35, 0.55) * hii * arm * disk * 1.6;
+  /* OB associations: hot blue clusters on the outer arms */
+  float ob = pow(noise(swp * 4.0 + vec2(r * 18.0, 0.0) + 8.0), 11.0) * 6.0;
+  col += vec3(0.55, 0.70, 1.0) * ob * arm * disk * smoothstep(0.25, 0.7, r);
+
+  /* bulge + faint stellar halo */
+  float rb = length(p * vec2(1.0, 1.15));
+  col += vec3(1.0, 0.85, 0.60) * exp(-pow(rb * 4.2, 0.75)) * 1.1;
+  col += vec3(0.50, 0.50, 0.65) * exp(-r * 0.9) * 0.05;
+
+  /* resolved star grain in the disk, then our own foreground stars */
+  col += vec3(0.85, 0.9, 1.0) * pow(noise(p * 26.0 + 4.0), 10.0) * 6.0 * arm * disk * 1.5;
+  col += starLayer(p0 * 30.0, 0.988, t) * 0.9;
   return col * 0.85;
 }
-/* ---------- 12 cosmic web ---------- */
+/* ---------- 12 cosmic web — two depth layers of filaments, bright
+   superclusters at the nodes, individual galaxies riding the strands ---------- */
 vec3 scWeb(vec2 uv, float t) {
-  vec2 p = uv * zoomFor(25.1) * 2.1;
-  float f1 = ridge(p * 1.6 + t * 0.008);
-  float fil = smoothstep(0.78, 0.99, f1);
+  vec3 col = vec3(0.0);
   float redshift = smoothstep(24.2, 26.8, uE);
-  vec3 cold = vec3(0.45, 0.5, 0.9), hot = vec3(0.95, 0.32, 0.22);
-  vec3 col = mix(cold, hot, redshift) * fil * 0.75;
-  float nodes = smoothstep(0.90, 1.0, f1) * smoothstep(0.85, 1.0, ridge(p * 0.8 + 5.0));
-  col += mix(vec3(0.9, 0.85, 0.8), vec3(1.0, 0.5, 0.35), redshift) * nodes * 0.9;
-  float gx = pow(noise(p * 34.0 + 9.0), 14.0) * 5.0;
-  col += vec3(0.85) * gx * smoothstep(0.55, 0.9, f1);
+  vec3 cold = vec3(0.40, 0.45, 0.85), hot = vec3(0.90, 0.30, 0.20);
+  for (int L = 0; L < 2; L++) {
+    float fl = float(L);
+    vec2 p = uv * zoomFor(25.1) * (2.1 + fl * 1.4) + fl * 13.0 + uPointer * 0.03 * (1.0 + fl * 1.5);
+    float wgt = 1.0 - fl * 0.55;
+    float f1 = ridge(p * 1.6 + t * 0.008);
+    float fil = smoothstep(0.78, 0.99, f1);
+    col += mix(cold, hot, redshift) * fil * 0.55 * wgt;
+    float nodes = smoothstep(0.88, 1.0, f1) * smoothstep(0.83, 1.0, ridge(p * 0.8 + 5.0));
+    col += mix(vec3(0.95, 0.90, 0.80), vec3(1.0, 0.5, 0.35), redshift) * nodes * 0.9 * wgt;
+    float gx = pow(noise(p * 34.0 + 9.0), 14.0) * 5.0;
+    col += mix(vec3(0.90, 0.85, 0.75), vec3(1.0, 0.6, 0.45), redshift) * gx * smoothstep(0.5, 0.9, f1) * wgt;
+  }
   col *= 1.0 - smoothstep(26.2, 26.85, uE) * 0.92;                   // fade at the horizon
   return col;
 }
