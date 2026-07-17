@@ -591,7 +591,7 @@ void main() {
 
 const FS = `#version 300 es
 precision highp float;
-uniform vec2 uRes; uniform float uTime; uniform float uE;
+uniform vec2 uRes; uniform float uTime; uniform float uE; uniform float uFinal;
 uniform vec2 uPointer; uniform vec4 uPing;
 out vec4 O;
 
@@ -1226,40 +1226,144 @@ void main() {
     col += vec3(0.9, 0.95, 1.0) * ring * 0.5;
   }
 
-  // filmic finish: gentle saturation lift, highlight roll-off, vignette, grain
-  float luma = dot(col, vec3(0.299, 0.587, 0.114));
-  col = mix(vec3(luma), col, 1.14);
-  col = col / (1.0 + col * 0.42);
-  col = pow(max(col, 0.0), vec3(0.90));
-  col *= 1.0 - 0.4 * dot(uv, uv);
-  col += (hash(gl_FragCoord.xy + fract(t)) - 0.5) * 0.02;
+  col = max(col, 0.0);
+  /* when the bloom pipeline is active the filmic finish moves to the
+     composite pass; uFinal=1 keeps it here as a no-post fallback */
+  if (uFinal > 0.5) {
+    float luma = dot(col, vec3(0.299, 0.587, 0.114));
+    col = mix(vec3(luma), col, 1.14);
+    col = col / (1.0 + col * 0.42);
+    col = pow(col, vec3(0.90));
+    col *= 1.0 - 0.4 * dot(uv, uv);
+    col += (hash(gl_FragCoord.xy + fract(t)) - 0.5) * 0.02;
+  }
   O = vec4(col, 1.0);
 }`;
 
-let glOK = false, prog, uRes, uTime, uE, uPointer, uPing;
-if (gl) {
+/* ---- multipass bloom shaders: bright extract, separable blur, composite ---- */
+const FS_BRIGHT = `#version 300 es
+precision highp float;
+uniform sampler2D uTex; uniform vec2 uInvDst; uniform vec2 uSrcTexel;
+out vec4 O;
+void main() {
+  vec2 uv = gl_FragCoord.xy * uInvDst;
+  vec3 c = texture(uTex, uv + uSrcTexel * vec2( 0.5,  0.5)).rgb
+         + texture(uTex, uv + uSrcTexel * vec2(-0.5,  0.5)).rgb
+         + texture(uTex, uv + uSrcTexel * vec2( 0.5, -0.5)).rgb
+         + texture(uTex, uv + uSrcTexel * vec2(-0.5, -0.5)).rgb;
+  c *= 0.25;
+  float lum = dot(c, vec3(0.299, 0.587, 0.114));
+  O = vec4(c * smoothstep(0.55, 1.0, lum), 1.0);
+}`;
+const FS_BLUR = `#version 300 es
+precision highp float;
+uniform sampler2D uTex; uniform vec2 uInvDst; uniform vec2 uDir;
+out vec4 O;
+void main() {
+  vec2 uv = gl_FragCoord.xy * uInvDst;
+  vec3 a = texture(uTex, uv).rgb * 0.227027;
+  a += (texture(uTex, uv + uDir * 1.3846).rgb + texture(uTex, uv - uDir * 1.3846).rgb) * 0.3162162;
+  a += (texture(uTex, uv + uDir * 3.2308).rgb + texture(uTex, uv - uDir * 3.2308).rgb) * 0.0702703;
+  O = vec4(a, 1.0);
+}`;
+const FS_COMP = `#version 300 es
+precision highp float;
+uniform sampler2D uSceneT; uniform sampler2D uBloomT;
+uniform vec2 uInvDst; uniform vec2 uRes2; uniform float uT2;
+out vec4 O;
+float hash2(vec2 p) { p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 34.345); return fract(p.x * p.y); }
+void main() {
+  vec2 uv = gl_FragCoord.xy * uInvDst;
+  vec3 col = texture(uSceneT, uv).rgb + texture(uBloomT, uv).rgb * 0.85;
+  float luma = dot(col, vec3(0.299, 0.587, 0.114));
+  col = mix(vec3(luma), col, 1.14);
+  col = col / (1.0 + col * 0.42);
+  col = pow(max(col, vec3(0.0)), vec3(0.90));
+  vec2 q = (gl_FragCoord.xy - 0.5 * uRes2) / uRes2.y;
+  col *= 1.0 - 0.4 * dot(q, q);
+  col += (hash2(gl_FragCoord.xy + fract(uT2)) - 0.5) * 0.02;
+  O = vec4(col, 1.0);
+}`;
+
+let glOK = false, prog, uRes, uTime, uE, uPointer, uPing, uFinal;
+let post = null;
+
+function buildProgram(fsSrc) {
   const mk = (type, src) => {
     const s = gl.createShader(type);
     gl.shaderSource(s, src); gl.compileShader(s);
     if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) { console.error(gl.getShaderInfoLog(s)); return null; }
     return s;
   };
-  const vs = mk(gl.VERTEX_SHADER, VS), fs = mk(gl.FRAGMENT_SHADER, FS);
-  if (vs && fs) {
-    prog = gl.createProgram();
-    gl.attachShader(prog, vs); gl.attachShader(prog, fs); gl.linkProgram(prog);
-    if (gl.getProgramParameter(prog, gl.LINK_STATUS)) {
-      gl.useProgram(prog);
-      uRes = gl.getUniformLocation(prog, 'uRes');
-      uTime = gl.getUniformLocation(prog, 'uTime');
-      uE = gl.getUniformLocation(prog, 'uE');
-      uPointer = gl.getUniformLocation(prog, 'uPointer');
-      uPing = gl.getUniformLocation(prog, 'uPing');
-      glOK = true;
-    } else console.error(gl.getProgramInfoLog(prog));
+  const vs = mk(gl.VERTEX_SHADER, VS), fs = mk(gl.FRAGMENT_SHADER, fsSrc);
+  if (!vs || !fs) return null;
+  const p = gl.createProgram();
+  gl.attachShader(p, vs); gl.attachShader(p, fs); gl.linkProgram(p);
+  if (!gl.getProgramParameter(p, gl.LINK_STATUS)) { console.error(gl.getProgramInfoLog(p)); return null; }
+  return p;
+}
+
+if (gl) {
+  prog = buildProgram(FS);
+  if (prog) {
+    uRes = gl.getUniformLocation(prog, 'uRes');
+    uTime = gl.getUniformLocation(prog, 'uTime');
+    uE = gl.getUniformLocation(prog, 'uE');
+    uPointer = gl.getUniformLocation(prog, 'uPointer');
+    uPing = gl.getUniformLocation(prog, 'uPing');
+    uFinal = gl.getUniformLocation(prog, 'uFinal');
+    glOK = true;
+    /* HDR targets when the GPU can render to half-float; 8-bit otherwise */
+    const pB = buildProgram(FS_BRIGHT), pBl = buildProgram(FS_BLUR), pC = buildProgram(FS_COMP);
+    const extF = gl.getExtension('EXT_color_buffer_float');
+    if (pB && pBl && pC) {
+      post = {
+        enabled: false, wq: 0, hq: 0,
+        ifmt: extF ? gl.RGBA16F : gl.RGBA8,
+        type: extF ? gl.HALF_FLOAT : gl.UNSIGNED_BYTE,
+        sceneTex: null, sceneFbo: null, texA: null, fboA: null, texB: null, fboB: null,
+        pBright: { p: pB, uInvDst: gl.getUniformLocation(pB, 'uInvDst'), uSrcTexel: gl.getUniformLocation(pB, 'uSrcTexel'), uTex: gl.getUniformLocation(pB, 'uTex') },
+        pBlur: { p: pBl, uInvDst: gl.getUniformLocation(pBl, 'uInvDst'), uDir: gl.getUniformLocation(pBl, 'uDir'), uTex: gl.getUniformLocation(pBl, 'uTex') },
+        pComp: { p: pC, uSceneT: gl.getUniformLocation(pC, 'uSceneT'), uBloomT: gl.getUniformLocation(pC, 'uBloomT'), uInvDst: gl.getUniformLocation(pC, 'uInvDst'), uRes2: gl.getUniformLocation(pC, 'uRes2'), uT2: gl.getUniformLocation(pC, 'uT2') },
+      };
+    }
   }
 }
 if (!glOK) document.getElementById('human-fn').textContent = 'WebGL2 unavailable — the journey still reads, it just cannot be seen';
+
+function makeTex(w, h) {
+  const tx = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, tx);
+  gl.texImage2D(gl.TEXTURE_2D, 0, post.ifmt, w, h, 0, gl.RGBA, post.type, null);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  return tx;
+}
+function makeFbo(tx) {
+  const fb = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tx, 0);
+  const ok = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  return ok ? fb : null;
+}
+function allocPost(w, h) {
+  if (!post) return;
+  ['sceneTex', 'texA', 'texB'].forEach(k => { if (post[k]) gl.deleteTexture(post[k]); });
+  ['sceneFbo', 'fboA', 'fboB'].forEach(k => { if (post[k]) gl.deleteFramebuffer(post[k]); });
+  post.wq = Math.max(1, Math.round(w / 4));
+  post.hq = Math.max(1, Math.round(h / 4));
+  post.sceneTex = makeTex(w, h); post.sceneFbo = makeFbo(post.sceneTex);
+  post.texA = makeTex(post.wq, post.hq); post.fboA = makeFbo(post.texA);
+  post.texB = makeTex(post.wq, post.hq); post.fboB = makeFbo(post.texB);
+  post.enabled = !!(post.sceneFbo && post.fboA && post.fboB);
+  if (!post.enabled && post.ifmt !== gl.RGBA8) {     // float target not renderable: retry in 8-bit
+    post.ifmt = gl.RGBA8; post.type = gl.UNSIGNED_BYTE;
+    allocPost(w, h);
+  }
+}
 
 function fit() {
   // cap the backing store at ~2K wide: keeps the heaviest scenes at 60 fps on 4K screens
@@ -1267,7 +1371,7 @@ function fit() {
   const w = Math.round(innerWidth * dpr), h = Math.round(innerHeight * dpr);
   if (canvas.width !== w || canvas.height !== h) {
     canvas.width = w; canvas.height = h;
-    if (gl) gl.viewport(0, 0, w, h);
+    if (glOK) allocPost(w, h);
   }
 }
 
@@ -1301,12 +1405,64 @@ function frame(now) {
   updateSound();
   if (glOK && !document.hidden) {
     fit();
-    gl.uniform2f(uRes, canvas.width, canvas.height);
+    const W = canvas.width, H = canvas.height;
+    const usePost = post && post.enabled;
+
+    /* pass 1 — the scene, in linear light (HDR when supported) */
+    gl.bindFramebuffer(gl.FRAMEBUFFER, usePost ? post.sceneFbo : null);
+    gl.viewport(0, 0, W, H);
+    gl.useProgram(prog);
+    gl.uniform2f(uRes, W, H);
     gl.uniform1f(uTime, t);
     gl.uniform1f(uE, shownE);
+    gl.uniform1f(uFinal, usePost ? 0 : 1);
     gl.uniform2f(uPointer, smoothPointer.x, smoothPointer.y);
     gl.uniform4f(uPing, ping.x, ping.y, ping.t, 0);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+    if (usePost) {
+      /* pass 2 — bright extraction at quarter resolution */
+      gl.useProgram(post.pBright.p);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, post.fboA);
+      gl.viewport(0, 0, post.wq, post.hq);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, post.sceneTex);
+      gl.uniform1i(post.pBright.uTex, 0);
+      gl.uniform2f(post.pBright.uInvDst, 1 / post.wq, 1 / post.hq);
+      gl.uniform2f(post.pBright.uSrcTexel, 1 / W, 1 / H);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+      /* passes 3-6 — two widening separable gaussian blurs, ping-pong */
+      gl.useProgram(post.pBlur.p);
+      gl.uniform1i(post.pBlur.uTex, 0);
+      gl.uniform2f(post.pBlur.uInvDst, 1 / post.wq, 1 / post.hq);
+      for (const s of [1, 2]) {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, post.fboB);
+        gl.bindTexture(gl.TEXTURE_2D, post.texA);
+        gl.uniform2f(post.pBlur.uDir, s / post.wq, 0);
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, post.fboA);
+        gl.bindTexture(gl.TEXTURE_2D, post.texB);
+        gl.uniform2f(post.pBlur.uDir, 0, s / post.hq);
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+      }
+
+      /* pass 7 — composite to screen with the filmic finish */
+      gl.useProgram(post.pComp.p);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      gl.viewport(0, 0, W, H);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, post.sceneTex);
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, post.texA);
+      gl.uniform1i(post.pComp.uSceneT, 0);
+      gl.uniform1i(post.pComp.uBloomT, 1);
+      gl.uniform2f(post.pComp.uInvDst, 1 / W, 1 / H);
+      gl.uniform2f(post.pComp.uRes2, W, H);
+      gl.uniform1f(post.pComp.uT2, t);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      gl.activeTexture(gl.TEXTURE0);
+    }
   }
   requestAnimationFrame(frame);
 }
@@ -1378,5 +1534,4 @@ function pingDecade() {
 
 })();
 </script>
-
 </html>
