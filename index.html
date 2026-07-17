@@ -180,7 +180,15 @@ sup { font-size: .68em; }
 }
 #sound { right: 20px; }
 #voyage { right: 128px; }
+#lang {
+  position: fixed; top: 14px; right: 236px; pointer-events: auto;
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--dim); background: none; border: 1px solid var(--faint); border-radius: 3px;
+  padding: 8px 14px; cursor: pointer; transition: color .3s, border-color .3s;
+  z-index: 4;
+}
 #sound:hover, #sound[aria-pressed="true"],
+#lang:hover,
 #voyage:hover, #voyage[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); }
 @media (prefers-reduced-motion: reduce) { #voyage { display: none; } }
 
@@ -403,6 +411,7 @@ sup { font-size: .68em; }
   </div>
   <div id="ruler"><div class="line"></div><div id="cursor"></div></div>
 </div>
+<button id="lang" title="Lire en français">FR</button>
 <button id="voyage" aria-pressed="false" title="Hands-free cruise through all 43 decades">Voyage ▸</button>
 <button id="sound" aria-pressed="false">Sound ○</button>
 
@@ -417,6 +426,7 @@ const TRACK_H = Math.round(SPAN * PX_PER_DECADE);
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const lerp = (a, b, t) => a + (b - a) * t;
+let lang = 'en';                       // 'en' | 'fr' — applied at startup from navigator.language
 
 /* Scene table — must mirror the GLSL bands.
    [name, subtitle, loE, hiE, accent] */
@@ -434,6 +444,21 @@ const SCENES = [
   ['The neighborhood',  'stars, and the space between',       14.2,  19.4, '#cdd8ff'],
   ['The galaxy',        'dust lanes and pink nurseries',      19.4,  23.2, '#b7c6ff'],
   ['The cosmic web',    'filaments of everything',            23.2,  26.9, '#ff7a6e'],
+];
+const SCENES_FR = [
+  ['Écume quantique',   'paires virtuelles, temps emprunté'],
+  ['Le noyau',          'des quarks et de la colle'],
+  ['L’atome',           'du vide, surtout'],
+  ['L’hélice',          'une molécule de deux mètres'],
+  ['La cellule',        'de la machinerie dans du miel'],
+  ['L’écran',           'trois lampes qui jouent au blanc'],
+  ['Le visible',        'le mètre humain'],
+  ['La ville',          'des toits, des haies, une rivière'],
+  ['La planète',        'un caillou mouillé, bien éclairé'],
+  ['Le système',        'une étoile et quelques restes'],
+  ['Le voisinage',      'des étoiles, et l’espace entre'],
+  ['La galaxie',        'poussières et pouponnières roses'],
+  ['La toile cosmique', 'les filaments de tout'],
 ];
 const weightOf = (e, lo, hi) =>
   (e < lo || e > hi) ? 0 :
@@ -479,7 +504,7 @@ readScroll();
 const hud = document.getElementById('hud');
 const roExp = document.getElementById('ro-exp');
 const roPretty = document.getElementById('ro-pretty');
-const roLight = document.getElementById('ro-light');
+let roLight = document.getElementById('ro-light');   // re-queried after language switches
 const sceneName = document.getElementById('scene-name');
 const sceneSub = document.getElementById('scene-sub');
 const cursor = document.getElementById('cursor');
@@ -492,27 +517,38 @@ const PREFIXES = [
   [6,'megameters'],[9,'gigameters'],[12,'terameters'],[15,'petameters'],
   [18,'exameters'],[21,'zettameters'],[24,'yottameters'],[27,'ronnameters'],
 ];
+const PREFIX_FR = {
+  quectometers: 'quectomètres', rontometers: 'rontomètres', yoctometers: 'yoctomètres',
+  zeptometers: 'zeptomètres', attometers: 'attomètres', femtometers: 'femtomètres',
+  picometers: 'picomètres', nanometers: 'nanomètres', micrometers: 'micromètres',
+  millimeters: 'millimètres', meters: 'mètres', kilometers: 'kilomètres',
+  megameters: 'mégamètres', gigameters: 'gigamètres', terameters: 'téramètres',
+  petameters: 'pétamètres', exameters: 'examètres', zettameters: 'zettamètres',
+  yottameters: 'yottamètres', ronnameters: 'ronnamètres',
+};
+const frNum = s => lang === 'fr' ? String(s).replace('.', ',') : String(s);
 function prettyMeters(e) {
   let p = PREFIXES[0];
   for (const cand of PREFIXES) if (cand[0] <= e) p = cand;
   const v = Math.pow(10, e - p[0]);
-  const num = v >= 100 ? v.toFixed(0) : v >= 10 ? v.toFixed(1) : v.toFixed(2);
-  return `≈ ${num} ${p[1]}`;
+  const num = frNum(v >= 100 ? v.toFixed(0) : v >= 10 ? v.toFixed(1) : v.toFixed(2));
+  return `≈ ${num} ${lang === 'fr' ? PREFIX_FR[p[1]] : p[1]}`;
 }
 function prettyLightTime(e) {
   const t = Math.pow(10, e) / 299792458; // seconds
   const YEAR = 3.156e7;
-  if (t < 1e-15) { const ex = Math.floor(Math.log10(t)); return (t / Math.pow(10, ex)).toFixed(1) + '×10' + supNum(ex) + ' s'; }
-  if (t < 1e-6) return (t * 1e9).toPrecision(3) + ' ns';
-  if (t < 1e-3) return (t * 1e6).toPrecision(3) + ' µs';
-  if (t < 1)    return (t * 1e3).toPrecision(3) + ' ms';
-  if (t < 60)   return t.toPrecision(3) + ' s';
-  if (t < 3600) return (t / 60).toPrecision(3) + ' min';
-  if (t < 86400) return (t / 3600).toPrecision(3) + ' hours';
-  if (t < YEAR) return (t / 86400).toPrecision(3) + ' days';
-  if (t < 1e6 * YEAR) return Math.round(t / YEAR).toLocaleString('en') + ' years';
-  if (t < 1e9 * YEAR) return (t / YEAR / 1e6).toPrecision(3) + ' million years';
-  return (t / YEAR / 1e9).toPrecision(3) + ' billion years';
+  const fr = lang === 'fr';
+  if (t < 1e-15) { const ex = Math.floor(Math.log10(t)); return frNum((t / Math.pow(10, ex)).toFixed(1)) + '×10' + supNum(ex) + ' s'; }
+  if (t < 1e-6) return frNum((t * 1e9).toPrecision(3)) + ' ns';
+  if (t < 1e-3) return frNum((t * 1e6).toPrecision(3)) + ' µs';
+  if (t < 1)    return frNum((t * 1e3).toPrecision(3)) + ' ms';
+  if (t < 60)   return frNum(t.toPrecision(3)) + ' s';
+  if (t < 3600) return frNum((t / 60).toPrecision(3)) + ' min';
+  if (t < 86400) return frNum((t / 3600).toPrecision(3)) + (fr ? ' heures' : ' hours');
+  if (t < YEAR) return frNum((t / 86400).toPrecision(3)) + (fr ? ' jours' : ' days');
+  if (t < 1e6 * YEAR) return Math.round(t / YEAR).toLocaleString(fr ? 'fr-FR' : 'en') + (fr ? ' ans' : ' years');
+  if (t < 1e9 * YEAR) return frNum((t / YEAR / 1e6).toPrecision(3)) + (fr ? ' millions d’années' : ' million years');
+  return frNum((t / YEAR / 1e9).toPrecision(3)) + (fr ? ' milliards d’années' : ' billion years');
 }
 function supNum(n) {
   const S = { '-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹' };
@@ -551,8 +587,8 @@ function updateHUD() {
   SCENES.forEach((s, i) => { const w = weightOf(disp, s[2], s[3]); if (w > best) { best = w; bi = i; } });
   if (bi !== curScene) {
     curScene = bi;
-    sceneName.textContent = SCENES[bi][0];
-    sceneSub.textContent = SCENES[bi][1];
+    sceneName.textContent = lang === 'fr' ? SCENES_FR[bi][0] : SCENES[bi][0];
+    sceneSub.textContent = lang === 'fr' ? SCENES_FR[bi][1] : SCENES[bi][1];
     document.documentElement.style.setProperty('--accent', SCENES[bi][4]);
   }
   // the DOM takes over at human scale
@@ -1471,6 +1507,7 @@ requestAnimationFrame(frame);
 /* ============================== sound ============================== */
 let audio = null;
 const soundBtn = document.getElementById('sound');
+const soundLabel = on => (lang === 'fr' ? 'Son ' : 'Sound ') + (on ? '●' : '○');
 function buildAudio() {
   const ctx = new (window.AudioContext || window.webkitAudioContext)();
   const master = ctx.createGain(); master.gain.value = 0; master.connect(ctx.destination);
@@ -1496,7 +1533,7 @@ soundBtn.addEventListener('click', async () => {
   await audio.ctx.resume();
   const on = soundBtn.getAttribute('aria-pressed') !== 'true';
   soundBtn.setAttribute('aria-pressed', String(on));
-  soundBtn.textContent = on ? 'Sound ●' : 'Sound ○';
+  soundBtn.textContent = soundLabel(on);
   audio.master.gain.setTargetAtTime(on ? 0.5 : 0, audio.ctx.currentTime, 0.4);
 });
 function updateSound() {
@@ -1523,14 +1560,169 @@ function pingDecade() {
 }
 
 /* ============================== outro stats ============================== */
-(function () {
-  const totalPx = TRACK_H;
+function buildOutroStats() {
   const el = document.getElementById('outro-stats');
-  el.innerHTML =
-    `Exchange rate at the top of the page: one pixel ≈ 10⁻¹⁶ m, far less than a proton. ` +
-    `At the bottom: one pixel ≈ 10²³ m, about <b>ten million light-years per pixel</b>. ` +
-    `Same thumb, same gesture — ${totalPx.toLocaleString('en')} pixels apart.`;
-})();
+  if (lang === 'fr') {
+    el.innerHTML =
+      `Taux de change en haut de la page : un pixel ≈ 10⁻¹⁶ m, bien moins qu’un proton. ` +
+      `En bas : un pixel ≈ 10²³ m, environ <b>dix millions d’années-lumière par pixel</b>. ` +
+      `Le même pouce, le même geste, à ${TRACK_H.toLocaleString('fr-FR')} pixels d’écart.`;
+  } else {
+    el.innerHTML =
+      `Exchange rate at the top of the page: one pixel ≈ 10⁻¹⁶ m, far less than a proton. ` +
+      `At the bottom: one pixel ≈ 10²³ m, about <b>ten million light-years per pixel</b>. ` +
+      `Same thumb, same gesture — ${TRACK_H.toLocaleString('en')} pixels apart.`;
+  }
+}
+buildOutroStats();
+
+/* ============================== i18n — full French edition ============================== */
+const FR = {
+  '#intro .over': 'Un instrument pour un seul voyage',
+  '#intro .sub':
+    `L’univers observable tient dans une barre de défilement. Cette page mesure ` +
+    `<b>43 puissances de dix</b> : elle commence à l’intérieur d’un proton et s’achève ` +
+    `au bord de tout ce que la lumière a eu le temps de nous montrer.`,
+  '#intro .rules':
+    `<span>ÉCHELLE <b>10⁻¹⁶ → 10²⁷ m</b></span>` +
+    `<span>TAUX DE CHANGE <b>~900 px par ×10</b></span>` +
+    `<span>RENDU <b>en direct, rien d’enregistré</b></span>`,
+  '#intro .cue': 'Défilez pour dézoomer',
+  '#wordmark': '<b>MAGNITUDE</b> / 43 DÉCADES',
+  '#readout .light': 'la lumière traverse ce cadre en <b id="ro-light"></b>',
+
+  '.card[data-e="-15.7"] .tag': '<span>Écume quantique</span><span class="m">≲10⁻¹⁶ m</span>',
+  '.card[data-e="-15.7"] p':
+    `Sous cette profondeur, la distance elle-même devient floue. La barre de défilement ` +
+    `pourrait descendre encore dix-neuf décades jusqu’à la longueur de Planck (1,6×10⁻³⁵ m), ` +
+    `mais rien de mesurable n’y vit : <b>c’est donc ici que le voyage commence</b>.`,
+  '.card[data-e="-14.9"] .tag': '<span>Le proton</span><span class="m">0,84 fm</span>',
+  '.card[data-e="-14.9"] p':
+    `Trois quarks, liés par des gluons qui scintillent entre existence et néant. Le rayon de ` +
+    `charge d’un proton fait 0,84 femtomètre, et <b>99,9 % de votre masse est cette colle</b>, ` +
+    `pas les quarks eux-mêmes.`,
+  '.card[data-e="-13.9"] .tag': '<span>Le noyau</span><span class="m">~10⁻¹⁴ m</span>',
+  '.card[data-e="-13.9"] p':
+    `Un noyau d’or, 79 protons et 118 neutrons, mesure environ 14 fm. Tout ce qui l’entoure, ` +
+    `pendant les quatre prochaines décades de votre défilement, est <b>vide</b>.`,
+  '.card[data-e="-10.2"] .tag': '<span>L’atome</span><span class="m">~1 Å</span>',
+  '.card[data-e="-10.2"] p':
+    `Vous avez traversé quatre puissances de dix de vide pour arriver ici. Gonflez un atome ` +
+    `d’hydrogène à la taille d’un stade et son noyau est <b>un petit pois au rond central</b>. ` +
+    `Le nuage que vous voyez est de la probabilité, pas de la matière.`,
+  '.card[data-e="-8.8"] .tag': '<span>La double hélice</span><span class="m">2 nm de large</span>',
+  '.card[data-e="-8.8"] p':
+    `L’ADN fait deux nanomètres de large, mais déroulée, la copie contenue dans chacune de vos ` +
+    `cellules court sur <b>environ deux mètres</b>. Vous portez à peu près 40 000 milliards ` +
+    `d’exemplaires de cette molécule.`,
+  '.card[data-e="-7.1"] .tag': '<span>Sous la lumière</span><span class="m">~100 nm</span>',
+  '.card[data-e="-7.1"] p':
+    `Un virus fait environ 100 nanomètres, moins que les longueurs d’onde de la lumière ` +
+    `visible (380 à 700 nm). Tout ce que vous avez vu jusqu’ici est, au sens strict, ` +
+    `<b>invisible</b> : aucun microscope à lumière ne pourra jamais le montrer.`,
+  '.card[data-e="-5.9"] .tag': '<span>La cellule</span><span class="m">~10 µm</span>',
+  '.card[data-e="-5.9"] p':
+    `Un colibacille fait 2 µm, un globule rouge 7,8 µm. À cette échelle, l’eau a la ` +
+    `consistance du miel et <b>nager revient à se visser dans l’eau</b> : l’inertie ne compte plus.`,
+  '.card[data-e="-4.1"] .tag': '<span>Le pixel</span><span class="m">~10⁻⁴ m</span>',
+  '.card[data-e="-4.1"] p':
+    `Un cheveu humain fait ~70 µm. Sur un écran portable classique, un pixel mesure environ ` +
+    `un dixième de millimètre : vous venez de dépasser <b>le grain de l’écran même</b> que vous ` +
+    `lisez. Chacun est trois petites lampes colorées qui se font passer pour du blanc.`,
+  '.card[data-e="3.6"] .tag': '<span>La ville</span><span class="m">~10⁴ m</span>',
+  '.card[data-e="3.6"] p':
+    `Dix kilomètres cadrent une ville : Paris intra-périphérique fait à peu près cette largeur. ` +
+    `D’ici, le monde humain se lit comme une texture, toits, limites de champs, et la rivière ` +
+    `qui explique <b>pourquoi la ville s’est construite exactement là</b>. C’est la plus grande ` +
+    `échelle qu’une personne peut traverser à pied en un après-midi.`,
+  '.card[data-e="6.9"] .tag': '<span>La planète</span><span class="m">1,27×10⁷ m</span>',
+  '.card[data-e="6.9"] p':
+    `La Terre, 12 756 km de diamètre. Toutes les personnes qui ont jamais vécu, environ ` +
+    `117 milliards, tiennent dans ce cadre. La Station spatiale internationale orbite à peine ` +
+    `400 km plus haut : <b>à ce zoom, son altitude fait quelques pixels</b>.`,
+  '.card[data-e="8.9"] .tag': '<span>L’étoile</span><span class="m">1,39×10⁹ m</span>',
+  '.card[data-e="8.9"] p':
+    `Le Soleil mesure 1,39 million de kilomètres, assez large pour que <b>l’orbite entière de ` +
+    `la Lune autour de la Terre tienne dedans</b>, avec de la marge.`,
+  '.card[data-e="11.1"] .tag': '<span>Une UA</span><span class="m">1,496×10¹¹ m</span>',
+  '.card[data-e="11.1"] p':
+    `La distance Terre-Soleil : une unité astronomique. La lumière, la chose la plus rapide ` +
+    `permise, met <b>8 minutes 19 secondes</b> à la traverser. Regardez l’affichage : le ` +
+    `temps-lumière de votre cadre se compte désormais en minutes.`,
+  '.card[data-e="13.2"] .tag': '<span>Le système</span><span class="m">~10¹³ m</span>',
+  '.card[data-e="13.2"] p':
+    `Voyager 1, lancée en 1977, est l’objet humain le plus lointain : environ 25 milliards de ` +
+    `kilomètres. Après un demi-siècle de chute à travers l’espace, <b>elle est toujours à ` +
+    `l’intérieur de ce seul cadre</b>.`,
+  '.card[data-e="16.1"] .tag': '<span>Le voisinage</span><span class="m">~10¹⁶ m</span>',
+  '.card[data-e="16.1"] p':
+    `Une année-lumière fait 9,46×10¹⁵ m. L’étoile la plus proche, Proxima du Centaure, est à ` +
+    `4,2 années-lumière : <b>40 000 milliards de kilomètres de rien</b> entre nous et la ` +
+    `fournaise d’hydrogène suivante.`,
+  '.card[data-e="20.8"] .tag': '<span>La galaxie</span><span class="m">~10²¹ m</span>',
+  '.card[data-e="20.8"] p':
+    `La Voie lactée : 100 000 années-lumière, quelques centaines de milliards d’étoiles, toutes ` +
+    `en orbite autour d’un trou noir de 4,3 millions de masses solaires. Le tour du Soleil prend ` +
+    `230 millions d’années : <b>il en a bouclé une vingtaine, en tout et pour tout</b>.`,
+  '.card[data-e="22.9"] .tag': '<span>Le Groupe local</span><span class="m">~10²³ m</span>',
+  '.card[data-e="22.9"] p':
+    `Andromède, à 2,5 millions d’années-lumière, approche à 110 km/s. Dans quatre milliards ` +
+    `d’années, les deux spirales fusionnent. À partir d’ici, <b>les galaxies sont la poussière</b>.`,
+  '.card[data-e="24.7"] .tag': '<span>La toile</span><span class="m">~10²⁵ m</span>',
+  '.card[data-e="24.7"] p':
+    `La matière se range en filaments tendus entre des vides : la plus grande structure qui ` +
+    `soit. Notre superamas, Laniakea, s’étend sur 520 millions d’années-lumière et contient ` +
+    `<b>cent mille galaxies</b>, et ce n’est qu’un fil parmi des millions.`,
+  '.card[data-e="26.3"] .tag': '<span>L’horizon</span><span class="m">8,8×10²⁶ m</span>',
+  '.card[data-e="26.3"] p':
+    `L’univers observable : 93 milliards d’années-lumière, des centaines de milliards de ` +
+    `galaxies. Pas le bord de tout, seulement le bord de <b>ce que la lumière a eu le temps ` +
+    `de nous apporter</b>.`,
+
+  '#human .halo': 'Vous êtes ici',
+  '#human p:not(.halo):not(.fn)':
+    `10⁰, un mètre. Une chaise, un chien, un ordinateur ouvert, vous. Des quarante-trois ` +
+    `échelles de cette page, celle-ci est la seule rendue en HTML : c’est la seule où existent ` +
+    `les navigateurs, et leurs utilisateurs.`,
+  '#human .fn': 'toutes les autres échelles sont des fragment shaders',
+
+  '#outro h2': 'La barre de défilement<br>s’arrête ici',
+  '#outro .big-num': '8,8 × 10²⁶ m · 93 000 000 000 années-lumière',
+  '#outro > div > p:nth-of-type(2)':
+    `Vous venez de parcourir toute la largeur de l’univers observable avec votre pouce. Une ` +
+    `propriété des logarithmes qui mérite qu’on s’y arrête : <b>les 900 derniers pixels de ce ` +
+    `défilement ont couvert neuf fois plus de distance que les quarante-deux décades ` +
+    `précédentes réunies.</b>`,
+  '#outro .fine': 'Magnitude · un seul fichier · <a href="#intro">retomber dans l’écume quantique</a>',
+};
+
+const langBtn = document.getElementById('lang');
+const enCache = new Map();
+function applyLang(l) {
+  lang = l;
+  document.documentElement.lang = l;
+  for (const sel in FR) {
+    const el = document.querySelector(sel);
+    if (!el) continue;
+    if (!enCache.has(sel)) enCache.set(sel, el.innerHTML);
+    el.innerHTML = l === 'fr' ? FR[sel] : enCache.get(sel);
+  }
+  roLight = document.getElementById('ro-light');
+  document.title = l === 'fr'
+    ? 'MAGNITUDE · L’univers dans une barre de défilement'
+    : 'MAGNITUDE — The Universe in One Scrollbar';
+  langBtn.textContent = l === 'fr' ? 'EN' : 'FR';
+  langBtn.title = l === 'fr' ? 'Read in English' : 'Lire en français';
+  voyageBtn.title = l === 'fr' ? 'Traversée automatique des 43 décades' : 'Hands-free cruise through all 43 decades';
+  soundBtn.textContent = soundLabel(soundBtn.getAttribute('aria-pressed') === 'true');
+  canvas.setAttribute('aria-label', l === 'fr'
+    ? 'Un zoom animé continu à travers les échelles de l’univers, des particules subatomiques à la toile cosmique, suivant votre position de défilement.'
+    : 'A continuous animated zoom through the scales of the universe, from subatomic particles to the cosmic web, following your scroll position.');
+  curScene = -1;                 // force the HUD scene name to re-render
+  buildOutroStats();
+}
+langBtn.addEventListener('click', () => applyLang(lang === 'fr' ? 'en' : 'fr'));
+if ((navigator.language || '').toLowerCase().startsWith('fr')) applyLang('fr');
 
 })();
 </script>
