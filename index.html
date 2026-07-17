@@ -1,0 +1,1062 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>MAGNITUDE — The Universe in One Scrollbar</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="The observable universe in one scrollbar: a continuous WebGL zoom through 43 powers of ten, from inside a proton to the edge of everything light can show us.">
+
+<style>
+/* =====================================================================
+   MAGNITUDE — the observable universe in one scrollbar.
+   A continuous WebGL zoom from 10^-16 m to 10^26.9 m.
+   Every ~900 pixels of scroll is one power of ten.
+   One file. No dependencies. No requests.
+   ===================================================================== */
+
+:root {
+  color-scheme: dark;
+  --black: #030407;
+  --ink: #e9edf5;
+  --dim: #6c7689;
+  --faint: #3a4152;
+  --accent: #b48cff;
+  --mono: 'Cascadia Code', ui-monospace, 'SF Mono', Consolas, monospace;
+  --serif: Charter, 'Iowan Old Style', Georgia, serif;
+  --air: system-ui, 'Segoe UI', 'Helvetica Neue', sans-serif;
+}
+
+* { box-sizing: border-box; }
+html { scrollbar-color: var(--accent) #0a0d14; }
+body {
+  margin: 0; background: var(--black); color: var(--ink);
+  font-family: var(--serif); font-size: 16px; line-height: 1.6;
+  overflow-x: hidden;
+}
+::selection { background: var(--accent); color: var(--black); }
+:focus-visible { outline: 1.5px solid var(--accent); outline-offset: 3px; }
+h1, h2, h3, p { margin: 0; }
+button { font: inherit; }
+
+#stage {
+  position: fixed; inset: 0; width: 100%; height: 100%;
+  z-index: 0; display: block;
+}
+
+/* ---------------- intro ---------------- */
+#intro {
+  position: relative; z-index: 2; min-height: 100svh;
+  display: grid; place-content: center; text-align: center;
+  padding: 24px; gap: 0;
+}
+#intro .over {
+  font-family: var(--mono); font-size: 11px; letter-spacing: .42em;
+  text-transform: uppercase; color: var(--dim); margin-bottom: 30px;
+}
+#intro h1 {
+  font-family: var(--air); font-weight: 100;
+  font-size: clamp(52px, 12vw, 150px);
+  letter-spacing: clamp(.18em, 2.5vw, .34em); text-indent: clamp(.18em, 2.5vw, .34em);
+  text-transform: uppercase; line-height: 1;
+  color: var(--ink);
+}
+#intro .sub {
+  margin: 34px auto 0; max-width: 46ch;
+  font-size: clamp(15px, 1.6vw, 18px); color: color-mix(in oklab, var(--ink) 80%, var(--dim));
+  text-wrap: balance;
+}
+#intro .sub b { color: var(--ink); font-weight: 400; font-style: italic; }
+#intro .rules {
+  margin: 40px auto 0; display: flex; gap: 34px; justify-content: center; flex-wrap: wrap;
+  font-family: var(--mono); font-size: 11px; letter-spacing: .1em; color: var(--dim);
+}
+#intro .rules b { color: var(--accent); font-weight: 400; }
+#intro .cue {
+  margin-top: 58px; font-family: var(--mono); font-size: 10px; letter-spacing: .34em;
+  text-transform: uppercase; color: var(--dim);
+}
+#intro .cue::after {
+  content: ''; display: block; width: 1px; height: 46px; margin: 14px auto 0;
+  background: linear-gradient(var(--accent), transparent);
+}
+@media (prefers-reduced-motion: no-preference) {
+  #intro .cue::after { animation: sink 2.4s ease-in-out infinite; }
+  @keyframes sink { 50% { transform: translateY(9px); opacity: .35; } }
+}
+@supports (animation-timeline: view()) {
+  #intro .fadeout {
+    animation: intro-out linear both;
+    animation-timeline: view();
+    animation-range: exit 0% exit 80%;
+  }
+  @keyframes intro-out { to { opacity: 0; filter: blur(6px); } }
+}
+
+/* ---------------- the 43-decade track ---------------- */
+#track { position: relative; z-index: 2; }
+
+.card {
+  position: absolute; width: min(380px, calc(100vw - 48px));
+  padding: 4px 0 4px 20px;
+}
+.card::before {
+  content: ''; position: absolute; left: 0; top: 8px; width: 2px; height: 40px;
+  background: linear-gradient(var(--c, var(--accent)), transparent);
+}
+.card .tag {
+  display: flex; justify-content: space-between; gap: 14px; align-items: baseline;
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em;
+  color: var(--c, var(--accent)); text-transform: uppercase; margin-bottom: 10px;
+  text-shadow: 0 1px 10px rgb(0 0 0 / .95);
+}
+.card .tag .m { color: var(--dim); letter-spacing: .04em; text-transform: none; }
+.card p {
+  font-size: 14.5px; color: color-mix(in oklab, var(--ink) 92%, var(--dim));
+  text-shadow: 0 1px 6px rgb(0 0 0 / .95), 0 0 22px rgb(0 0 0 / .85), 0 0 44px rgb(0 0 0 / .6);
+}
+.card p b { color: var(--ink); font-weight: 400; font-style: italic; }
+sup { font-size: .68em; }
+
+@supports (animation-timeline: view()) {
+  .card {
+    animation: card-in both linear;
+    animation-timeline: view();
+    animation-range: entry 0% entry 70%;
+  }
+  @keyframes card-in { from { opacity: 0; transform: translateY(26px); } }
+}
+
+/* the one scale rendered in HTML */
+#human {
+  position: fixed; inset: 0; z-index: 1; display: grid; place-content: center;
+  text-align: center; padding: 24px; opacity: 0; pointer-events: none;
+}
+#human .halo {
+  font-family: var(--air); font-weight: 100; text-transform: uppercase;
+  font-size: clamp(30px, 6vw, 64px); letter-spacing: .3em; text-indent: .3em;
+  color: var(--ink);
+}
+#human p {
+  margin: 22px auto 0; max-width: 44ch; font-size: 15.5px;
+  color: color-mix(in oklab, var(--ink) 82%, var(--dim));
+}
+#human .fn { margin-top: 16px; font-family: var(--mono); font-size: 11px; color: var(--dim); letter-spacing: .05em; }
+
+/* ---------------- outro ---------------- */
+#outro {
+  position: relative; z-index: 2; min-height: 160svh;
+  display: grid; place-content: center; text-align: center; padding: 24px;
+}
+#outro h2 {
+  font-family: var(--air); font-weight: 100; text-transform: uppercase;
+  font-size: clamp(34px, 7vw, 84px); letter-spacing: .22em; text-indent: .22em;
+  line-height: 1.15; color: var(--ink);
+}
+#outro .big-num {
+  margin-top: 26px; font-family: var(--mono); font-size: clamp(15px, 2.4vw, 22px);
+  color: var(--accent); letter-spacing: .06em;
+}
+#outro p { margin: 26px auto 0; max-width: 52ch; font-size: 15.5px; color: color-mix(in oklab, var(--ink) 80%, var(--dim)); }
+#outro p b { color: var(--ink); font-weight: 400; font-style: italic; }
+#outro .fine { margin-top: 44px; font-family: var(--mono); font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--dim); }
+#outro a { color: var(--accent); }
+
+/* ---------------- HUD ---------------- */
+#hud { position: fixed; inset: 0; z-index: 3; pointer-events: none; opacity: 0; transition: opacity .8s; }
+#hud.on { opacity: 1; }
+
+#wordmark {
+  position: fixed; top: 20px; left: 24px;
+  font-family: var(--mono); font-size: 11px; letter-spacing: .38em; text-transform: uppercase;
+  color: var(--dim);
+}
+#wordmark b { color: var(--ink); font-weight: 400; }
+
+#sound, #voyage {
+  position: fixed; top: 14px; pointer-events: auto;
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--dim); background: none; border: 1px solid var(--faint); border-radius: 3px;
+  padding: 8px 14px; cursor: pointer; transition: color .3s, border-color .3s;
+  z-index: 4;
+}
+#sound { right: 20px; }
+#voyage { right: 128px; }
+#sound:hover, #sound[aria-pressed="true"],
+#voyage:hover, #voyage[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); }
+@media (prefers-reduced-motion: reduce) { #voyage { display: none; } }
+
+#scene-name {
+  position: fixed; left: 24px; bottom: 108px; max-width: 60vw;
+  font-family: var(--air); font-weight: 100; text-transform: uppercase;
+  font-size: clamp(22px, 3.6vw, 44px); letter-spacing: .24em; line-height: 1.1;
+  color: var(--ink); transition: opacity .5s;
+}
+#scene-sub {
+  position: fixed; left: 25px; bottom: 84px;
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .22em; text-transform: uppercase;
+  color: var(--accent); transition: color .6s;
+}
+
+#readout {
+  position: fixed; right: 24px; bottom: 84px; text-align: right;
+  font-family: var(--mono); font-variant-numeric: tabular-nums;
+}
+#readout .exp { font-size: clamp(20px, 3vw, 32px); color: var(--ink); letter-spacing: .02em; }
+#readout .exp sup { color: var(--accent); transition: color .6s; }
+#readout .pretty { margin-top: 3px; font-size: 11.5px; color: var(--dim); letter-spacing: .04em; }
+#readout .light { margin-top: 2px; font-size: 11.5px; color: var(--dim); letter-spacing: .04em; }
+#readout .light b { color: var(--ink); font-weight: 400; }
+
+#ruler {
+  position: fixed; left: 24px; right: 24px; bottom: 34px; height: 30px;
+}
+#ruler .line { position: absolute; left: 0; right: 0; top: 14px; height: 1px; background: var(--faint); }
+#ruler .tick {
+  position: absolute; top: 10px; width: 1px; height: 9px; background: var(--faint);
+  font-family: var(--mono); font-size: 9px; color: var(--dim); letter-spacing: .05em;
+}
+#ruler .tick span { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); white-space: nowrap; }
+#ruler .tick.major { background: var(--dim); }
+#cursor {
+  position: absolute; top: 4px; width: 2px; height: 21px; margin-left: -1px;
+  background: var(--accent); transition: background .6s;
+  box-shadow: 0 0 12px var(--accent);
+}
+
+@media (max-width: 720px) {
+  #scene-name { bottom: 128px; letter-spacing: .14em; }
+  #scene-sub { bottom: 108px; }
+  #readout { right: 16px; bottom: 168px; }
+  #ruler { left: 16px; right: 16px; }
+  #wordmark { left: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: .01s !important; transition-duration: .01s !important; }
+}
+</style>
+
+<canvas id="stage" aria-label="A continuous animated zoom through the scales of the universe, from subatomic particles to the cosmic web, following your scroll position."></canvas>
+
+<!-- ================= INTRO ================= -->
+<header id="intro">
+  <div class="fadeout">
+    <p class="over">An instrument for one journey</p>
+    <h1>Magnitude</h1>
+    <p class="sub">
+      The observable universe fits in one scrollbar. This page is
+      <b>43 powers of ten</b> long — it begins inside a proton and ends at the edge of
+      everything that light has had time to show us.
+    </p>
+    <div class="rules">
+      <span>SCALE <b>10⁻¹⁶ → 10²⁷ m</b></span>
+      <span>EXCHANGE RATE <b>~900 px per ×10</b></span>
+      <span>RENDERING <b>live, nothing recorded</b></span>
+    </div>
+    <p class="cue">Scroll to zoom out</p>
+  </div>
+</header>
+
+<!-- ================= TRACK (cards are positioned by JS along 43 decades) ================= -->
+<div id="track">
+  <article class="card" data-e="-15.7" data-side="r">
+    <div class="tag"><span>Quantum foam</span><span class="m">≲10⁻¹⁶ m</span></div>
+    <p>Below this depth, distance itself gets blurry. The scrollbar could keep going
+    down another nineteen decades to the Planck length (1.6×10⁻³⁵ m) — but nothing
+    measurable lives there, so <b>this is where the journey starts</b>.</p>
+  </article>
+  <article class="card" data-e="-14.9" data-side="l">
+    <div class="tag"><span>The proton</span><span class="m">0.84 fm</span></div>
+    <p>Three quarks, bound by gluons that flicker in and out of existence. A proton's
+    charge radius is 0.84 femtometers, and <b>99.9% of your mass is this glue</b>, not
+    the quarks themselves.</p>
+  </article>
+  <article class="card" data-e="-13.9" data-side="r">
+    <div class="tag"><span>The nucleus</span><span class="m">~10⁻¹⁴ m</span></div>
+    <p>A gold nucleus — 79 protons, 118 neutrons — is about 14 fm across. Everything
+    around it, for the next four decades of your scroll, is <b>empty</b>.</p>
+  </article>
+  <article class="card" data-e="-10.2" data-side="l">
+    <div class="tag"><span>The atom</span><span class="m">~1 Å</span></div>
+    <p>You crossed four powers of ten of vacuum to get here. Blow a hydrogen atom up
+    to the size of a stadium and its nucleus is <b>a pea at midfield</b>. The cloud you
+    see is probability, not stuff.</p>
+  </article>
+  <article class="card" data-e="-8.8" data-side="r">
+    <div class="tag"><span>The double helix</span><span class="m">2 nm wide</span></div>
+    <p>DNA is two nanometers across, but unspooled, the copy in each of your cells runs
+    <b>about two meters</b>. You carry roughly 40 trillion copies of this molecule.</p>
+  </article>
+  <article class="card" data-e="-7.1" data-side="l">
+    <div class="tag"><span>Below light</span><span class="m">~100 nm</span></div>
+    <p>A virus is around 100 nanometers — smaller than the wavelengths of visible light
+    (380–700 nm). Everything you have seen so far is, strictly speaking,
+    <b>invisible</b>: no microscope using light can ever show it.</p>
+  </article>
+  <article class="card" data-e="-5.9" data-side="r">
+    <div class="tag"><span>The cell</span><span class="m">~10 µm</span></div>
+    <p>An E. coli is 2 µm; a red blood cell 7.8 µm. At this scale water feels like
+    honey and <b>swimming means corkscrewing</b> — inertia stops mattering.</p>
+  </article>
+  <article class="card" data-e="-4.1" data-side="l">
+    <div class="tag"><span>The pixel</span><span class="m">~10⁻⁴ m</span></div>
+    <p>A human hair is ~70 µm. On a typical laptop panel, one pixel is about a tenth of
+    a millimeter — you just scrolled past <b>the grain of the very screen</b> you're
+    reading. Each one is three colored lamps pretending to be white.</p>
+  </article>
+  <article class="card" data-e="3.6" data-side="r">
+    <div class="tag"><span>The city</span><span class="m">~10⁴ m</span></div>
+    <p>Ten kilometers frames a city. Manhattan's grid blocks are ~80 m apart; Central
+    Park is 4 km end to end. This is the largest scale a human can <b>walk across in an
+    afternoon</b>.</p>
+  </article>
+  <article class="card" data-e="6.9" data-side="l">
+    <div class="tag"><span>The planet</span><span class="m">1.27×10⁷ m</span></div>
+    <p>Earth, 12,756 km across. Every person who has ever lived — around 117 billion of
+    us — fits inside this frame. The International Space Station orbits a mere 400 km
+    up: <b>at this zoom, its altitude is a few pixels</b>.</p>
+  </article>
+  <article class="card" data-e="8.9" data-side="r">
+    <div class="tag"><span>The star</span><span class="m">1.39×10⁹ m</span></div>
+    <p>The Sun is 1.39 million kilometers across — wide enough that <b>the Moon's
+    entire orbit around Earth would fit inside it</b>, with room to spare.</p>
+  </article>
+  <article class="card" data-e="11.1" data-side="l">
+    <div class="tag"><span>One AU</span><span class="m">1.496×10¹¹ m</span></div>
+    <p>The Earth–Sun distance: one astronomical unit. Light — the fastest thing
+    permitted — needs <b>8 minutes 19 seconds</b> to cross it. Check the readout: the
+    light-time of your viewport is now measured in minutes.</p>
+  </article>
+  <article class="card" data-e="13.2" data-side="r">
+    <div class="tag"><span>The system</span><span class="m">~10¹³ m</span></div>
+    <p>Voyager 1, launched 1977, is the farthest human-made object: roughly 25 billion
+    kilometers out. After half a century of falling through space,
+    <b>it is still inside this single frame</b>.</p>
+  </article>
+  <article class="card" data-e="16.1" data-side="l">
+    <div class="tag"><span>The neighborhood</span><span class="m">~10¹⁶ m</span></div>
+    <p>A light-year is 9.46×10¹⁵ m. The nearest star, Proxima Centauri, sits 4.2
+    light-years away — <b>40 trillion kilometers of nothing</b> between us and the next
+    hydrogen furnace.</p>
+  </article>
+  <article class="card" data-e="20.8" data-side="r">
+    <div class="tag"><span>The galaxy</span><span class="m">~10²¹ m</span></div>
+    <p>The Milky Way: 100,000 light-years, a few hundred billion stars, all orbiting a
+    black hole of 4.3 million solar masses. The Sun's lap takes 230 million years —
+    <b>it has gone around about 20 times, ever</b>.</p>
+  </article>
+  <article class="card" data-e="22.9" data-side="l">
+    <div class="tag"><span>The Local Group</span><span class="m">~10²³ m</span></div>
+    <p>Andromeda, 2.5 million light-years away, is approaching at 110 km/s. In four
+    billion years the two spirals merge. From here on, <b>galaxies are the dust</b>.</p>
+  </article>
+  <article class="card" data-e="24.7" data-side="r">
+    <div class="tag"><span>The web</span><span class="m">~10²⁵ m</span></div>
+    <p>Matter settles into filaments strung between voids — the largest structure there
+    is. Our supercluster, Laniakea, spans 520 million light-years and holds
+    <b>a hundred thousand galaxies</b>, and it is one thread among millions.</p>
+  </article>
+  <article class="card" data-e="26.3" data-side="l">
+    <div class="tag"><span>The horizon</span><span class="m">8.8×10²⁶ m</span></div>
+    <p>The observable universe: 93 billion light-years across, holding hundreds of
+    billions of galaxies. Not the edge of everything — just the edge of
+    <b>what light has had time to bring us</b>.</p>
+  </article>
+</div>
+
+<!-- the one scale rendered in HTML -->
+<div id="human" aria-hidden="true">
+  <p class="halo">You are here</p>
+  <p>
+    10⁰ — one meter. A chair, a dog, an open laptop, you. Of the forty-three scales on
+    this page, this is the only one rendered in HTML — because it is the only scale
+    where browsers, and their users, exist.
+  </p>
+  <p class="fn" id="human-fn">every other scale is a fragment shader</p>
+</div>
+
+<!-- ================= OUTRO ================= -->
+<footer id="outro">
+  <div>
+    <h2>The scrollbar<br>ends here</h2>
+    <p class="big-num">8.8 × 10²⁶ m · 93,000,000,000 light-years</p>
+    <p>
+      You just traveled the full width of the observable universe with your thumb.
+      A property of logarithms worth sitting with: <b>the final 900 pixels of that
+      scroll covered nine times more distance than the previous forty-two decades
+      combined.</b>
+    </p>
+    <p id="outro-stats"></p>
+    <p class="fine">Magnitude · one file · <a href="#intro">fall back to the quantum foam</a></p>
+  </div>
+</footer>
+
+<div id="hud" aria-hidden="true">
+  <div id="wordmark"><b>MAGNITUDE</b> / 43 DECADES</div>
+  <div id="scene-name"></div>
+  <div id="scene-sub"></div>
+  <div id="readout">
+    <div class="exp">10<sup id="ro-exp">−16.0</sup> m</div>
+    <div class="pretty" id="ro-pretty"></div>
+    <div class="light">light crosses this frame in <b id="ro-light"></b></div>
+  </div>
+  <div id="ruler"><div class="line"></div><div id="cursor"></div></div>
+</div>
+<button id="voyage" aria-pressed="false" title="Hands-free cruise through all 43 decades">Voyage ▸</button>
+<button id="sound" aria-pressed="false">Sound ○</button>
+
+<script>
+(() => {
+'use strict';
+
+/* ============================== constants ============================== */
+const E_MIN = -16.5, E_MAX = 26.9, SPAN = E_MAX - E_MIN;   // 43.4 decades
+const PX_PER_DECADE = 900;
+const TRACK_H = Math.round(SPAN * PX_PER_DECADE);
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+
+/* Scene table — must mirror the GLSL bands.
+   [name, subtitle, loE, hiE, accent] */
+const SCENES = [
+  ['Quantum foam',      'virtual pairs, borrowed time',      -17.0, -14.8, '#b48cff'],
+  ['The nucleus',       'quarks and glue',                   -15.6, -13.6, '#ff9a5c'],
+  ['The atom',          'mostly nothing',                    -13.8,  -9.6, '#6ee7ff'],
+  ['The helix',         'a two-meter molecule',               -9.6,  -7.6, '#59e6a8'],
+  ['The cell',          'machinery in honey',                 -7.6,  -4.6, '#a8e063'],
+  ['The screen',        'three lamps pretending to be white', -4.8,  -2.4, '#7fd3ff'],
+  ['The visible',       'the human meter',                    -2.4,   1.6, '#ffd9a0'],
+  ['The city',          'lights seen from above',              1.6,   5.2, '#ffb84d'],
+  ['The planet',        'a wet rock, well lit',                5.2,   8.4, '#6fb7ff'],
+  ['The system',        'one star, some leftovers',            8.4,  14.2, '#ffd166'],
+  ['The neighborhood',  'stars, and the space between',       14.2,  19.4, '#cdd8ff'],
+  ['The galaxy',        'a slow white whirlpool',             19.4,  23.2, '#b7c6ff'],
+  ['The cosmic web',    'filaments of everything',            23.2,  26.9, '#ff7a6e'],
+];
+const weightOf = (e, lo, hi) =>
+  (e < lo || e > hi) ? 0 :
+  Math.min(1, (e - lo) / 0.7) * Math.min(1, (hi - e) / 0.7);
+
+/* ============================== layout ============================== */
+const track = document.getElementById('track');
+track.style.height = TRACK_H + 'px';
+
+function placeCards() {
+  const introH = document.getElementById('intro').offsetHeight;
+  const wide = innerWidth > 760;
+  document.querySelectorAll('.card').forEach(card => {
+    const e = parseFloat(card.dataset.e);
+    card.style.top = Math.round(((e - E_MIN) / SPAN) * TRACK_H - 60) + 'px';
+    if (wide) {
+      if (card.dataset.side === 'l') { card.style.left = 'clamp(24px, 9vw, 140px)'; card.style.right = 'auto'; }
+      else { card.style.right = 'clamp(24px, 9vw, 140px)'; card.style.left = 'auto'; }
+    } else {
+      card.style.left = '50%'; card.style.right = 'auto';
+      card.style.translate = '-50% 0';
+    }
+    // tint the card by its scene
+    let best = 0, bi = 0;
+    SCENES.forEach((s, i) => { const w = weightOf(e, s[2], s[3]); if (w > best) { best = w; bi = i; } });
+    card.style.setProperty('--c', SCENES[bi][4]);
+  });
+}
+placeCards();
+addEventListener('resize', placeCards);
+
+/* ============================== scroll → exponent ============================== */
+let targetE = E_MIN, shownE = E_MIN;
+function readScroll() {
+  const introH = document.getElementById('intro').offsetHeight;
+  const y = scrollY - introH;
+  targetE = E_MIN + clamp(y / TRACK_H, 0, 1) * SPAN;
+}
+addEventListener('scroll', readScroll, { passive: true });
+readScroll();
+
+/* ============================== HUD ============================== */
+const hud = document.getElementById('hud');
+const roExp = document.getElementById('ro-exp');
+const roPretty = document.getElementById('ro-pretty');
+const roLight = document.getElementById('ro-light');
+const sceneName = document.getElementById('scene-name');
+const sceneSub = document.getElementById('scene-sub');
+const cursor = document.getElementById('cursor');
+const humanEl = document.getElementById('human');
+
+const PREFIXES = [
+  [-30,'quectometers'],[-27,'rontometers'],[-24,'yoctometers'],[-21,'zeptometers'],
+  [-18,'attometers'],[-15,'femtometers'],[-12,'picometers'],[-9,'nanometers'],
+  [-6,'micrometers'],[-3,'millimeters'],[0,'meters'],[3,'kilometers'],
+  [6,'megameters'],[9,'gigameters'],[12,'terameters'],[15,'petameters'],
+  [18,'exameters'],[21,'zettameters'],[24,'yottameters'],[27,'ronnameters'],
+];
+function prettyMeters(e) {
+  let p = PREFIXES[0];
+  for (const cand of PREFIXES) if (cand[0] <= e) p = cand;
+  const v = Math.pow(10, e - p[0]);
+  const num = v >= 100 ? v.toFixed(0) : v >= 10 ? v.toFixed(1) : v.toFixed(2);
+  return `≈ ${num} ${p[1]}`;
+}
+function prettyLightTime(e) {
+  const t = Math.pow(10, e) / 299792458; // seconds
+  const YEAR = 3.156e7;
+  if (t < 1e-15) { const ex = Math.floor(Math.log10(t)); return (t / Math.pow(10, ex)).toFixed(1) + '×10' + supNum(ex) + ' s'; }
+  if (t < 1e-6) return (t * 1e9).toPrecision(3) + ' ns';
+  if (t < 1e-3) return (t * 1e6).toPrecision(3) + ' µs';
+  if (t < 1)    return (t * 1e3).toPrecision(3) + ' ms';
+  if (t < 60)   return t.toPrecision(3) + ' s';
+  if (t < 3600) return (t / 60).toPrecision(3) + ' min';
+  if (t < 86400) return (t / 3600).toPrecision(3) + ' hours';
+  if (t < YEAR) return (t / 86400).toPrecision(3) + ' days';
+  if (t < 1e6 * YEAR) return Math.round(t / YEAR).toLocaleString('en') + ' years';
+  if (t < 1e9 * YEAR) return (t / YEAR / 1e6).toPrecision(3) + ' million years';
+  return (t / YEAR / 1e9).toPrecision(3) + ' billion years';
+}
+function supNum(n) {
+  const S = { '-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹' };
+  return String(n).split('').map(c => S[c] || c).join('');
+}
+
+/* ruler ticks */
+const ruler = document.getElementById('ruler');
+for (let d = -15; d <= 25; d += 5) {
+  const t = document.createElement('div');
+  t.className = 'tick major';
+  t.style.left = ((d - E_MIN) / SPAN * 100) + '%';
+  t.innerHTML = `<span>10${supNum(d)}</span>`;
+  ruler.appendChild(t);
+}
+for (let d = Math.ceil(E_MIN); d <= Math.floor(E_MAX); d++) {
+  if ((d + 15) % 5 === 0) continue;
+  const t = document.createElement('div');
+  t.className = 'tick';
+  t.style.left = ((d - E_MIN) / SPAN * 100) + '%';
+  ruler.appendChild(t);
+}
+
+let curScene = -1, lastDecade = null;
+function updateHUD() {
+  hud.classList.toggle('on', scrollY > innerHeight * 0.5 && targetE < E_MAX - 0.35);
+
+  const disp = shownE;
+  roExp.textContent = (disp < 0 ? '−' : '+') + Math.abs(disp).toFixed(1);
+  roPretty.textContent = prettyMeters(disp);
+  roLight.textContent = prettyLightTime(disp);
+  cursor.style.left = ((disp - E_MIN) / SPAN * 100) + '%';
+
+  // dominant scene
+  let best = -1, bi = 0;
+  SCENES.forEach((s, i) => { const w = weightOf(disp, s[2], s[3]); if (w > best) { best = w; bi = i; } });
+  if (bi !== curScene) {
+    curScene = bi;
+    sceneName.textContent = SCENES[bi][0];
+    sceneSub.textContent = SCENES[bi][1];
+    document.documentElement.style.setProperty('--accent', SCENES[bi][4]);
+  }
+  // the DOM takes over at human scale
+  humanEl.style.opacity = weightOf(disp, -2.4, 1.6).toFixed(3);
+
+  // decade crossing ping (for the sound engine)
+  const dec = Math.floor(disp);
+  if (lastDecade !== null && dec !== lastDecade) pingDecade();
+  lastDecade = dec;
+}
+
+/* ============================== pointer & ping ============================== */
+const pointer = { x: 0, y: 0 };
+addEventListener('pointermove', ev => {
+  pointer.x = (ev.clientX / innerWidth) * 2 - 1;
+  pointer.y = (ev.clientY / innerHeight) * 2 - 1;
+}, { passive: true });
+
+const ping = { x: 0, y: 0, t: -100 };
+addEventListener('pointerdown', ev => {
+  if (ev.target.closest('button, a, .card')) return;
+  ping.x = ev.clientX / innerWidth;
+  ping.y = 1 - ev.clientY / innerHeight;
+  ping.t = performance.now() / 1000;
+});
+
+/* ============================== WebGL ============================== */
+const canvas = document.getElementById('stage');
+const gl = canvas.getContext('webgl2', { antialias: false, alpha: false });
+
+const VS = `#version 300 es
+void main() {
+  vec2 p = vec2(float((gl_VertexID << 1) & 2), float(gl_VertexID & 2));
+  gl_Position = vec4(p * 2.0 - 1.0, 0.0, 1.0);
+}`;
+
+const FS = `#version 300 es
+precision highp float;
+uniform vec2 uRes; uniform float uTime; uniform float uE;
+uniform vec2 uPointer; uniform vec4 uPing;
+out vec4 O;
+
+#define PI 3.14159265
+
+float hash(vec2 p) { p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 34.345); return fract(p.x * p.y); }
+float hash1(float n) { return fract(sin(n) * 43758.5453); }
+float noise(vec2 p) {
+  vec2 i = floor(p), f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(hash(i), hash(i + vec2(1, 0)), f.x),
+             mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), f.x), f.y);
+}
+const mat2 M2 = mat2(1.6, 1.2, -1.2, 1.6);
+float fbm(vec2 p) {
+  float v = 0.0, a = 0.5;
+  for (int i = 0; i < 5; i++) { v += a * noise(p); p = M2 * p; a *= 0.5; }
+  return v;
+}
+float ridge(vec2 p) {
+  float v = 0.0, a = 0.5;
+  for (int i = 0; i < 4; i++) { v += a * (1.0 - abs(2.0 * noise(p) - 1.0)); p = M2 * p; a *= 0.5; }
+  return v;
+}
+mat2 rot(float a) { float c = cos(a), s = sin(a); return mat2(c, -s, s, c); }
+float wband(float e, float lo, float hi) {
+  if (e < lo || e > hi) return 0.0;
+  return min(1.0, (e - lo) / 0.7) * min(1.0, (hi - e) / 0.7);
+}
+/* local zoom: content drawn at its own scale keeps shrinking as uE grows */
+float zoomFor(float eCenter) { return pow(10.0, clamp(uE - eCenter, -2.2, 2.2)); }
+
+/* round stars with soft halos; scans 3x3 neighbor cells so no glow is ever
+   clipped into a square. The brightest get diffraction spikes. */
+vec3 starLayer(vec2 p, float thresh, float t) {
+  vec3 col = vec3(0.0);
+  vec2 base = floor(p);
+  vec2 fp = fract(p);
+  for (int j = -1; j <= 1; j++)
+  for (int i = -1; i <= 1; i++) {
+    vec2 o = vec2(float(i), float(j));
+    vec2 id = base + o;
+    float h = hash(id);
+    if (h < thresh) continue;
+    vec2 pos = o + 0.5 + (vec2(hash(id + 1.0), hash(id + 2.0)) - 0.5) * 0.8;
+    vec2 q = fp - pos;
+    float d2 = dot(q, q);
+    float tw = 0.75 + 0.25 * sin(t * (1.0 + h * 3.0) + h * 40.0);
+    vec3 tint = mix(vec3(0.62, 0.74, 1.0), vec3(1.0, 0.78, 0.55), step(0.72, hash(id + 5.0)));
+    float b = (h - thresh) / (1.0 - thresh);
+    col += tint * tw * b * 0.0009 / (d2 + 0.0009);
+    if (h > 0.996) {
+      float sp = exp(-abs(q.x) * 30.0) * exp(-abs(q.y) * 200.0)
+               + exp(-abs(q.y) * 30.0) * exp(-abs(q.x) * 200.0);
+      col += tint * sp * 0.5 * tw;
+    }
+  }
+  return col;
+}
+
+/* ---------- 0 quantum foam ---------- */
+vec3 scFoam(vec2 uv, float t) {
+  vec2 p = uv * zoomFor(-16.0) * 3.0;
+  float f = fbm(p * 3.0 + t * 0.7) * fbm(p * 5.0 - t * 0.5);
+  vec3 col = vec3(0.10, 0.05, 0.22) * f * 2.2;
+  float sparks = smoothstep(0.72, 0.95, noise(p * 9.0 + t * 2.5));
+  col += sparks * vec3(0.62, 0.42, 1.0) * 0.9;
+  float pair = pow(noise(p * 6.0 - t * 1.6), 9.0) * 2.4;
+  col += pair * vec3(0.8, 0.6, 1.0) * 0.8;
+  return col;
+}
+/* ---------- 1 nucleus ---------- */
+vec3 scNucleus(vec2 uv, float t) {
+  vec2 p = uv * zoomFor(-14.6) * 2.4;
+  float field = 0.0;
+  for (int i = 0; i < 7; i++) {
+    float fi = float(i);
+    vec2 c = 0.55 * vec2(sin(fi * 2.4 + t * 0.6 + sin(t * 0.9 + fi)),
+                         cos(fi * 1.7 - t * 0.5)) * (0.4 + 0.35 * hash1(fi));
+    field += 0.045 / (dot(p - c, p - c) + 0.012);
+  }
+  float body = smoothstep(1.0, 2.6, field);
+  float rim = smoothstep(0.9, 1.15, field) - smoothstep(1.3, 2.2, field);
+  float gluon = fbm(p * 6.0 + t * 1.4);
+  vec3 col = body * mix(vec3(0.9, 0.32, 0.10), vec3(1.0, 0.75, 0.35), gluon);
+  col += rim * vec3(1.0, 0.5, 0.2) * 0.7;
+  return col * 0.9;
+}
+/* ---------- 2 atom ---------- */
+vec3 scAtom(vec2 uv, float t) {
+  vec2 p = uv * zoomFor(-10.3) * 1.5;
+  float r = length(p);
+  float th = atan(p.y, p.x);
+  float orb = exp(-r * 2.1) * (0.45 + 0.55 * pow(abs(cos(th * 2.0 + t * 0.12)), 2.0));
+  orb += exp(-abs(r - 0.85) * 5.0) * 0.30 * (0.6 + 0.4 * sin(th * 6.0 - t * 0.4));
+  vec3 col = vec3(0.12, 0.55, 0.75) * orb * 0.85;
+  col += vec3(0.9, 0.95, 1.0) * exp(-r * 60.0) * 1.4;                      // the nucleus, a point
+  float spark = step(0.9965, hash(floor(vec2(th * 20.0, r * 30.0) + t * 3.0)));
+  col += spark * vec3(0.5, 0.9, 1.0) * exp(-r * 1.5) * 0.8;
+  return col;
+}
+/* ---------- 3 helix ---------- */
+vec3 scHelix(vec2 uv, float t) {
+  vec2 p = rot(0.5) * uv * zoomFor(-8.7) * 2.0;
+  float ph = p.x * 4.6 + t * 0.35;
+  vec3 col = vec3(0.0);
+  for (int k = 0; k < 2; k++) {
+    float s = sin(ph + float(k) * PI);
+    float depth = 0.6 + 0.4 * cos(ph + float(k) * PI);
+    float d = abs(p.y - s * 0.42);
+    col += vec3(0.20, 0.9, 0.62) * depth * 0.030 / (d * d + 0.006);
+  }
+  float rung = smoothstep(0.14, 0.0, abs(fract(ph / PI * 2.0) - 0.5) - 0.28);
+  float inside = smoothstep(0.44, 0.30, abs(p.y));
+  col += vec3(0.55, 0.85, 0.65) * rung * inside * 0.35;
+  col *= exp(-abs(p.y) * 0.8);
+  return col * 0.8;
+}
+/* ---------- 4 cell ---------- */
+vec3 scCell(vec2 uv, float t) {
+  vec2 p = uv * zoomFor(-6.0) * 1.4;
+  float r = length(p);
+  float wob = fbm(normalize(p + 0.001) * 2.0 + t * 0.15) * 0.14;
+  float R = 0.82 + wob;
+  vec3 col = vec3(0.0);
+  float mem = exp(-abs(r - R) * 26.0);
+  col += vec3(0.55, 0.85, 0.30) * mem * 1.1;
+  float inside = smoothstep(R, R - 0.06, r);
+  col += inside * vec3(0.06, 0.13, 0.05);
+  float nuc = 0.05 / (dot(p - vec2(0.16, -0.05), p - vec2(0.16, -0.05)) + 0.045);
+  col += inside * vec3(0.35, 0.6, 0.22) * smoothstep(0.6, 1.6, nuc);
+  for (int i = 0; i < 5; i++) {
+    float fi = float(i) + 1.0;
+    vec2 c = 0.5 * vec2(sin(fi * 2.1 + t * 0.22), cos(fi * 3.3 + t * 0.17));
+    col += inside * vec3(0.5, 0.75, 0.3) * 0.010 / (dot(p - c, p - c) + 0.01);
+  }
+  float stream = fbm(p * 5.0 + vec2(t * 0.35, -t * 0.2));
+  col += inside * vec3(0.2, 0.4, 0.12) * smoothstep(0.62, 0.8, stream) * 0.5;
+  return col;
+}
+/* ---------- 5 subpixels ---------- */
+vec3 scScreen(vec2 uv, float t) {
+  float z = zoomFor(-3.6);
+  vec2 p = uv * z * 9.0;
+  vec2 cell = floor(p);
+  vec2 f = fract(p);
+  float img = 0.35 + 0.65 * fbm(cell * 0.18 + t * 0.05);
+  float lane = floor(f.x * 3.0);
+  vec2 bp = vec2(fract(f.x * 3.0) - 0.5, f.y - 0.5);
+  vec2 dr = max(abs(bp) - vec2(0.15, 0.28), 0.0);        // capsule-shaped emitters, not squares
+  float d = length(dr);
+  float bar = smoothstep(0.10, 0.015, d);
+  float glow = 0.010 / (d * d + 0.016);
+  vec3 rgb = lane < 0.5 ? vec3(1.0, 0.08, 0.05) : (lane < 1.5 ? vec3(0.05, 1.0, 0.15) : vec3(0.1, 0.25, 1.0));
+  vec3 col = rgb * (bar + glow * 0.45) * img;
+  col *= 0.9 + 0.1 * sin(uv.y * uRes.y * 1.6);           // faint scanline
+  return col * 0.9;
+}
+/* ---------- 6 human — the DOM's scale; shader just breathes ---------- */
+vec3 scHuman(vec2 uv, float t) {
+  float r = length(uv * vec2(0.8, 1.0));
+  float breathe = 0.5 + 0.5 * sin(t * 0.5);
+  vec3 col = vec3(0.10, 0.075, 0.05) * exp(-r * 1.6) * (0.8 + 0.2 * breathe);
+  for (int i = 0; i < 8; i++) {
+    float fi = float(i);
+    vec2 c = vec2(sin(fi * 1.7 + t * 0.05) * 0.9, fract(hash1(fi) + t * 0.008) * 2.0 - 1.0);
+    col += vec3(0.5, 0.42, 0.3) * 0.0011 / (dot(uv - c, uv - c) + 0.002);
+  }
+  return col;
+}
+/* ---------- 7 city — sprawl at night, the way it looks from orbit ---------- */
+vec3 scCity(vec2 uv, float t) {
+  vec2 p = rot(0.3) * uv * zoomFor(3.9) * 2.1;
+  float coast = fbm(p * 0.85 + 3.7);
+  float land = smoothstep(0.42, 0.52, coast);
+  float art = ridge(p * 2.4 + 11.0);                       // arterial roads as light filaments
+  float roads = smoothstep(0.78, 0.98, art);
+  float density = exp(-length(p + vec2(0.25, -0.1)) * 0.85) * (0.35 + 0.65 * fbm(p * 1.7 + 5.0));
+  vec3 col = vec3(1.0, 0.60, 0.24) * roads * density * land * 1.7;
+  float sp = pow(noise(p * 34.0 + t * 0.02), 13.0) * 9.0;   // individual lamps, round
+  col += vec3(1.0, 0.82, 0.5) * sp * density * land * smoothstep(0.45, 0.85, art);
+  col += vec3(0.05, 0.028, 0.014) * density * land;        // diffuse skyglow
+  col += vec3(0.006, 0.011, 0.018) * (1.0 - land);         // dark water
+  col += vec3(0.028, 0.042, 0.058) * (1.0 - land) * pow(noise(p * 6.0 + t * 0.12), 3.0);
+  return col;
+}
+/* ---------- 8 planet ---------- */
+vec3 scPlanet(vec2 uv, float t) {
+  vec2 p = uv * zoomFor(6.9) * 1.35;
+  float r = length(p);
+  vec3 col = vec3(0.0);
+  if (r < 1.0) {
+    vec3 n = vec3(p, sqrt(1.0 - r * r));
+    vec3 L = normalize(vec3(-0.55, 0.35, 0.75));
+    float diff = clamp(dot(n, L), 0.0, 1.0);
+    vec2 sph = vec2(atan(n.x, n.z) + t * 0.02, asin(n.y));
+    float land = fbm(sph * 2.6 + 7.0);
+    float isLand = smoothstep(0.52, 0.56, land);
+    vec3 ocean = vec3(0.05, 0.16, 0.38);
+    vec3 ground = mix(vec3(0.10, 0.22, 0.08), vec3(0.35, 0.30, 0.18), fbm(sph * 6.0));
+    vec3 surf = mix(ocean, ground, isLand);
+    float ice = smoothstep(1.02, 1.24, abs(sph.y));
+    surf = mix(surf, vec3(0.82, 0.88, 0.94), ice * 0.9);
+    float cloud = smoothstep(0.52, 0.74, fbm(sph * 3.4 + vec2(t * 0.045, 0.0)) * 0.85
+                                       + fbm(sph * 7.0 - vec2(t * 0.03, 0.0)) * 0.35);
+    surf = mix(surf, vec3(0.93), cloud * 0.9);
+    float spec = pow(clamp(dot(reflect(-L, n), vec3(0, 0, 1)), 0.0, 1.0), 24.0) * (1.0 - isLand) * (1.0 - cloud) * (1.0 - ice);
+    float twilight = smoothstep(-0.04, 0.28, diff);
+    col = surf * (diff * 1.1 + 0.015) * twilight + spec * vec3(0.9);
+    col += vec3(0.25, 0.5, 1.0) * pow(1.0 - n.z, 3.0) * (diff + 0.12) * 0.4;   // in-disk atmosphere
+    float night = smoothstep(0.06, -0.14, diff);
+    float cities = pow(noise(sph * 42.0), 9.0) * 2.6 * isLand * (1.0 - cloud) * (1.0 - ice);
+    col += night * cities * vec3(1.0, 0.72, 0.38);
+  }
+  float rim = exp(-abs(r - 1.0) * 14.0);
+  col += vec3(0.25, 0.5, 1.0) * rim * (r > 1.0 ? 0.8 : 0.4);
+  return col;
+}
+/* ---------- 9 solar system ---------- */
+vec3 scSystem(vec2 uv, float t) {
+  vec2 p = uv * zoomFor(11.3) * 1.15;
+  float r = length(p);
+  vec3 col = vec3(1.0, 0.72, 0.3) * 0.020 / (r * r + 0.004);
+  col += vec3(1.0, 0.5, 0.15) * fbm(p * 9.0 + t * 0.4) * exp(-r * 9.0) * 0.9;
+  vec2 pe = p * vec2(1.0, 1.35);                      // slight tilt
+  float re = length(pe);
+  for (int i = 0; i < 7; i++) {
+    float fi = float(i);
+    float R = 0.16 + fi * 0.135;
+    col += vec3(0.5, 0.6, 0.8) * exp(-abs(re - R) * 220.0) * 0.20;
+    float ang = t * (0.24 - fi * 0.026) + fi * 2.4;
+    vec2 pl = vec2(cos(ang), sin(ang) / 1.35) * R;
+    col += mix(vec3(0.8, 0.7, 0.5), vec3(0.5, 0.65, 1.0), hash1(fi)) * 0.0011 / (dot(p - pl, p - pl) + 0.0012);
+  }
+  col += vec3(0.5, 0.45, 0.4) * exp(-abs(pe.y) * 7.0) * exp(-r * 1.2) * 0.10;   // zodiacal dust
+  return col;
+}
+/* ---------- 10 stellar neighborhood ---------- */
+vec3 scStars(vec2 uv, float t) {
+  vec3 col = vec3(0.0);
+  vec2 mw = rot(-0.55) * uv;                                 // the Milky Way band, edge-on
+  float band = fbm(mw * vec2(1.3, 3.6) + 2.0) * exp(-abs(mw.y) * 2.6);
+  col += vec3(0.14, 0.13, 0.20) * band * 1.5;
+  col += vec3(0.05, 0.02, 0.01) * fbm(mw * vec2(2.6, 7.0) + 9.0) * exp(-abs(mw.y) * 3.4);
+  col += vec3(0.035, 0.025, 0.06) * fbm(uv * 2.4 + 3.0);
+  for (int L = 0; L < 3; L++) {
+    float fl = float(L);
+    vec2 p = uv * zoomFor(16.5) * (20.0 + fl * 30.0) + uPointer * (0.4 + fl * 0.5) + fl * 17.0;
+    col += starLayer(p, 0.93, t) * (0.5 + fl * 0.3);
+  }
+  return col;
+}
+/* ---------- 11 galaxy ---------- */
+vec3 scGalaxy(vec2 uv, float t) {
+  vec2 p = rot(0.4) * (uv * zoomFor(21.0)) * vec2(1.0, 1.9) * 1.25;
+  float r = length(p) + 1e-4;
+  float th = atan(p.y, p.x);
+  float arm = pow(0.5 + 0.5 * cos(2.0 * th - log(r) * 5.5 + t * 0.03), 2.4);
+  float disk = exp(-r * 2.0);
+  float dust = fbm(p * 5.0 + 11.0);
+  vec3 col = vec3(0.65, 0.72, 1.0) * arm * disk * 1.5;
+  col *= 0.45 + 0.55 * smoothstep(0.25, 0.75, dust);
+  col += vec3(1.0, 0.85, 0.6) * exp(-r * 7.0) * 1.6;                 // bulge
+  float sp = pow(noise(p * 26.0 + 4.0), 10.0) * 6.0;
+  col += vec3(0.85, 0.9, 1.0) * sp * arm * disk * 2.0;
+  col += starLayer(p * 34.0, 0.985, t) * disk * 0.8;         // foreground stars of our own galaxy
+  return col * 0.85;
+}
+/* ---------- 12 cosmic web ---------- */
+vec3 scWeb(vec2 uv, float t) {
+  vec2 p = uv * zoomFor(25.1) * 2.1;
+  float f1 = ridge(p * 1.6 + t * 0.008);
+  float fil = smoothstep(0.78, 0.99, f1);
+  float redshift = smoothstep(24.2, 26.8, uE);
+  vec3 cold = vec3(0.45, 0.5, 0.9), hot = vec3(0.95, 0.32, 0.22);
+  vec3 col = mix(cold, hot, redshift) * fil * 0.75;
+  float nodes = smoothstep(0.90, 1.0, f1) * smoothstep(0.85, 1.0, ridge(p * 0.8 + 5.0));
+  col += mix(vec3(0.9, 0.85, 0.8), vec3(1.0, 0.5, 0.35), redshift) * nodes * 0.9;
+  float gx = pow(noise(p * 34.0 + 9.0), 14.0) * 5.0;
+  col += vec3(0.85) * gx * smoothstep(0.55, 0.9, f1);
+  col *= 1.0 - smoothstep(26.2, 26.85, uE) * 0.92;                   // fade at the horizon
+  return col;
+}
+
+void main() {
+  vec2 uv = (gl_FragCoord.xy - 0.5 * uRes) / uRes.y;
+  uv += uPointer * vec2(0.018, -0.018);
+  float t = uTime;
+  float e = uE;
+
+  vec3 col = vec3(0.008, 0.010, 0.020);
+
+  float w;
+  w = wband(e, -17.0, -14.8); if (w > 0.002) col += w * scFoam(uv, t);
+  w = wband(e, -15.6, -13.6); if (w > 0.002) col += w * scNucleus(uv, t);
+  w = wband(e, -13.8,  -9.6); if (w > 0.002) col += w * scAtom(uv, t);
+  w = wband(e,  -9.6,  -7.6); if (w > 0.002) col += w * scHelix(uv, t);
+  w = wband(e,  -7.6,  -4.6); if (w > 0.002) col += w * scCell(uv, t);
+  w = wband(e,  -4.8,  -2.4); if (w > 0.002) col += w * scScreen(uv, t);
+  w = wband(e,  -2.4,   1.6); if (w > 0.002) col += w * scHuman(uv, t);
+  w = wband(e,   1.6,   5.2); if (w > 0.002) col += w * scCity(uv, t);
+  w = wband(e,   5.2,   8.4); if (w > 0.002) col += w * scPlanet(uv, t);
+  w = wband(e,   8.4,  14.2); if (w > 0.002) col += w * scSystem(uv, t);
+  w = wband(e,  14.2,  19.4); if (w > 0.002) col += w * scStars(uv, t);
+  w = wband(e,  19.4,  23.2); if (w > 0.002) col += w * scGalaxy(uv, t);
+  w = wband(e,  23.2,  26.9); if (w > 0.002) col += w * scWeb(uv, t);
+
+  // sonar ping on click
+  float age = t - uPing.z;
+  if (age < 2.0 && age > 0.0) {
+    vec2 pc = (uPing.xy * uRes / uRes.y) - 0.5 * uRes / uRes.y;
+    float d = length(uv - uPointer * vec2(0.018, -0.018) - pc);
+    float ring = exp(-abs(d - age * 0.55) * 26.0) * exp(-age * 2.0);
+    col += vec3(0.9, 0.95, 1.0) * ring * 0.5;
+  }
+
+  // filmic finish: gentle saturation lift, highlight roll-off, vignette, grain
+  float luma = dot(col, vec3(0.299, 0.587, 0.114));
+  col = mix(vec3(luma), col, 1.14);
+  col = col / (1.0 + col * 0.42);
+  col = pow(max(col, 0.0), vec3(0.90));
+  col *= 1.0 - 0.4 * dot(uv, uv);
+  col += (hash(gl_FragCoord.xy + fract(t)) - 0.5) * 0.02;
+  O = vec4(col, 1.0);
+}`;
+
+let glOK = false, prog, uRes, uTime, uE, uPointer, uPing;
+if (gl) {
+  const mk = (type, src) => {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src); gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) { console.error(gl.getShaderInfoLog(s)); return null; }
+    return s;
+  };
+  const vs = mk(gl.VERTEX_SHADER, VS), fs = mk(gl.FRAGMENT_SHADER, FS);
+  if (vs && fs) {
+    prog = gl.createProgram();
+    gl.attachShader(prog, vs); gl.attachShader(prog, fs); gl.linkProgram(prog);
+    if (gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+      gl.useProgram(prog);
+      uRes = gl.getUniformLocation(prog, 'uRes');
+      uTime = gl.getUniformLocation(prog, 'uTime');
+      uE = gl.getUniformLocation(prog, 'uE');
+      uPointer = gl.getUniformLocation(prog, 'uPointer');
+      uPing = gl.getUniformLocation(prog, 'uPing');
+      glOK = true;
+    } else console.error(gl.getProgramInfoLog(prog));
+  }
+}
+if (!glOK) document.getElementById('human-fn').textContent = 'WebGL2 unavailable — the journey still reads, it just cannot be seen';
+
+function fit() {
+  const dpr = clamp(devicePixelRatio || 1, 1, 1.5);
+  const w = Math.round(innerWidth * dpr), h = Math.round(innerHeight * dpr);
+  if (canvas.width !== w || canvas.height !== h) {
+    canvas.width = w; canvas.height = h;
+    if (gl) gl.viewport(0, 0, w, h);
+  }
+}
+
+/* Voyage — hands-free cruise through all 43 decades */
+const voyageBtn = document.getElementById('voyage');
+let cruising = false, lastNow = 0;
+function setCruise(on) {
+  cruising = on;
+  voyageBtn.setAttribute('aria-pressed', String(on));
+  voyageBtn.textContent = on ? 'Voyage ■' : 'Voyage ▸';
+}
+voyageBtn.addEventListener('click', () => setCruise(!cruising));
+['wheel', 'touchmove', 'keydown'].forEach(ev =>
+  addEventListener(ev, () => { if (cruising) setCruise(false); }, { passive: true }));
+
+const smoothPointer = { x: 0, y: 0 };
+let frozenT = 20;
+function frame(now) {
+  const t = reduced ? frozenT : now / 1000;
+  if (cruising) {
+    const dt = Math.min((now - lastNow) / 1000, 0.05);
+    scrollBy(0, dt * 290);                              // full journey in ~2.5 minutes
+    if (scrollY + innerHeight >= document.documentElement.scrollHeight - 4) setCruise(false);
+    readScroll();
+  }
+  lastNow = now;
+  shownE = lerp(shownE, targetE, 0.14);
+  smoothPointer.x = lerp(smoothPointer.x, pointer.x, 0.05);
+  smoothPointer.y = lerp(smoothPointer.y, pointer.y, 0.05);
+  updateHUD();
+  updateSound();
+  if (glOK && !document.hidden) {
+    fit();
+    gl.uniform2f(uRes, canvas.width, canvas.height);
+    gl.uniform1f(uTime, t);
+    gl.uniform1f(uE, shownE);
+    gl.uniform2f(uPointer, smoothPointer.x, smoothPointer.y);
+    gl.uniform4f(uPing, ping.x, ping.y, ping.t, 0);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+/* ============================== sound ============================== */
+let audio = null;
+const soundBtn = document.getElementById('sound');
+function buildAudio() {
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const master = ctx.createGain(); master.gain.value = 0; master.connect(ctx.destination);
+  const mk = (type, detune) => {
+    const o = ctx.createOscillator(); o.type = type; o.detune.value = detune;
+    const g = ctx.createGain(); g.gain.value = 0.05; o.connect(g); g.connect(master); o.start();
+    return o;
+  };
+  const o1 = mk('sine', 0), o2 = mk('sine', 9), o3 = mk('triangle', -1205);
+  // filtered noise bed
+  const len = ctx.sampleRate * 2;
+  const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+  const noise = ctx.createBufferSource(); noise.buffer = buf; noise.loop = true;
+  const nf = ctx.createBiquadFilter(); nf.type = 'bandpass'; nf.Q.value = 2.5;
+  const ng = ctx.createGain(); ng.gain.value = 0.028;
+  noise.connect(nf); nf.connect(ng); ng.connect(master); noise.start();
+  return { ctx, master, o1, o2, o3, nf };
+}
+soundBtn.addEventListener('click', async () => {
+  if (!audio) audio = buildAudio();
+  await audio.ctx.resume();
+  const on = soundBtn.getAttribute('aria-pressed') !== 'true';
+  soundBtn.setAttribute('aria-pressed', String(on));
+  soundBtn.textContent = on ? 'Sound ●' : 'Sound ○';
+  audio.master.gain.setTargetAtTime(on ? 0.5 : 0, audio.ctx.currentTime, 0.4);
+});
+function updateSound() {
+  if (!audio || soundBtn.getAttribute('aria-pressed') !== 'true') return;
+  // small scales ring high and fast, cosmic scales rumble
+  const f = 55 * Math.pow(2, (E_MAX - shownE) / SPAN * 5.2);
+  const now = audio.ctx.currentTime;
+  audio.o1.frequency.setTargetAtTime(f, now, 0.15);
+  audio.o2.frequency.setTargetAtTime(f * 1.5, now, 0.2);
+  audio.o3.frequency.setTargetAtTime(f * 4, now, 0.25);
+  audio.nf.frequency.setTargetAtTime(clamp(f * 6, 80, 9000), now, 0.3);
+}
+function pingDecade() {
+  if (!audio || soundBtn.getAttribute('aria-pressed') !== 'true') return;
+  const ctx = audio.ctx;
+  const o = ctx.createOscillator(); o.type = 'sine';
+  const f = 110 * Math.pow(2, (E_MAX - shownE) / SPAN * 5.2);
+  o.frequency.value = clamp(f * 2, 60, 4000);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.09, ctx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.5);
+  o.connect(g); g.connect(audio.master);
+  o.start(); o.stop(ctx.currentTime + 0.55);
+}
+
+/* ============================== outro stats ============================== */
+(function () {
+  const totalPx = TRACK_H;
+  const el = document.getElementById('outro-stats');
+  el.innerHTML =
+    `Exchange rate at the top of the page: one pixel ≈ 10⁻¹⁶ m, far less than a proton. ` +
+    `At the bottom: one pixel ≈ 10²³ m, about <b>ten million light-years per pixel</b>. ` +
+    `Same thumb, same gesture — ${totalPx.toLocaleString('en')} pixels apart.`;
+})();
+
+})();
+</script>
+
+</html>
