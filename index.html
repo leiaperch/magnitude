@@ -763,85 +763,148 @@ vec3 scHuman(vec2 uv, float t) {
   return col;
 }
 /* ---------- 7 city — daylight satellite imagery, the atlas look ----------
-   Countryside patchwork, hedgerows, a river with its riparian trees, a
-   highway, and an urban fabric on a warped grid: terracotta roofs in the
-   old core, pale industrial slabs at the edge, cast shadows, traffic,
-   then clouds and haze as altitude grows. */
+   A real terrain: elevation field with hillshading, a carved river valley,
+   forests climbing the slopes, drier fields on the plateaus. On the plain,
+   an urban fabric of perimeter blocks — rowhouses aligned along the
+   streets with ridged two-slope roofs and inner courtyards — detached
+   houses at the edge, cast shadows, traffic, then clouds and haze. */
+float fbm3(vec2 p) {
+  float v = 0.0, a = 0.5;
+  for (int i = 0; i < 3; i++) { v += a * noise(p); p = M2 * p; a *= 0.5; }
+  return v;
+}
+float mea3(float x) { return (fbm3(vec2(x * 0.35, 3.1)) - 0.5) * 2.2; }
+float terra(vec2 p) {
+  float e = fbm3(p * 0.5 + 41.0);
+  float rd = abs(p.y - mea3(p.x));
+  return e - 0.38 * exp(-rd * rd * 5.0);      // the river carves its valley
+}
 float roadGrid(vec2 q, float spacing, float width) {
   vec2 g = abs(fract(q / spacing) - 0.5) * spacing;
   float d = min(g.x, g.y);
   float aa = fwidth(d) + 1e-4;
   return smoothstep(width + aa, width - aa, d);
 }
+/* built mass at q — used twice: at the shading point and offset for cast shadows */
+float urbanMass(vec2 q, float rowMix) {
+  vec2 cid = floor(q / 0.17);
+  vec2 inn = fract(q / 0.17);
+  vec2 m0 = 0.12 + 0.10 * vec2(hash(cid + 2.0), hash(cid + 5.0));
+  float det = step(m0.x, inn.x) * step(inn.x, 1.0 - m0.x * 0.6)
+            * step(m0.y, inn.y) * step(inn.y, 1.0 - m0.y);
+  float b = min(min(inn.x, 1.0 - inn.x), min(inn.y, 1.0 - inn.y));
+  float depth = 0.16 + 0.10 * hash(cid + 21.0);
+  float nearY = step(min(inn.y, 1.0 - inn.y), min(inn.x, 1.0 - inn.x));
+  float tang = mix(inn.y, inn.x, nearY);
+  float houseN = 5.0 + floor(4.0 * hash(cid + 3.0));
+  float hh = hash(cid * 3.1 + floor(tang * houseN) + nearY * 7.0);
+  float row = step(0.045, b) * step(b, 0.045 + depth) * step(0.10, hh);
+  float mass = mix(det * step(0.10, hash(cid + 9.0)), row, rowMix);
+  float park = step(0.93, hash(cid + 13.0));
+  return mass * (1.0 - park) * step(0.06, hash(cid + 9.0));
+}
 vec3 scCity(vec2 uv, float t) {
   vec2 p = rot(0.25) * uv * zoomFor(3.9) * 2.6;
 
-  /* countryside patchwork with hedgerows */
+  /* terrain: elevation, slope, hillshade */
+  float el = terra(p);
+  float gx = terra(p + vec2(0.05, 0.0)) - el;
+  float gy = terra(p + vec2(0.0, 0.05)) - el;
+  vec3 tn = normalize(vec3(-gx * 7.0, -gy * 7.0, 1.0));
+  float hillshade = clamp(dot(tn, normalize(vec3(-0.5, 0.55, 0.75))), 0.0, 1.0);
+  float elN = smoothstep(0.05, 0.75, el);
+  float slope = length(vec2(gx, gy)) * 20.0;
+
+  /* countryside: lush valley floor, drier plateaus, pasture on the slopes */
   vec2 fscale = vec2(2.6, 4.2);
   float fh = hash(floor(p * fscale + vec2(0.0, 17.0)));
-  vec3 field = mix(vec3(0.36, 0.42, 0.21), vec3(0.60, 0.55, 0.35), fh);
-  field = mix(field, vec3(0.44, 0.30, 0.19), step(0.80, fh));            // ploughed earth
-  field *= 0.90 + 0.10 * noise(p * 34.0);                                // soil grain
+  vec3 field = mix(vec3(0.34, 0.41, 0.20), vec3(0.58, 0.53, 0.33), fh);
+  field = mix(field, vec3(0.44, 0.30, 0.19), step(0.82, fh));            // ploughed earth
+  field = mix(field, vec3(0.52, 0.50, 0.30), elN * 0.55);                // dry uplands
+  float pasture = smoothstep(0.35, 0.8, slope);
+  field = mix(field, vec3(0.38, 0.46, 0.24), pasture * 0.8);             // slopes: open grass
+  field *= 0.90 + 0.10 * noise(p * 34.0);
   vec2 fg = abs(fract(p * fscale) - 0.5);
-  field *= 1.0 - smoothstep(0.455, 0.5, max(fg.x, fg.y)) * 0.5;          // hedgerows
-  float forest = smoothstep(0.56, 0.72, fbm(p * 0.7 + 23.0));
-  vec3 col = mix(field, vec3(0.13, 0.20, 0.10) * (0.8 + 0.4 * noise(p * 26.0)), forest);
+  field *= 1.0 - smoothstep(0.455, 0.5, max(fg.x, fg.y)) * 0.5 * (1.0 - pasture * 0.7);
+  float forest = smoothstep(0.58, 0.72, fbm(p * 0.7 + 23.0) + elN * 0.18 + slope * 0.22);
+  vec3 col = mix(field, vec3(0.12, 0.19, 0.10) * (0.8 + 0.4 * noise(p * 26.0)), forest);
 
-  /* the river and its dark tree line */
-  float mea = (fbm(vec2(p.x * 0.35, 3.1)) - 0.5) * 2.2;
-  float rd = abs(p.y - mea);
-  col = mix(col, vec3(0.11, 0.19, 0.09), smoothstep(0.15, 0.055, rd) * 0.75);
+  /* relief shading over the open land */
+  col *= 0.55 + 0.60 * hillshade;
+
+  /* the river in its valley, with its dark tree line */
+  float rd = abs(p.y - mea3(p.x));
+  col = mix(col, vec3(0.10, 0.18, 0.085), smoothstep(0.15, 0.055, rd) * 0.75);
   float river = smoothstep(0.05, 0.032, rd);
-  col = mix(col, vec3(0.12, 0.18, 0.17), river);
+  col = mix(col, vec3(0.12, 0.18, 0.17) * (0.8 + 0.3 * hillshade), river);
 
   /* highway skirting the town */
-  float hwd = abs(p.x * 0.62 + p.y * 0.45 - 0.85 - (fbm(vec2(p.y * 0.3, 8.0)) - 0.5) * 1.1);
+  float hwd = abs(p.x * 0.62 + p.y * 0.45 - 0.85 - (fbm3(vec2(p.y * 0.3, 8.0)) - 0.5) * 1.1);
   float hwm = smoothstep(0.030, 0.016, hwd);
 
-  /* urban mask: dense core near the river bend, ragged edges */
+  /* urban mask: the town stays on the plain, dense near the river bend */
   vec2 pc = p - vec2(0.35, -0.15);
-  float urb = smoothstep(0.15, 0.42, exp(-dot(pc, pc) * 0.5) * (0.45 + 0.55 * fbm(p * 1.1 + 3.0)));
-  float core = exp(-dot(pc, pc) * 2.6);
+  float urb = smoothstep(0.15, 0.42, exp(-dot(pc, pc) * 0.5) * (0.45 + 0.55 * fbm3(p * 1.1 + 3.0)));
+  urb *= smoothstep(0.85, 0.45, elN + slope * 0.4);
+  float core = exp(-dot(pc, pc) * 2.6) * smoothstep(0.7, 0.3, elN);
+  float rowMix = smoothstep(0.20, 0.65, core * 1.5 + urb * 0.2);
 
-  /* street network: a grid bent by the terrain */
-  vec2 q = p + (vec2(fbm(p * 0.9 + 4.0), fbm(p * 0.9 + 9.0)) - 0.5) * 0.55;
+  /* street network bent by the terrain */
+  vec2 q = p + (vec2(fbm3(p * 0.9 + 4.0), fbm3(p * 0.9 + 9.0)) - 0.5) * 0.55
+             + vec2(gx, gy) * 2.2;
   float av = roadGrid(q, 0.85, 0.014);
   float st = roadGrid(q, 0.17, 0.005);
 
-  /* parcels, roofs, walls' shadows */
-  vec2 cellId = floor(q / 0.17);
-  vec2 inner = fract(q / 0.17);
-  vec2 m0 = 0.10 + 0.10 * vec2(hash(cellId + 2.0), hash(cellId + 5.0));
-  float bld = step(m0.x, inner.x) * step(inner.x, 1.0 - m0.x * 0.6)
-            * step(m0.y, inner.y) * step(inner.y, 1.0 - m0.y)
-            * step(0.10, hash(cellId + 9.0));
-  float park = step(0.93, hash(cellId + 13.0));
-  float ph = hash(floor(q * vec2(17.0, 12.0)) + cellId);
-  vec3 roof = mix(vec3(0.50, 0.485, 0.46), vec3(0.585, 0.33, 0.22), smoothstep(0.2, 0.7, core) * step(0.2, ph));
-  roof = mix(roof, vec3(0.74, 0.74, 0.72), step(0.88, ph) * (1.0 - smoothstep(0.1, 0.5, core)));
-  roof *= 0.80 + 0.40 * hash(floor(q * vec2(17.0, 12.0)) + 31.0);
-  float edgeSh = smoothstep(0.10, 0.0, inner.x - m0.x) + smoothstep(0.10, 0.0, (1.0 - m0.y) - inner.y);
-  roof *= 1.0 - 0.32 * clamp(edgeSh, 0.0, 1.0);
+  /* the block, evaluated at this point: perimeter rows or detached parcels */
+  vec2 cid = floor(q / 0.17);
+  vec2 inn = fract(q / 0.17);
+  vec2 m0 = 0.12 + 0.10 * vec2(hash(cid + 2.0), hash(cid + 5.0));
+  float det = step(m0.x, inn.x) * step(inn.x, 1.0 - m0.x * 0.6)
+            * step(m0.y, inn.y) * step(inn.y, 1.0 - m0.y);
+  float b = min(min(inn.x, 1.0 - inn.x), min(inn.y, 1.0 - inn.y));
+  float depth = 0.16 + 0.10 * hash(cid + 21.0);
+  float nearY = step(min(inn.y, 1.0 - inn.y), min(inn.x, 1.0 - inn.x));
+  float tang = mix(inn.y, inn.x, nearY);
+  float houseN = 5.0 + floor(4.0 * hash(cid + 3.0));
+  float houseId = floor(tang * houseN);
+  float hh = hash(cid * 3.1 + houseId + nearY * 7.0);
+  float row = step(0.045, b) * step(b, 0.045 + depth) * step(0.10, hh);
+  float blockOk = step(0.06, hash(cid + 9.0));
+  float park = step(0.93, hash(cid + 13.0));
+  float mass = mix(det * step(0.10, hash(cid + 9.0)), row, rowMix) * (1.0 - park) * blockOk;
 
-  vec2 qs = q + vec2(0.030, -0.030);                      // sun from the south-west
-  vec2 cellS = floor(qs / 0.17);
-  vec2 innerS = fract(qs / 0.17);
-  vec2 mS = 0.10 + 0.10 * vec2(hash(cellS + 2.0), hash(cellS + 5.0));
-  float bldS = step(mS.x, innerS.x) * step(innerS.x, 1.0 - mS.x * 0.6)
-             * step(mS.y, innerS.y) * step(innerS.y, 1.0 - mS.y)
-             * step(0.10, hash(cellS + 9.0));
+  /* roof colors: terracotta rows in the core, slate/pale at the edge */
+  float ph = hash(cid * 1.7 + houseId + 11.0);
+  vec3 roof = mix(vec3(0.50, 0.485, 0.46), vec3(0.60, 0.335, 0.22), smoothstep(0.15, 0.55, core) * step(0.15, ph));
+  roof = mix(roof, vec3(0.74, 0.74, 0.72), step(0.90, ph) * (1.0 - smoothstep(0.1, 0.5, core)));
+  roof *= 0.82 + 0.36 * hh;
+  /* two-slope ridged roofs on the rows: street-side pitch catches the sun */
+  float dSlope = clamp((b - 0.045) / depth, 0.0, 1.0);
+  float ridged = mix(1.0, mix(1.12, 0.80, step(0.5, dSlope)), rowMix * row);
+  ridged *= 1.0 - 0.18 * smoothstep(0.06, 0.0, abs(dSlope - 0.5)) * rowMix * row;   // ridge line
+  roof *= ridged;
+  /* detached houses keep the simple lit/shaded edge */
+  float edgeSh = smoothstep(0.10, 0.0, inn.x - m0.x) + smoothstep(0.10, 0.0, (1.0 - m0.y) - inn.y);
+  roof *= 1.0 - 0.30 * clamp(edgeSh, 0.0, 1.0) * (1.0 - rowMix);
 
-  vec3 lot = vec3(0.40, 0.39, 0.36) * (0.9 + 0.2 * noise(q * 60.0));
+  /* courtyards inside the blocks, gardens around detached houses */
+  vec3 court = mix(vec3(0.40, 0.39, 0.36), vec3(0.24, 0.33, 0.17), step(0.5, hash(cid + 27.0)));
+  court *= 0.85 + 0.3 * noise(q * 70.0);
+  vec3 garden = mix(vec3(0.27, 0.36, 0.18), vec3(0.42, 0.41, 0.38), 0.4 + 0.4 * noise(q * 55.0));
+  vec3 lot = mix(garden, court, rowMix * step(0.045 + depth, b));
   lot = mix(lot, vec3(0.19, 0.29, 0.14), park);
-  vec3 fab = mix(lot, roof, bld * (1.0 - park));
-  fab *= 1.0 - bldS * (1.0 - bld) * 0.32;                 // cast shadows on lots and streets
+
+  vec3 fab = mix(lot, roof, mass);
+  float massS = urbanMass(q + vec2(0.030, -0.030), rowMix);   // sun from the south-west
+  fab *= 1.0 - massS * (1.0 - mass) * 0.32;                   // cast shadows on ground
   fab = mix(fab, vec3(0.49, 0.49, 0.475), st);
   fab = mix(fab, vec3(0.56, 0.56, 0.545), av);
   float traf = av * pow(noise(q * 60.0 + vec2(t * 0.9, 0.0)), 10.0) * 6.0 * smoothstep(3.4, 2.4, uE);
   fab += vec3(0.85) * traf;
+  fab *= 0.86 + 0.22 * hillshade;                             // gentle relief over the town
 
   col = mix(col, fab, urb * (1.0 - river));
-  col = mix(col, vec3(0.57, 0.57, 0.555), hwm * (1.0 - urb * 0.35));
+  col = mix(col, vec3(0.57, 0.57, 0.555) * (0.8 + 0.3 * hillshade), hwm * (1.0 - urb * 0.35));
 
   /* altitude: cumulus with offset shadows, then blue haze */
   float alt = smoothstep(3.4, 5.5, uE);
@@ -1018,7 +1081,8 @@ if (gl) {
 if (!glOK) document.getElementById('human-fn').textContent = 'WebGL2 unavailable — the journey still reads, it just cannot be seen';
 
 function fit() {
-  const dpr = clamp(devicePixelRatio || 1, 1, 1.5);
+  // cap the backing store at ~2K wide: keeps the heaviest scenes at 60 fps on 4K screens
+  const dpr = Math.min(clamp(devicePixelRatio || 1, 1, 1.5), 2048 / Math.max(innerWidth, 1));
   const w = Math.round(innerWidth * dpr), h = Math.round(innerHeight * dpr);
   if (canvas.width !== w || canvas.height !== h) {
     canvas.width = w; canvas.height = h;
