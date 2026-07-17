@@ -657,15 +657,47 @@ vec3 starLayer(vec2 p, float thresh, float t) {
   return col;
 }
 
-/* ---------- 0 quantum foam ---------- */
+/* ---------- 0 quantum foam — the vacuum, boiling: an interference field
+   with a chromatic uncertainty fringe, flux filaments, and virtual pairs
+   that are born together, drift apart, and annihilate in a flash ---------- */
 vec3 scFoam(vec2 uv, float t) {
   vec2 p = uv * zoomFor(-16.0) * 3.0;
-  float f = fbm(p * 3.0 + t * 0.7) * fbm(p * 5.0 - t * 0.5);
-  vec3 col = vec3(0.10, 0.05, 0.22) * f * 2.2;
-  float sparks = smoothstep(0.72, 0.95, noise(p * 9.0 + t * 2.5));
-  col += sparks * vec3(0.62, 0.42, 1.0) * 0.9;
-  float pair = pow(noise(p * 6.0 - t * 1.6), 9.0) * 2.4;
-  col += pair * vec3(0.8, 0.6, 1.0) * 0.8;
+
+  /* seething interference field, sampled slightly apart per channel */
+  vec2 w = vec2(fbm(p * 2.0 + t * 0.5), fbm(p * 2.0 - t * 0.4 + 7.0));
+  float fR = fbm(p * 3.0 + w * 1.6 + vec2(0.05, 0.0) + t * 0.3);
+  float fG = fbm(p * 3.0 + w * 1.6 + t * 0.3);
+  float fB = fbm(p * 3.0 + w * 1.6 - vec2(0.05, 0.0) + t * 0.3);
+  vec3 boil = vec3(fR * fR, fG * fG, fB * fB);
+  vec3 col = boil * vec3(0.55, 0.22, 0.95) * 1.1;
+  col += boil.g * vec3(0.05, 0.10, 0.30);
+
+  /* flux filaments threading the field */
+  col += vec3(0.55, 0.30, 1.0) * pow(ridge(p * 2.2 + w + t * 0.2), 6.0) * 0.9;
+
+  /* virtual particle-antiparticle pairs (3x3 scan: nothing clips square) */
+  vec2 g = p * 2.2;
+  vec2 base = floor(g);
+  for (int j = -1; j <= 1; j++)
+  for (int i = -1; i <= 1; i++) {
+    vec2 o = vec2(float(i), float(j));
+    vec2 id = base + o;
+    float h = hash(id);
+    if (h < 0.45) continue;
+    float ph = fract(t * (0.22 + 0.30 * h) + h * 7.0);          // lifecycle
+    float sep = 0.10 + 0.26 * sin(ph * PI);
+    vec2 ctr = o + 0.5 + (vec2(hash(id + 1.0), hash(id + 2.0)) - 0.5) * 0.55;
+    float ang = hash(id + 3.0) * 6.28318 + t * 0.15;
+    vec2 ax = vec2(cos(ang), sin(ang)) * sep;
+    vec2 q = fract(g) - ctr;
+    float vis = smoothstep(0.0, 0.10, ph) * smoothstep(1.0, 0.90, ph);
+    float d1 = dot(q - ax, q - ax), d2 = dot(q + ax, q + ax);
+    col += (vec3(0.65, 0.75, 1.0) * (0.0007 / (d1 + 0.0007))
+          + vec3(1.0, 0.55, 0.85) * (0.0007 / (d2 + 0.0007))) * vis * 0.8;
+    col += vec3(0.5, 0.35, 0.9) * exp(-sdSeg(q, -ax, ax) * 55.0) * vis * 0.22;
+    float flash = exp(-dot(q, q) * 60.0) * smoothstep(0.86, 0.965, ph) * (1.0 - smoothstep(0.965, 1.0, ph));
+    col += vec3(0.95, 0.85, 1.0) * flash * 1.6;                 // annihilation
+  }
   return col;
 }
 /* ---------- 1 nucleus — shaded nucleons packed in a gluon field ---------- */
@@ -1033,23 +1065,56 @@ vec3 scPlanet(vec2 uv, float t) {
   col += vec3(0.25, 0.5, 1.0) * rim * (r > 1.0 ? 0.8 : 0.4);
   return col;
 }
-/* ---------- 9 solar system ---------- */
+/* ---------- 9 solar system — eight planets in true colors on log-spaced
+   orbits with Kepler speeds, asteroid and Kuiper belts, zodiacal dust ---------- */
 vec3 scSystem(vec2 uv, float t) {
   vec2 p = uv * zoomFor(11.3) * 1.15;
   float r = length(p);
-  vec3 col = vec3(1.0, 0.72, 0.3) * 0.020 / (r * r + 0.004);
-  col += vec3(1.0, 0.5, 0.15) * fbm(p * 9.0 + t * 0.4) * exp(-r * 9.0) * 0.9;
-  vec2 pe = p * vec2(1.0, 1.35);                      // slight tilt
+  vec3 col = vec3(0.0);
+  col += starLayer(uv * 40.0 + 7.0, 0.965, t) * 0.35;          // fixed stars, far behind
+
+  /* the Sun: white-gold core, boiling corona, radial streamers, a soft lens spike */
+  col += vec3(1.0, 0.85, 0.55) * 0.016 / (r * r + 0.003);
+  col += vec3(1.0, 0.55, 0.20) * fbm(p * 9.0 + t * 0.4) * exp(-r * 10.0) * 1.1;
+  float ang0 = atan(p.y, p.x);
+  col += vec3(1.0, 0.80, 0.50) * pow(noise(vec2(cos(ang0), sin(ang0)) * 3.0 + 3.0), 3.0) * exp(-r * 5.0) * 0.6;
+  col += vec3(0.9, 0.85, 0.8) * exp(-abs(p.y) * 60.0) * exp(-abs(p.x) * 3.0) * 0.22;
+
+  vec2 pe = p * vec2(1.0, 1.45);                               // ecliptic tilt
   float re = length(pe);
-  for (int i = 0; i < 7; i++) {
+
+  vec3 pcols[8];
+  pcols[0] = vec3(0.55, 0.52, 0.48);   // Mercury
+  pcols[1] = vec3(0.95, 0.88, 0.70);   // Venus
+  pcols[2] = vec3(0.35, 0.55, 0.95);   // Earth
+  pcols[3] = vec3(0.90, 0.45, 0.25);   // Mars
+  pcols[4] = vec3(0.85, 0.72, 0.55);   // Jupiter
+  pcols[5] = vec3(0.92, 0.83, 0.60);   // Saturn
+  pcols[6] = vec3(0.60, 0.85, 0.90);   // Uranus
+  pcols[7] = vec3(0.35, 0.50, 0.95);   // Neptune
+  for (int i = 0; i < 8; i++) {
     float fi = float(i);
-    float R = 0.16 + fi * 0.135;
-    col += vec3(0.5, 0.6, 0.8) * exp(-abs(re - R) * 220.0) * 0.20;
-    float ang = t * (0.24 - fi * 0.026) + fi * 2.4;
-    vec2 pl = vec2(cos(ang), sin(ang) / 1.35) * R;
-    col += mix(vec3(0.8, 0.7, 0.5), vec3(0.5, 0.65, 1.0), hash1(fi)) * 0.0011 / (dot(p - pl, p - pl) + 0.0012);
+    float R = 0.085 * pow(1.62, fi);                           // Titius-Bode-ish spacing
+    col += vec3(0.4, 0.5, 0.7) * exp(-abs(re - R) * 300.0) * 0.055;   // ghost of an orbit
+    float ang = t * 0.16 * pow(1.62, -1.5 * fi) + fi * 2.4;    // Kepler: slower out there
+    vec2 pl = vec2(cos(ang), sin(ang) / 1.45) * R;
+    float d2 = dot(p - pl, p - pl);
+    float sz = (i == 4 || i == 5) ? 0.00030 : 0.00016;         // the giants read bigger
+    col += pcols[i] * sz / (d2 + sz * 0.9);
+    if (i == 5) {                                              // Saturn's rings, hinted
+      vec2 q = (p - pl) * vec2(1.0, 2.2);
+      col += vec3(0.9, 0.85, 0.70) * exp(-abs(length(q) - 0.012) * 480.0) * 0.35;
+    }
   }
-  col += vec3(0.5, 0.45, 0.4) * exp(-abs(pe.y) * 7.0) * exp(-r * 1.2) * 0.10;   // zodiacal dust
+
+  /* asteroid belt between Mars and Jupiter; Kuiper belt past Neptune */
+  float beltR = 0.085 * pow(1.62, 3.55);
+  col += vec3(0.60, 0.55, 0.50) * exp(-pow((re - beltR) * 26.0, 2.0)) * pow(noise(p * 90.0 + t * 0.05), 6.0) * 3.0;
+  float kuiR = 0.085 * pow(1.62, 7.8);
+  col += vec3(0.50, 0.55, 0.70) * exp(-pow((re - kuiR) * 10.0, 2.0)) * pow(noise(p * 70.0 + 3.0), 8.0) * 2.0;
+
+  /* zodiacal light: a lens of dust in the ecliptic plane */
+  col += vec3(0.45, 0.40, 0.35) * exp(-abs(pe.y) * 6.0) * exp(-re * 1.6) * 0.11;
   return col;
 }
 /* ---------- 10 stellar neighborhood ---------- */
