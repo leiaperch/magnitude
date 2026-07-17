@@ -214,6 +214,34 @@ sup { font-size: .68em; }
 #readout .light { margin-top: 2px; font-size: 11.5px; color: var(--dim); letter-spacing: .04em; }
 #readout .light b { color: var(--ink); font-weight: 400; }
 
+.scale-obj {
+  margin-top: 7px; pointer-events: auto; display: inline-block;
+  font-family: var(--mono); font-size: 11.5px; letter-spacing: .04em; text-align: right;
+  color: var(--accent); background: none; border: none;
+  border-bottom: 1px dashed color-mix(in oklab, var(--accent) 45%, transparent);
+  padding: 0 0 2px; cursor: pointer; transition: color .6s, border-color .6s;
+  font-variant-numeric: tabular-nums;
+}
+#goto {
+  position: fixed; right: 24px; bottom: 150px; z-index: 6;
+  width: min(320px, calc(100vw - 48px)); max-height: 44vh; overflow-y: auto;
+  background: color-mix(in oklab, var(--black) 80%, transparent);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--faint); border-radius: 6px; padding: 8px 0;
+  scrollbar-width: thin; scrollbar-color: var(--faint) transparent;
+}
+#goto-title {
+  font-family: var(--mono); font-size: 10px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--dim); padding: 8px 16px 10px;
+}
+#goto button {
+  display: flex; justify-content: space-between; gap: 14px; width: 100%; text-align: left;
+  background: none; border: none; font-family: var(--mono); font-size: 12px; color: var(--ink);
+  padding: 7px 16px; cursor: pointer;
+}
+#goto button small { color: var(--dim); font-size: 10.5px; }
+#goto button:hover { background: color-mix(in oklab, var(--accent) 14%, transparent); color: var(--accent); }
+
 #ruler {
   position: fixed; left: 24px; right: 24px; bottom: 34px; height: 30px;
 }
@@ -405,11 +433,16 @@ sup { font-size: .68em; }
   <div id="scene-name"></div>
   <div id="scene-sub"></div>
   <div id="readout">
-    <div class="exp">10<sup id="ro-exp">−16.0</sup> m</div>
+    <div class="exp">10<sup id="ro-exp">−16.0</sup> <span id="ro-unit">m</span></div>
     <div class="pretty" id="ro-pretty"></div>
     <div class="light">light crosses this frame in <b id="ro-light"></b></div>
+    <button id="ro-obj" class="scale-obj"></button>
   </div>
   <div id="ruler"><div class="line"></div><div id="cursor"></div></div>
+</div>
+<div id="goto" hidden>
+  <div id="goto-title"></div>
+  <div id="goto-list"></div>
 </div>
 <button id="lang" title="Lire en français">FR</button>
 <button id="voyage" aria-pressed="false" title="Hands-free cruise through all 43 decades">Voyage ▸</button>
@@ -497,7 +530,7 @@ function readScroll() {
   const y = scrollY - introH;
   targetE = E_MIN + clamp(y / TRACK_H, 0, 1) * SPAN;
 }
-addEventListener('scroll', readScroll, { passive: true });
+addEventListener('scroll', () => { readScroll(); updateHash(); }, { passive: true });
 readScroll();
 
 /* ============================== HUD ============================== */
@@ -555,6 +588,105 @@ function supNum(n) {
   return String(n).split('').map(c => S[c] || c).join('');
 }
 
+/* ================= the living scale: reference objects ================= */
+/* [log10(size in m), [en, fr]] — real measured sizes */
+const OBJECTS = [
+  [-14.77, ['a proton', 'un proton']],
+  [-13.85, ['a gold nucleus', 'un noyau d’or']],
+  [-10.00, ['a hydrogen atom', 'un atome d’hydrogène']],
+  [-9.55,  ['a water molecule', 'une molécule d’eau']],
+  [-8.70,  ['the width of DNA', 'la largeur de l’ADN']],
+  [-7.00,  ['a flu virus', 'un virus de la grippe']],
+  [-5.70,  ['an E. coli bacterium', 'un colibacille']],
+  [-5.11,  ['a red blood cell', 'un globule rouge']],
+  [-4.15,  ['the width of a hair', 'l’épaisseur d’un cheveu']],
+  [-3.52,  ['a grain of salt', 'un grain de sel']],
+  [-2.40,  ['an ant', 'une fourmi']],
+  [-1.82,  ['a honeybee', 'une abeille']],
+  [-1.10,  ['a mouse', 'une souris']],
+  [-0.30,  ['a cat', 'un chat']],
+  [0.23,   ['a human', 'un humain']],
+  [0.74,   ['a giraffe', 'une girafe']],
+  [1.48,   ['a blue whale', 'une baleine bleue']],
+  [1.85,   ['a Boeing 747', 'un Boeing 747']],
+  [2.52,   ['the Eiffel Tower', 'la tour Eiffel']],
+  [3.60,   ['Central Park', 'Central Park']],
+  [3.94,   ['Mount Everest', 'l’Everest']],
+  [4.00,   ['Paris', 'Paris']],
+  [5.26,   ['Corsica', 'la Corse']],
+  [6.00,   ['France', 'la France']],
+  [6.54,   ['the Moon', 'la Lune']],
+  [7.11,   ['Earth', 'la Terre']],
+  [8.15,   ['Jupiter', 'Jupiter']],
+  [8.89,   ['the Moon’s orbit', 'l’orbite de la Lune']],
+  [9.14,   ['the Sun', 'le Soleil']],
+  [11.17,  ['one astronomical unit', 'une unité astronomique']],
+  [12.95,  ['Neptune’s orbit', 'l’orbite de Neptune']],
+  [13.55,  ['the heliosphere', 'l’héliosphère']],
+  [15.98,  ['one light-year', 'une année-lumière']],
+  [16.60,  ['the trip to Proxima', 'le trajet vers Proxima']],
+  [17.36,  ['the Orion Nebula', 'la nébuleuse d’Orion']],
+  [20.39,  ['the trip to the galactic core', 'le trajet vers le centre galactique']],
+  [20.98,  ['the Milky Way', 'la Voie lactée']],
+  [22.37,  ['the trip to Andromeda', 'le trajet vers Andromède']],
+  [22.97,  ['the Local Group', 'le Groupe local']],
+  [24.69,  ['Laniakea', 'Laniakea']],
+  [25.97,  ['the Hercules Great Wall', 'la Grande Muraille d’Hercule']],
+  [26.94,  ['the observable universe', 'l’univers observable']],
+];
+function scaleLine(e) {
+  const fr = lang === 'fr';
+  let best = OBJECTS[0];
+  for (const o of OBJECTS) { if (o[0] <= e + 0.12) best = o; else break; }
+  const name = best[1][fr ? 1 : 0];
+  const ratio = Math.pow(10, e - best[0]);
+  const frame = fr ? 'ce cadre' : 'this frame';
+  if (ratio < 0.95) return `${frame} ≈ ${name} ÷ ${Math.round(1 / ratio)}`;
+  if (ratio < 1.35) return `${frame} ≈ ${name}`;
+  const n = ratio < 10 ? frNum(ratio.toFixed(1)) : String(Math.round(ratio));
+  return `${frame} ≈ ${n} × ${name}`;
+}
+
+/* the same table becomes a navigation menu */
+const gotoEl = document.getElementById('goto');
+const roObj = document.getElementById('ro-obj');
+function introH() { return document.getElementById('intro').offsetHeight; }
+function eToY(e) { return introH() + ((e - E_MIN) / SPAN) * TRACK_H; }
+function scrollToE(e) {
+  gotoEl.hidden = true;
+  window.scrollTo({ top: Math.round(eToY(e)), behavior: reduced ? 'auto' : 'smooth' });
+}
+function buildGoto() {
+  const list = document.getElementById('goto-list');
+  list.innerHTML = '';
+  for (const o of OBJECTS) {
+    const b = document.createElement('button');
+    const nm = document.createElement('span');
+    nm.textContent = o[1][lang === 'fr' ? 1 : 0];
+    const sz = document.createElement('small');
+    sz.textContent = '10' + supNum(Math.round(o[0])) + ' m';
+    b.append(nm, sz);
+    b.addEventListener('click', () => scrollToE(o[0] + 0.35));
+    list.appendChild(b);
+  }
+  document.getElementById('goto-title').textContent =
+    lang === 'fr' ? 'Aller à l’échelle de…' : 'Go to the scale of…';
+}
+roObj.addEventListener('click', ev => { ev.stopPropagation(); gotoEl.hidden = !gotoEl.hidden; });
+document.addEventListener('click', ev => {
+  if (!ev.target.closest('#goto')) gotoEl.hidden = true;
+});
+addEventListener('keydown', ev => { if (ev.key === 'Escape') gotoEl.hidden = true; });
+
+/* deep link: the address bar follows your scale */
+let hashTimer = 0;
+function updateHash() {
+  clearTimeout(hashTimer);
+  hashTimer = setTimeout(() => {
+    history.replaceState(null, '', '#e=' + shownE.toFixed(2));
+  }, 300);
+}
+
 /* ruler ticks */
 const ruler = document.getElementById('ruler');
 for (let d = -15; d <= 25; d += 5) {
@@ -580,6 +712,7 @@ function updateHUD() {
   roExp.textContent = (disp < 0 ? '−' : '+') + Math.abs(disp).toFixed(1);
   roPretty.textContent = prettyMeters(disp);
   roLight.textContent = prettyLightTime(disp);
+  roObj.textContent = scaleLine(disp);
   cursor.style.left = ((disp - E_MIN) / SPAN * 100) + '%';
 
   // dominant scene
@@ -1719,10 +1852,23 @@ function applyLang(l) {
     ? 'Un zoom animé continu à travers les échelles de l’univers, des particules subatomiques à la toile cosmique, suivant votre position de défilement.'
     : 'A continuous animated zoom through the scales of the universe, from subatomic particles to the cosmic web, following your scroll position.');
   curScene = -1;                 // force the HUD scene name to re-render
+  buildGoto();
   buildOutroStats();
 }
 langBtn.addEventListener('click', () => applyLang(lang === 'fr' ? 'en' : 'fr'));
 if ((navigator.language || '').toLowerCase().startsWith('fr')) applyLang('fr');
+else buildGoto();
+
+/* arrive through a deep link: jump straight to the shared scale */
+(function initHash() {
+  const m = location.hash.match(/e=(-?\d+(?:\.\d+)?)/);
+  if (!m) return;
+  const target = clamp(parseFloat(m[1]), E_MIN, E_MAX);
+  setTimeout(() => {
+    window.scrollTo({ top: Math.round(eToY(target)), behavior: 'instant' });
+    readScroll(); shownE = targetE;
+  }, 80);
+})();
 
 })();
 </script>
