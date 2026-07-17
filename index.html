@@ -180,16 +180,21 @@ sup { font-size: .68em; }
 }
 #sound { right: 20px; }
 #voyage { right: 128px; }
-#lang {
+#lang, #mode {
   position: fixed; top: 14px; right: 236px; pointer-events: auto;
   font-family: var(--mono); font-size: 10.5px; letter-spacing: .18em; text-transform: uppercase;
   color: var(--dim); background: none; border: 1px solid var(--faint); border-radius: 3px;
   padding: 8px 14px; cursor: pointer; transition: color .3s, border-color .3s;
   z-index: 4;
 }
+#mode { right: 314px; color: var(--accent); border-color: color-mix(in oklab, var(--accent) 45%, transparent); }
 #sound:hover, #sound[aria-pressed="true"],
-#lang:hover,
+#lang:hover, #mode:hover,
 #voyage:hover, #voyage[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); }
+@media (max-width: 680px) {
+  #mode { top: 56px; right: 20px; }
+  #lang { top: 56px; right: auto; left: 20px; }
+}
 @media (prefers-reduced-motion: reduce) { #voyage { display: none; } }
 
 #scene-name {
@@ -399,6 +404,70 @@ sup { font-size: .68em; }
     billions of galaxies. Not the edge of everything — just the edge of
     <b>what light has had time to bring us</b>.</p>
   </article>
+
+  <!-- time mode annotations -->
+  <article class="card" data-t="-11" data-side="r" hidden>
+    <div class="tag"><span>Electroweak era</span><span class="m">t ≈ 10⁻¹¹ s</span></div>
+    <p>The universe is a trillionth of a second old and hotter than 10¹⁵ K. The four
+    forces have just finished separating; everything that exists is <b>a plasma of
+    quarks, gluons and light</b>.</p>
+  </article>
+  <article class="card" data-t="-4.8" data-side="l" hidden>
+    <div class="tag"><span>Confinement</span><span class="m">t ≈ 10 µs</span></div>
+    <p>Cooling below two trillion kelvin, quarks lock together three by three. The
+    first protons and neutrons appear — <b>nothing since has ever been hot enough to
+    unbind them</b>.</p>
+  </article>
+  <article class="card" data-t="0.1" data-side="r" hidden>
+    <div class="tag"><span>One second</span><span class="m">t + 1 s</span></div>
+    <p>Neutrinos stop interacting and fly free. They are still passing through you —
+    about <b>60 billion per square centimeter per second</b>, almost unchanged since
+    this moment.</p>
+  </article>
+  <article class="card" data-t="2.26" data-side="l" hidden>
+    <div class="tag"><span>Three minutes</span><span class="m">t + 180 s</span></div>
+    <p>In about a quarter of an hour the universe forges the hydrogen and helium of
+    everything that will ever exist: three quarters, one quarter.
+    <b>The recipe has not changed since.</b></p>
+  </article>
+  <article class="card" data-t="12.2" data-side="r" hidden>
+    <div class="tag"><span>Matter takes over</span><span class="m">t + 50,000 yr</span></div>
+    <p>Until here, light outweighed matter. From this crossover on, matter rules
+    gravity and can begin, <b>slowly, to clump</b>.</p>
+  </article>
+  <article class="card" data-t="13.08" data-side="l" hidden>
+    <div class="tag"><span>First light</span><span class="m">t + 380,000 yr</span></div>
+    <p>The fog of electrons clears; photons fly free. That first light is still
+    everywhere — stretched a thousandfold into microwaves, <b>the oldest thing you
+    can observe</b>.</p>
+  </article>
+  <article class="card" data-t="15.1" data-side="r" hidden>
+    <div class="tag"><span>The dark ages</span><span class="m">t + ~40 Myr</span></div>
+    <p>For tens of millions of years there is not a single star. The universe is a
+    slowly cooling cloud of neutral hydrogen — <b>completely dark, everywhere</b>.</p>
+  </article>
+  <article class="card" data-t="16" data-side="l" hidden>
+    <div class="tag"><span>First stars</span><span class="m">t + ~300 Myr</span></div>
+    <p>The first stars are monsters, a hundred solar masses, dead within a few million
+    years. Their ashes are the first elements heavier than lithium —
+    <b>every atom of carbon in your body included</b>.</p>
+  </article>
+  <article class="card" data-t="16.6" data-side="r" hidden>
+    <div class="tag"><span>Young galaxies</span><span class="m">t + 1 Gyr</span></div>
+    <p>Gravity has braided matter into filaments; galaxies light up at the crossings.
+    Reionization completes — <b>the universe becomes transparent for good</b>.</p>
+  </article>
+  <article class="card" data-t="17.46" data-side="l" hidden>
+    <div class="tag"><span>The Sun ignites</span><span class="m">t + 9.2 Gyr</span></div>
+    <p>In a recycled cloud enriched by generations of dead stars, a disk collapses:
+    the Sun ignites and planets accrete from the leftovers,
+    <b>in barely 100 million years</b>.</p>
+  </article>
+  <article class="card" data-t="17.5" data-side="r" hidden>
+    <div class="tag"><span>Life</span><span class="m">t + 10 Gyr</span></div>
+    <p>Barely 200 million years after the oceans condense, chemistry starts copying
+    itself. It has not stopped since — <b>you are the current draft</b>.</p>
+  </article>
 </div>
 
 <!-- the one scale rendered in HTML -->
@@ -444,6 +513,7 @@ sup { font-size: .68em; }
   <div id="goto-title"></div>
   <div id="goto-list"></div>
 </div>
+<button id="mode" title="Scroll through time instead of space">Years</button>
 <button id="lang" title="Lire en français">FR</button>
 <button id="voyage" aria-pressed="false" title="Hands-free cruise through all 43 decades">Voyage ▸</button>
 <button id="sound" aria-pressed="false">Sound ○</button>
@@ -456,6 +526,13 @@ sup { font-size: .68em; }
 const E_MIN = -16.5, E_MAX = 26.9, SPAN = E_MAX - E_MIN;   // 43.4 decades
 const PX_PER_DECADE = 900;
 const TRACK_H = Math.round(SPAN * PX_PER_DECADE);
+/* two axes: space (log10 meters) and time (log10 seconds after the Big Bang) */
+const AXIS = {
+  e: { min: E_MIN, max: E_MAX, span: SPAN, trackH: TRACK_H },
+  t: { min: -12.7, max: 17.70, span: 30.4, trackH: Math.round(30.4 * PX_PER_DECADE) },
+};
+let MODE = 'e';
+let AX = AXIS.e;
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -493,31 +570,58 @@ const SCENES_FR = [
   ['La galaxie',        'poussières et pouponnières roses'],
   ['La toile cosmique', 'les filaments de tout'],
 ];
-const weightOf = (e, lo, hi) =>
+const weightOf = (e, lo, hi, r = 0.7) =>
   (e < lo || e > hi) ? 0 :
-  Math.min(1, (e - lo) / 0.7) * Math.min(1, (hi - e) / 0.7);
+  Math.min(1, (e - lo) / r) * Math.min(1, (hi - e) / r);
+
+/* epochs for time mode — bands and ramps mirror the shader */
+const SCENES_T = [
+  ['Quark-gluon plasma', 'matter, not yet',                 -12.7, -4.0,  '#ffb37a', 0.7],
+  ['Nucleosynthesis',    'the first three minutes',          -4.6,  2.6,  '#ff9a5c', 0.7],
+  ['The glow',           'an opaque fog, cooling',           -5.0, 13.2,  '#ff7a4d', 0.7],
+  ['The dark ages',      'nothing shines yet',               13.0, 15.7,  '#5b6b9e', 0.5],
+  ['First stars',        'reionization',                     15.4, 16.75, '#9fc0ff', 0.35],
+  ['Young galaxies',     'structure assembles',              16.55, 17.30,'#b7c6ff', 0.2],
+  ['A disk of dust',     'the Sun ignites',                  17.20, 17.50,'#ffd166', 0.08],
+  ['The Earth',          'life, almost immediately',         17.42, 17.62,'#6fb7ff', 0.05],
+  ['Now',                'the latest moment there has been', 17.55, 17.70,'#ffd9a0', 0.035],
+];
+const SCENES_T_FR = [
+  ['Plasma quark-gluon',     'la matière, pas encore'],
+  ['Nucléosynthèse',         'les trois premières minutes'],
+  ['La lueur',               'un brouillard opaque qui refroidit'],
+  ['Les âges sombres',       'rien ne brille encore'],
+  ['Premières étoiles',      'la réionisation'],
+  ['Jeunes galaxies',        'les structures s’assemblent'],
+  ['Un disque de poussière', 'le Soleil s’allume'],
+  ['La Terre',               'la vie, presque aussitôt'],
+  ['Maintenant',             'l’instant le plus tardif qui ait existé'],
+];
 
 /* ============================== layout ============================== */
 const track = document.getElementById('track');
 track.style.height = TRACK_H + 'px';
 
 function placeCards() {
-  const introH = document.getElementById('intro').offsetHeight;
   const wide = innerWidth > 760;
+  const SC = MODE === 't' ? SCENES_T : SCENES;
   document.querySelectorAll('.card').forEach(card => {
-    const e = parseFloat(card.dataset.e);
-    card.style.top = Math.round(((e - E_MIN) / SPAN) * TRACK_H - 60) + 'px';
+    const isTime = card.hasAttribute('data-t');
+    card.hidden = (MODE === 't') !== isTime;
+    if (card.hidden) return;
+    const v = parseFloat(isTime ? card.dataset.t : card.dataset.e);
+    card.style.top = Math.round(((v - AX.min) / AX.span) * AX.trackH - 60) + 'px';
     if (wide) {
-      if (card.dataset.side === 'l') { card.style.left = 'clamp(24px, 9vw, 140px)'; card.style.right = 'auto'; }
-      else { card.style.right = 'clamp(24px, 9vw, 140px)'; card.style.left = 'auto'; }
+      if (card.dataset.side === 'l') { card.style.left = 'clamp(24px, 9vw, 140px)'; card.style.right = 'auto'; card.style.translate = 'none'; }
+      else { card.style.right = 'clamp(24px, 9vw, 140px)'; card.style.left = 'auto'; card.style.translate = 'none'; }
     } else {
       card.style.left = '50%'; card.style.right = 'auto';
       card.style.translate = '-50% 0';
     }
     // tint the card by its scene
     let best = 0, bi = 0;
-    SCENES.forEach((s, i) => { const w = weightOf(e, s[2], s[3]); if (w > best) { best = w; bi = i; } });
-    card.style.setProperty('--c', SCENES[bi][4]);
+    SC.forEach((s, i) => { const w = weightOf(v, s[2], s[3], s[5]); if (w > best) { best = w; bi = i; } });
+    card.style.setProperty('--c', SC[bi][4]);
   });
 }
 placeCards();
@@ -526,9 +630,8 @@ addEventListener('resize', placeCards);
 /* ============================== scroll → exponent ============================== */
 let targetE = E_MIN, shownE = E_MIN;
 function readScroll() {
-  const introH = document.getElementById('intro').offsetHeight;
-  const y = scrollY - introH;
-  targetE = E_MIN + clamp(y / TRACK_H, 0, 1) * SPAN;
+  const y = scrollY - document.getElementById('intro').offsetHeight;
+  targetE = AX.min + clamp(y / AX.trackH, 0, 1) * AX.span;
 }
 addEventListener('scroll', () => { readScroll(); updateHash(); }, { passive: true });
 readScroll();
@@ -567,8 +670,7 @@ function prettyMeters(e) {
   const num = frNum(v >= 100 ? v.toFixed(0) : v >= 10 ? v.toFixed(1) : v.toFixed(2));
   return `≈ ${num} ${lang === 'fr' ? PREFIX_FR[p[1]] : p[1]}`;
 }
-function prettyLightTime(e) {
-  const t = Math.pow(10, e) / 299792458; // seconds
+function humanizeSeconds(t) {
   const YEAR = 3.156e7;
   const fr = lang === 'fr';
   if (t < 1e-15) { const ex = Math.floor(Math.log10(t)); return frNum((t / Math.pow(10, ex)).toFixed(1)) + '×10' + supNum(ex) + ' s'; }
@@ -582,6 +684,20 @@ function prettyLightTime(e) {
   if (t < 1e6 * YEAR) return Math.round(t / YEAR).toLocaleString(fr ? 'fr-FR' : 'en') + (fr ? ' ans' : ' years');
   if (t < 1e9 * YEAR) return frNum((t / YEAR / 1e6).toPrecision(3)) + (fr ? ' millions d’années' : ' million years');
   return frNum((t / YEAR / 1e9).toPrecision(3)) + (fr ? ' milliards d’années' : ' billion years');
+}
+function prettyLightTime(e) { return humanizeSeconds(Math.pow(10, e) / 299792458); }
+
+/* time mode: the universe's temperature, log-log interpolated
+   through the radiation era (T ∝ t^-1/2) then the matter era (≈ t^-2/3) */
+const TEMP_PTS = [[-12.7, 16.46], [13.08, 3.48], [17.70, 0.40]];
+function tempStr(e) {
+  let a = TEMP_PTS[0], b = TEMP_PTS[1];
+  if (e > TEMP_PTS[1][0]) { a = TEMP_PTS[1]; b = TEMP_PTS[2]; }
+  const f = clamp((e - a[0]) / (b[0] - a[0]), 0, 1);
+  const lt = a[1] + (b[1] - a[1]) * f;
+  if (lt >= 5) { const ex = Math.floor(lt); return frNum(Math.pow(10, lt - ex).toFixed(1)) + '×10' + supNum(ex) + ' K'; }
+  const v = Math.pow(10, lt);
+  return (v >= 100 ? Math.round(v).toLocaleString(lang === 'fr' ? 'fr-FR' : 'en') : frNum(v.toFixed(1))) + ' K';
 }
 function supNum(n) {
   const S = { '-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹' };
@@ -647,11 +763,33 @@ function scaleLine(e) {
   return `${frame} ≈ ${n} × ${name}`;
 }
 
-/* the same table becomes a navigation menu */
+/* landmark moments for time mode — [log10 s, [en, fr]] */
+const TIMES = [
+  [-12.0, ['the electroweak era', 'l’ère électrofaible']],
+  [-5.0,  ['quarks lock into protons', 'les quarks se figent en protons']],
+  [0.0,   ['the first second', 'la première seconde']],
+  [2.26,  ['the first three minutes', 'les trois premières minutes']],
+  [12.2,  ['matter takes over', 'la matière prend le dessus']],
+  [13.08, ['the first free light', 'la première lumière libre']],
+  [15.0,  ['the dark ages', 'les âges sombres']],
+  [16.0,  ['the first stars', 'les premières étoiles']],
+  [16.6,  ['young galaxies', 'les jeunes galaxies']],
+  [17.46, ['the Sun ignites', 'le Soleil s’allume']],
+  [17.50, ['first life on Earth', 'la première vie sur Terre']],
+  [17.632,['the dinosaurs', 'les dinosaures']],
+  [17.639,['now', 'maintenant']],
+];
+function epochLine(e) {
+  let best = TIMES[0];
+  for (const o of TIMES) { if (o[0] <= e + 0.05) best = o; else break; }
+  return (lang === 'fr' ? 'époque : ' : 'epoch: ') + best[1][lang === 'fr' ? 1 : 0];
+}
+
+/* the same tables become a navigation menu */
 const gotoEl = document.getElementById('goto');
 const roObj = document.getElementById('ro-obj');
 function introH() { return document.getElementById('intro').offsetHeight; }
-function eToY(e) { return introH() + ((e - E_MIN) / SPAN) * TRACK_H; }
+function eToY(e) { return introH() + ((e - AX.min) / AX.span) * AX.trackH; }
 function scrollToE(e) {
   gotoEl.hidden = true;
   window.scrollTo({ top: Math.round(eToY(e)), behavior: reduced ? 'auto' : 'smooth' });
@@ -659,18 +797,20 @@ function scrollToE(e) {
 function buildGoto() {
   const list = document.getElementById('goto-list');
   list.innerHTML = '';
-  for (const o of OBJECTS) {
+  const timeMode = MODE === 't';
+  for (const o of (timeMode ? TIMES : OBJECTS)) {
     const b = document.createElement('button');
     const nm = document.createElement('span');
     nm.textContent = o[1][lang === 'fr' ? 1 : 0];
     const sz = document.createElement('small');
-    sz.textContent = '10' + supNum(Math.round(o[0])) + ' m';
+    sz.textContent = '10' + supNum(Math.round(o[0])) + (timeMode ? ' s' : ' m');
     b.append(nm, sz);
-    b.addEventListener('click', () => scrollToE(o[0] + 0.35));
+    b.addEventListener('click', () => scrollToE(clamp(o[0] + (timeMode ? 0.02 : 0.35), AX.min, AX.max)));
     list.appendChild(b);
   }
-  document.getElementById('goto-title').textContent =
-    lang === 'fr' ? 'Aller à l’échelle de…' : 'Go to the scale of…';
+  document.getElementById('goto-title').textContent = timeMode
+    ? (lang === 'fr' ? 'Aller au moment de…' : 'Go to the moment of…')
+    : (lang === 'fr' ? 'Aller à l’échelle de…' : 'Go to the scale of…');
 }
 roObj.addEventListener('click', ev => { ev.stopPropagation(); gotoEl.hidden = !gotoEl.hidden; });
 document.addEventListener('click', ev => {
@@ -683,49 +823,58 @@ let hashTimer = 0;
 function updateHash() {
   clearTimeout(hashTimer);
   hashTimer = setTimeout(() => {
-    history.replaceState(null, '', '#e=' + shownE.toFixed(2));
+    history.replaceState(null, '', (MODE === 't' ? '#m=t&e=' : '#e=') + shownE.toFixed(2));
   }, 300);
 }
 
-/* ruler ticks */
+/* ruler ticks (rebuilt when the axis changes) */
 const ruler = document.getElementById('ruler');
-for (let d = -15; d <= 25; d += 5) {
-  const t = document.createElement('div');
-  t.className = 'tick major';
-  t.style.left = ((d - E_MIN) / SPAN * 100) + '%';
-  t.innerHTML = `<span>10${supNum(d)}</span>`;
-  ruler.appendChild(t);
+function buildRuler() {
+  ruler.querySelectorAll('.tick').forEach(t => t.remove());
+  for (let d = Math.ceil(AX.min); d <= Math.floor(AX.max); d++) {
+    const t = document.createElement('div');
+    const major = d % 5 === 0;
+    t.className = major ? 'tick major' : 'tick';
+    t.style.left = ((d - AX.min) / AX.span * 100) + '%';
+    if (major) t.innerHTML = `<span>10${supNum(d)}</span>`;
+    ruler.appendChild(t);
+  }
 }
-for (let d = Math.ceil(E_MIN); d <= Math.floor(E_MAX); d++) {
-  if ((d + 15) % 5 === 0) continue;
-  const t = document.createElement('div');
-  t.className = 'tick';
-  t.style.left = ((d - E_MIN) / SPAN * 100) + '%';
-  ruler.appendChild(t);
-}
+buildRuler();
 
 let curScene = -1, lastDecade = null;
 function updateHUD() {
   hud.classList.toggle('on', scrollY > innerHeight * 0.5 && targetE < E_MAX - 0.35);
 
   const disp = shownE;
+  const timeMode = MODE === 't';
   roExp.textContent = (disp < 0 ? '−' : '+') + Math.abs(disp).toFixed(1);
-  roPretty.textContent = prettyMeters(disp);
-  roLight.textContent = prettyLightTime(disp);
-  roObj.textContent = scaleLine(disp);
-  cursor.style.left = ((disp - E_MIN) / SPAN * 100) + '%';
+  if (timeMode) {
+    roPretty.textContent = '≈ ' + humanizeSeconds(Math.pow(10, disp)) + (lang === 'fr' ? ' après le Big Bang' : ' after the Big Bang');
+    roLight.textContent = tempStr(disp);
+    roObj.textContent = epochLine(disp);
+  } else {
+    roPretty.textContent = prettyMeters(disp);
+    roLight.textContent = prettyLightTime(disp);
+    roObj.textContent = scaleLine(disp);
+  }
+  cursor.style.left = ((disp - AX.min) / AX.span * 100) + '%';
 
   // dominant scene
+  const SC = timeMode ? SCENES_T : SCENES;
+  const SCF = timeMode ? SCENES_T_FR : SCENES_FR;
   let best = -1, bi = 0;
-  SCENES.forEach((s, i) => { const w = weightOf(disp, s[2], s[3]); if (w > best) { best = w; bi = i; } });
+  SC.forEach((s, i) => { const w = weightOf(disp, s[2], s[3], s[5]); if (w > best) { best = w; bi = i; } });
   if (bi !== curScene) {
     curScene = bi;
-    sceneName.textContent = lang === 'fr' ? SCENES_FR[bi][0] : SCENES[bi][0];
-    sceneSub.textContent = lang === 'fr' ? SCENES_FR[bi][1] : SCENES[bi][1];
-    document.documentElement.style.setProperty('--accent', SCENES[bi][4]);
+    sceneName.textContent = lang === 'fr' ? SCF[bi][0] : SC[bi][0];
+    sceneSub.textContent = lang === 'fr' ? SCF[bi][1] : SC[bi][1];
+    document.documentElement.style.setProperty('--accent', SC[bi][4]);
   }
-  // the DOM takes over at human scale
-  humanEl.style.opacity = weightOf(disp, -2.4, 1.6).toFixed(3);
+  // the DOM takes over at human scale (space) / at "now" (time)
+  humanEl.style.opacity = (timeMode
+    ? weightOf(disp, 17.55, 17.70, 0.035)
+    : weightOf(disp, -2.4, 1.6)).toFixed(3);
 
   // decade crossing ping (for the sound engine)
   const dec = Math.floor(disp);
@@ -760,7 +909,7 @@ void main() {
 
 const FS = `#version 300 es
 precision highp float;
-uniform vec2 uRes; uniform float uTime; uniform float uE; uniform float uFinal;
+uniform vec2 uRes; uniform float uTime; uniform float uE; uniform float uFinal; uniform float uMode;
 uniform vec2 uPointer; uniform vec4 uPing;
 out vec4 O;
 
@@ -790,8 +939,14 @@ float wband(float e, float lo, float hi) {
   if (e < lo || e > hi) return 0.0;
   return min(1.0, (e - lo) / 0.7) * min(1.0, (hi - e) / 0.7);
 }
-/* local zoom: content drawn at its own scale keeps shrinking as uE grows */
-float zoomFor(float eCenter) { return pow(10.0, clamp(uE - eCenter, -2.2, 2.2)); }
+float wbandR(float e, float lo, float hi, float r) {
+  if (e < lo || e > hi) return 0.0;
+  return min(1.0, (e - lo) / r) * min(1.0, (hi - e) / r);
+}
+/* local zoom: content drawn at its own scale keeps shrinking as gE grows.
+   gE tracks uE in space mode; time mode sets it per reused scene. */
+float gE = 0.0;
+float zoomFor(float eCenter) { return pow(10.0, clamp(gE - eCenter, -2.2, 2.2)); }
 
 float sdSeg(vec2 p, vec2 a, vec2 b) {
   vec2 pa = p - a, ba = b - a;
@@ -1363,15 +1518,53 @@ vec3 scWeb(vec2 uv, float t) {
   return col;
 }
 
+/* ---------- time-mode epochs (uE is log10 seconds after the Big Bang) ---------- */
+vec3 scPlasma(vec2 uv, float t, float e) {
+  float cool = smoothstep(-12.5, -4.5, e);
+  vec2 p = uv * 2.4;
+  vec2 w = vec2(fbm(p * 2.2 + t * 0.9), fbm(p * 2.2 - t * 0.8 + 5.0));
+  float f = fbm(p * 3.5 + w * 1.8 + t * 0.6);
+  vec3 hot = mix(vec3(1.0, 0.95, 0.88), vec3(1.0, 0.55, 0.22), cool);
+  vec3 col = hot * (0.22 + f * f * 1.5);
+  col += vec3(1.0, 0.8, 0.9) * pow(ridge(p * 2.5 + w + t * 0.5), 7.0) * (1.0 - cool * 0.5);
+  col += vec3(0.9, 0.95, 1.0) * pow(noise(p * 14.0 + t * 2.0), 9.0) * 2.0;
+  return col * (1.0 - cool * 0.3);
+}
+vec3 scCMB(vec2 uv, float t, float e) {
+  float prog = smoothstep(-4.0, 13.0, e);                   // blackbody fog, cooling
+  vec3 bb = mix(vec3(1.0, 0.88, 0.66), vec3(0.72, 0.24, 0.08), prog);
+  vec2 p = uv * 2.0;
+  float fog = fbm(p * 2.0 + t * 0.06) * 0.55 + fbm(p * 5.0 - t * 0.04) * 0.3;
+  float lift = smoothstep(12.5, 13.15, e);                  // recombination: the fog clears
+  vec3 col = bb * (0.30 + fog) * (1.0 - lift * 0.94);
+  float aniso = fbm(uv * 3.2 + 17.0) - 0.5;                 // ...revealing the CMB map
+  col += lift * mix(vec3(0.11, 0.15, 0.40), vec3(0.62, 0.27, 0.13), smoothstep(-0.16, 0.16, aniso)) * 0.75;
+  return col;
+}
+vec3 scDarkAges(vec2 uv, float t) {
+  vec3 col = vec3(0.008, 0.010, 0.020) * (0.5 + fbm(uv * 2.0 + t * 0.01));
+  col += vec3(0.045, 0.04, 0.08) * fbm(uv * 1.2 + 31.0) * 0.5;
+  return col;
+}
+vec3 scFirstStars(vec2 uv, float t) {
+  vec3 col = vec3(0.010, 0.012, 0.026);
+  col += vec3(0.10, 0.08, 0.20) * fbm(uv * 2.6 + t * 0.02) * 0.6;
+  col += starLayer(uv * 20.0 + 3.0, 0.985, t) * vec3(0.75, 0.85, 1.25) * 1.5;
+  col += vec3(0.22, 0.32, 0.65) * pow(noise(uv * 4.0 + 9.0), 6.0) * 1.4;   // reionized bubbles
+  return col;
+}
+
 void main() {
   vec2 uv = (gl_FragCoord.xy - 0.5 * uRes) / uRes.y;
   uv += uPointer * vec2(0.018, -0.018);
   float t = uTime;
   float e = uE;
+  gE = uE;
 
   vec3 col = vec3(0.008, 0.010, 0.020);
 
   float w;
+  if (uMode < 0.5) {
   w = wband(e, -17.0, -14.8); if (w > 0.002) col += w * scFoam(uv, t);
   w = wband(e, -15.6, -13.6); if (w > 0.002) col += w * scNucleus(uv, t);
   w = wband(e, -13.8,  -9.6); if (w > 0.002) col += w * scAtom(uv, t);
@@ -1385,6 +1578,17 @@ void main() {
   w = wband(e,  14.2,  19.4); if (w > 0.002) col += w * scStars(uv, t);
   w = wband(e,  19.4,  23.2); if (w > 0.002) col += w * scGalaxy(uv, t);
   w = wband(e,  23.2,  26.9); if (w > 0.002) col += w * scWeb(uv, t);
+  } else {
+  w = wbandR(e, -12.7,  -4.0, 0.7);   if (w > 0.002) col += w * scPlasma(uv, t, e);
+  w = wbandR(e,  -4.6,   2.6, 0.7);   if (w > 0.002) { gE = mix(-15.3, -13.9, (e + 4.6) / 7.2); col += w * scNucleus(uv, t); }
+  w = wbandR(e,  -5.0,  13.2, 0.7);   if (w > 0.002) col += w * scCMB(uv, t, e);
+  w = wbandR(e,  13.0,  15.7, 0.5);   if (w > 0.002) col += w * scDarkAges(uv, t);
+  w = wbandR(e,  15.4,  16.75, 0.35); if (w > 0.002) col += w * scFirstStars(uv, t);
+  w = wbandR(e,  16.55, 17.30, 0.2);  if (w > 0.002) { gE = mix(20.3, 21.6, (e - 16.55) / 0.75); col += w * scGalaxy(uv, t); }
+  w = wbandR(e,  17.20, 17.50, 0.08); if (w > 0.002) { gE = mix(10.4, 12.0, (e - 17.20) / 0.30); col += w * scSystem(uv, t); }
+  w = wbandR(e,  17.42, 17.62, 0.05); if (w > 0.002) { gE = mix(6.2, 7.2, (e - 17.42) / 0.20); col += w * scPlanet(uv, t); }
+  w = wbandR(e,  17.55, 17.70, 0.035); if (w > 0.002) { gE = uE; col += w * scHuman(uv, t); }
+  }
 
   // sonar ping on click
   float age = t - uPing.z;
@@ -1454,7 +1658,7 @@ void main() {
   O = vec4(col, 1.0);
 }`;
 
-let glOK = false, prog, uRes, uTime, uE, uPointer, uPing, uFinal;
+let glOK = false, prog, uRes, uTime, uE, uPointer, uPing, uFinal, uModeL;
 let post = null;
 
 function buildProgram(fsSrc) {
@@ -1481,6 +1685,7 @@ if (gl) {
     uPointer = gl.getUniformLocation(prog, 'uPointer');
     uPing = gl.getUniformLocation(prog, 'uPing');
     uFinal = gl.getUniformLocation(prog, 'uFinal');
+    uModeL = gl.getUniformLocation(prog, 'uMode');
     glOK = true;
     /* HDR targets when the GPU can render to half-float; 8-bit otherwise */
     const pB = buildProgram(FS_BRIGHT), pBl = buildProgram(FS_BLUR), pC = buildProgram(FS_COMP);
@@ -1585,6 +1790,7 @@ function frame(now) {
     gl.uniform1f(uTime, t);
     gl.uniform1f(uE, shownE);
     gl.uniform1f(uFinal, usePost ? 0 : 1);
+    gl.uniform1f(uModeL, MODE === 't' ? 1 : 0);
     gl.uniform2f(uPointer, smoothPointer.x, smoothPointer.y);
     gl.uniform4f(uPing, ping.x, ping.y, ping.t, 0);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
@@ -1672,7 +1878,7 @@ soundBtn.addEventListener('click', async () => {
 function updateSound() {
   if (!audio || soundBtn.getAttribute('aria-pressed') !== 'true') return;
   // small scales ring high and fast, cosmic scales rumble
-  const f = 55 * Math.pow(2, (E_MAX - shownE) / SPAN * 5.2);
+  const f = 55 * Math.pow(2, (AX.max - shownE) / AX.span * 5.2);
   const now = audio.ctx.currentTime;
   audio.o1.frequency.setTargetAtTime(f, now, 0.15);
   audio.o2.frequency.setTargetAtTime(f * 1.5, now, 0.2);
@@ -1683,7 +1889,7 @@ function pingDecade() {
   if (!audio || soundBtn.getAttribute('aria-pressed') !== 'true') return;
   const ctx = audio.ctx;
   const o = ctx.createOscillator(); o.type = 'sine';
-  const f = 110 * Math.pow(2, (E_MAX - shownE) / SPAN * 5.2);
+  const f = 110 * Math.pow(2, (AX.max - shownE) / AX.span * 5.2);
   o.frequency.value = clamp(f * 2, 60, 4000);
   const g = ctx.createGain();
   g.gain.setValueAtTime(0.09, ctx.currentTime);
@@ -1695,7 +1901,16 @@ function pingDecade() {
 /* ============================== outro stats ============================== */
 function buildOutroStats() {
   const el = document.getElementById('outro-stats');
-  if (lang === 'fr') {
+  const fr = lang === 'fr';
+  if (MODE === 't') {
+    el.innerHTML = fr
+      ? `En haut de la page, un pixel couvrait environ 10⁻¹⁴ seconde. En bas, il couvre ` +
+        `à peu près <b>35 millions d’années</b>. Toute l’histoire humaine tient dans les ` +
+        `six derniers millièmes de pixel.`
+      : `At the top of the page, one pixel covered about 10⁻¹⁴ of a second. At the bottom ` +
+        `it covers roughly <b>35 million years</b>. All of human history fits in the final ` +
+        `six thousandths of a pixel.`;
+  } else if (fr) {
     el.innerHTML =
       `Taux de change en haut de la page : un pixel ≈ 10⁻¹⁶ m, bien moins qu’un proton. ` +
       `En bas : un pixel ≈ 10²³ m, environ <b>dix millions d’années-lumière par pixel</b>. ` +
@@ -1812,6 +2027,58 @@ const FR = {
     `galaxies. Pas le bord de tout, seulement le bord de <b>ce que la lumière a eu le temps ` +
     `de nous apporter</b>.`,
 
+  '.card[data-t="-11"] .tag': '<span>Ère électrofaible</span><span class="m">t ≈ 10⁻¹¹ s</span>',
+  '.card[data-t="-11"] p':
+    `L’univers a un billionième de seconde et dépasse 10¹⁵ K. Les quatre forces ` +
+    `viennent de finir de se séparer ; tout ce qui existe est <b>un plasma de quarks, ` +
+    `de gluons et de lumière</b>.`,
+  '.card[data-t="-4.8"] .tag': '<span>Confinement</span><span class="m">t ≈ 10 µs</span>',
+  '.card[data-t="-4.8"] p':
+    `En passant sous deux mille milliards de kelvins, les quarks se verrouillent trois ` +
+    `par trois. Les premiers protons et neutrons apparaissent : <b>rien, depuis, n’a ` +
+    `jamais été assez chaud pour les défaire</b>.`,
+  '.card[data-t="0.1"] .tag': '<span>Une seconde</span><span class="m">t + 1 s</span>',
+  '.card[data-t="0.1"] p':
+    `Les neutrinos cessent d’interagir et filent, libres. Ils vous traversent encore, ` +
+    `environ <b>60 milliards par centimètre carré et par seconde</b>, presque inchangés ` +
+    `depuis cet instant.`,
+  '.card[data-t="2.26"] .tag': '<span>Trois minutes</span><span class="m">t + 180 s</span>',
+  '.card[data-t="2.26"] p':
+    `En un quart d’heure environ, l’univers forge l’hydrogène et l’hélium de tout ce ` +
+    `qui existera : trois quarts, un quart. <b>La recette n’a pas changé depuis.</b>`,
+  '.card[data-t="12.2"] .tag': '<span>La matière l’emporte</span><span class="m">t + 50 000 ans</span>',
+  '.card[data-t="12.2"] p':
+    `Jusqu’ici, la lumière pesait plus lourd que la matière. À partir de ce croisement, ` +
+    `la matière gouverne la gravité et peut commencer, <b>lentement, à s’agglutiner</b>.`,
+  '.card[data-t="13.08"] .tag': '<span>Première lumière</span><span class="m">t + 380 000 ans</span>',
+  '.card[data-t="13.08"] p':
+    `Le brouillard d’électrons se dissipe ; les photons filent, libres. Cette première ` +
+    `lumière est encore partout, étirée mille fois en micro-ondes : <b>la chose la plus ` +
+    `ancienne que l’on puisse observer</b>.`,
+  '.card[data-t="15.1"] .tag': '<span>Les âges sombres</span><span class="m">t + ~40 Ma</span>',
+  '.card[data-t="15.1"] p':
+    `Pendant des dizaines de millions d’années, pas une seule étoile. L’univers est un ` +
+    `nuage d’hydrogène neutre qui refroidit lentement : <b>entièrement noir, partout</b>.`,
+  '.card[data-t="16"] .tag': '<span>Premières étoiles</span><span class="m">t + ~300 Ma</span>',
+  '.card[data-t="16"] p':
+    `Les premières étoiles sont des monstres, cent masses solaires, mortes en quelques ` +
+    `millions d’années. Leurs cendres sont les premiers éléments plus lourds que le ` +
+    `lithium : <b>chaque atome de carbone de votre corps compris</b>.`,
+  '.card[data-t="16.6"] .tag': '<span>Jeunes galaxies</span><span class="m">t + 1 Ga</span>',
+  '.card[data-t="16.6"] p':
+    `La gravité a tressé la matière en filaments ; les galaxies s’allument aux ` +
+    `croisements. La réionisation s’achève : <b>l’univers devient transparent pour de bon</b>.`,
+  '.card[data-t="17.46"] .tag': '<span>Le Soleil s’allume</span><span class="m">t + 9,2 Ga</span>',
+  '.card[data-t="17.46"] p':
+    `Dans un nuage recyclé, enrichi par des générations d’étoiles mortes, un disque ` +
+    `s’effondre : le Soleil s’allume et les planètes s’accrètent dans les restes,
+    <b>en à peine 100 millions d’années</b>.`,
+  '.card[data-t="17.5"] .tag': '<span>La vie</span><span class="m">t + 10 Ga</span>',
+  '.card[data-t="17.5"] p':
+    `À peine 200 millions d’années après la condensation des océans, la chimie se met ` +
+    `à se copier elle-même. Elle n’a jamais cessé depuis : <b>vous êtes le brouillon ` +
+    `en cours</b>.`,
+
   '#human .halo': 'Vous êtes ici',
   '#human p:not(.halo):not(.fn)':
     `10⁰, un mètre. Une chaise, un chien, un ordinateur ouvert, vous. Des quarante-trois ` +
@@ -1852,18 +2119,104 @@ function applyLang(l) {
     ? 'Un zoom animé continu à travers les échelles de l’univers, des particules subatomiques à la toile cosmique, suivant votre position de défilement.'
     : 'A continuous animated zoom through the scales of the universe, from subatomic particles to the cosmic web, following your scroll position.');
   curScene = -1;                 // force the HUD scene name to re-render
+  modeBtn.textContent = MODE === 't'
+    ? (lang === 'fr' ? 'Mètres' : 'Meters')
+    : (lang === 'fr' ? 'Années' : 'Years');
+  modeBtn.title = lang === 'fr'
+    ? (MODE === 't' ? 'Revenir à l’espace' : 'Faire défiler le temps plutôt que l’espace')
+    : (MODE === 't' ? 'Back to space' : 'Scroll through time instead of space');
   buildGoto();
   buildOutroStats();
+  if (MODE === 't') applyTimeTexts();
 }
 langBtn.addEventListener('click', () => applyLang(lang === 'fr' ? 'en' : 'fr'));
-if ((navigator.language || '').toLowerCase().startsWith('fr')) applyLang('fr');
-else buildGoto();
 
-/* arrive through a deep link: jump straight to the shared scale */
+/* ============================== the years mode ============================== */
+const TIME_TEXTS = {
+  en: {
+    '#intro .sub':
+      `The universe is 13.8 billion years old. In this mode the page is <b>30 powers ` +
+      `of ten of seconds</b> long: it begins in the plasma of the first trillionth of ` +
+      `a second and ends now, at the moment you are reading it.`,
+    '#intro .rules':
+      `<span>SPAN <b>10⁻¹² s → 13.8 Gyr</b></span>` +
+      `<span>EXCHANGE RATE <b>~900 px per ×10</b></span>` +
+      `<span>RENDERING <b>live, nothing recorded</b></span>`,
+    '#wordmark': '<b>MAGNITUDE</b> / 30 DECADES OF TIME',
+    '#readout .light': 'the universe’s temperature: <b id="ro-light"></b>',
+    '#human .halo': 'This is now',
+    '#human p:not(.halo):not(.fn)':
+      `t + 13.8 billion years. Of every epoch on this page, this is the only one in ` +
+      `which someone can read it.`,
+    '#human .fn': 'the thirty decades before this one had no witnesses',
+    '#outro h2': 'The scrollbar<br>ends now',
+    '#outro .big-num': 't + 4.35 × 10¹⁷ s · 13,800,000,000 years',
+    '#outro > div > p:nth-of-type(2)':
+      `You just scrolled through all of time. The logarithm works the other way here: ` +
+      `<b>the last 900 pixels hold 90% of the universe’s entire history, and all of ` +
+      `human existence fits in the final six thousandths of a pixel.</b>`,
+  },
+  fr: {
+    '#intro .sub':
+      `L’univers a 13,8 milliards d’années. Dans ce mode, la page mesure <b>30 puissances ` +
+      `de dix de secondes</b> : elle commence dans le plasma du premier billionième de ` +
+      `seconde et s’achève maintenant, à l’instant où vous la lisez.`,
+    '#intro .rules':
+      `<span>ÉTENDUE <b>10⁻¹² s → 13,8 Ga</b></span>` +
+      `<span>TAUX DE CHANGE <b>~900 px par ×10</b></span>` +
+      `<span>RENDU <b>en direct, rien d’enregistré</b></span>`,
+    '#wordmark': '<b>MAGNITUDE</b> / 30 DÉCADES DE TEMPS',
+    '#readout .light': 'température de l’univers : <b id="ro-light"></b>',
+    '#human .halo': 'C’est maintenant',
+    '#human p:not(.halo):not(.fn)':
+      `t + 13,8 milliards d’années. De toutes les époques de cette page, celle-ci est ` +
+      `la seule où quelqu’un peut la lire.`,
+    '#human .fn': 'les trente décades précédentes n’avaient pas de témoins',
+    '#outro h2': 'La barre de défilement<br>s’arrête maintenant',
+    '#outro .big-num': 't + 4,35 × 10¹⁷ s · 13 800 000 000 ans',
+    '#outro > div > p:nth-of-type(2)':
+      `Vous venez de faire défiler tout le temps. Le logarithme joue ici dans l’autre ` +
+      `sens : <b>les 900 derniers pixels contiennent 90 % de toute l’histoire de ` +
+      `l’univers, et l’existence humaine entière tient dans les six derniers millièmes ` +
+      `de pixel.</b>`,
+  },
+};
+function applyTimeTexts() {
+  const T = TIME_TEXTS[lang];
+  for (const sel in T) {
+    const el = document.querySelector(sel);
+    if (!el) continue;
+    if (!enCache.has(sel)) enCache.set(sel, el.innerHTML);
+    el.innerHTML = T[sel];
+  }
+  roLight = document.getElementById('ro-light');
+}
+
+const modeBtn = document.getElementById('mode');
+function applyMode(m) {
+  MODE = m;
+  AX = m === 't' ? AXIS.t : AXIS.e;
+  track.style.height = AX.trackH + 'px';
+  document.getElementById('ro-unit').textContent = m === 't' ? 's' : 'm';
+  buildRuler();
+  placeCards();
+  window.scrollTo({ top: 0, behavior: 'instant' });
+  targetE = AX.min; shownE = AX.min;
+  lastDecade = null;
+  applyLang(lang);        // reapplies every text for the current mode + language
+  history.replaceState(null, '', m === 't' ? '#m=t' : '#e=' + AX.min.toFixed(2));
+}
+modeBtn.addEventListener('click', () => applyMode(MODE === 't' ? 'e' : 't'));
+
+if ((navigator.language || '').toLowerCase().startsWith('fr')) applyLang('fr');
+else applyLang('en');
+
+/* arrive through a deep link: jump straight to the shared scale or epoch */
 (function initHash() {
+  if (/m=t/.test(location.hash)) applyMode('t');
   const m = location.hash.match(/e=(-?\d+(?:\.\d+)?)/);
   if (!m) return;
-  const target = clamp(parseFloat(m[1]), E_MIN, E_MAX);
+  const target = clamp(parseFloat(m[1]), AX.min, AX.max);
   setTimeout(() => {
     window.scrollTo({ top: Math.round(eToY(target)), behavior: 'instant' });
     readScroll(); shownE = targetE;
