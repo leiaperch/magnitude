@@ -35,32 +35,41 @@ for (const era of ages.eras) {
   /* the town must stand where the camera is pointed */
   if (box.max.x < 0 || box.min.x > 16) bad.push(`${tag}: town has drifted off in x`);
 
-  /* nothing may share a material's opacity: each smoke puff fades alone */
-  const smokeMats = new Set();
-  built.group.traverse(o => {
-    if (o.isMesh && o.material && o.material.transparent) {
-      if (smokeMats.has(o.material)) bad.push(`${tag}: two puffs share one material`);
-      smokeMats.add(o.material);
-    }
-  });
+  /* Whatever animates its own opacity (smoke puffs fade) must own its material;
+   * two meshes sharing one would fade in lockstep. Holograms share a glow and
+   * never fade, so only flag materials whose opacity actually changes. */
+  const opacityBefore = new Map();
+  built.group.traverse(o => { if (o.isMesh && o.material && o.material.transparent) opacityBefore.set(o.material, o.material.opacity); });
 
-  /* animation must move things, and never to NaN. Some groups are spinners
-   * (mill sails, turbine blades) which turn without going anywhere, so ask
-   * whether *anything* moved or turned rather than picking one at random. */
   const groups = built.group.children.filter(o => o.isGroup);
-  const before = groups.map(o => ({ p: o.position.clone(), r: o.rotation.z }));
+  const before = groups.map(o => ({ p: o.position.clone(), rz: o.rotation.z, ry: o.rotation.y }));
+  built.tick(0.05);
+  const midRy = groups.map(o => o.rotation.y);
   for (let i = 0; i < 40; i++) built.tick(i * 0.1);
+
   built.group.traverse(o => {
     if (!isFinite(o.position.x) || !isFinite(o.position.y) || !isFinite(o.position.z)) bad.push(`${tag}: NaN position after tick`);
   });
-  const stirred = groups.some((o, i) => !o.position.equals(before[i].p) || o.rotation.z !== before[i].r);
+
+  const users = new Map();
+  built.group.traverse(o => {
+    if (o.isMesh && o.material && opacityBefore.has(o.material) && o.material.opacity !== opacityBefore.get(o.material)) {
+      users.set(o.material, (users.get(o.material) || 0) + 1);
+    }
+  });
+  for (const [, n] of users) if (n > 1) { bad.push(`${tag}: a fading material is shared by ${n} meshes`); break; }
+
+  const stirred = groups.some((o, i) => !o.position.equals(before[i].p) || o.rotation.z !== before[i].rz || o.rotation.y !== before[i].ry);
   if (groups.length && !stirred) bad.push(`${tag}: ${groups.length} animated groups and none of them moved`);
 
-  /* walkers must face where they are heading */
-  for (const m of groups) {
+  /* Walkers must face where they are heading — but only the ones that hold a
+   * heading. Drones spin freely (ry keeps changing), like mill sails on z. */
+  for (let i = 0; i < groups.length; i++) {
+    const m = groups[i];
+    if (m.rotation.z !== 0 || m.rotation.y !== midRy[i]) continue;   // free spinner: skip
     const ry = ((m.rotation.y % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
     const ok = [0, Math.PI / 2, Math.PI, 3 * Math.PI / 2].some(a => Math.abs(ry - a) < 1e-6);
-    if (!ok && m.rotation.z === 0) bad.push(`${tag}: a mover faces ${(ry * 57.3).toFixed(1)}°, not an axis`);
+    if (!ok) bad.push(`${tag}: a mover faces ${(ry * 57.3).toFixed(1)}°, not an axis`);
   }
 
   if (ms > 120) bad.push(`${tag}: took ${ms}ms to build`);

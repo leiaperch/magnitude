@@ -35,29 +35,33 @@ cam.updateMatrixWorld(true);
 cam.updateProjectionMatrix();
 const VP = new THREE.Matrix4().multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse);
 
-/* light, matching ages.js: one sun, plus a hemisphere fill */
+/* light, matching ages.js: one sun, a hemisphere fill, and a day→night dim */
 const SUN = new THREE.Vector3(-24, 34, 16).normalize();
-const SUN_I = 2.1, HEMI_I = 1.1;
 const SKY_H = new THREE.Color(0xdfeaf0);
 
-function shade(color, nx, ny, nz, hill) {
-  const s = Math.max(0, nx * SUN.x + ny * SUN.y + nz * SUN.z) * SUN_I;
+function shade(color, emissive, nx, ny, nz, hill, night) {
+  const sunI = 2.1 - night * 1.78, hemiI = 1.1 - night * 0.72;
+  const sc = new THREE.Color(0xfff2dd).lerp(new THREE.Color(0x9fb4e0), night);
+  const s = Math.max(0, nx * SUN.x + ny * SUN.y + nz * SUN.z) * sunI;
   const hw = 0.5 * (ny + 1);                       // hemisphere: sky above, ground below
-  const hr = (hill.r + (SKY_H.r - hill.r) * hw) * HEMI_I;
-  const hg = (hill.g + (SKY_H.g - hill.g) * hw) * HEMI_I;
-  const hb = (hill.b + (SKY_H.b - hill.b) * hw) * HEMI_I;
   const f = 1 / 2.2;                               // rough gamma, so mids don't blow out
-  return [
-    Math.min(255, 255 * Math.pow(Math.min(1, color.r * (s + hr)), f)),
-    Math.min(255, 255 * Math.pow(Math.min(1, color.g * (s + hg)), f)),
-    Math.min(255, 255 * Math.pow(Math.min(1, color.b * (s + hb)), f)),
-  ];
+  const col = [color.r, color.g, color.b], em = [emissive.r, emissive.g, emissive.b];
+  const hi = [hill.r, hill.g, hill.b], sk = [SKY_H.r, SKY_H.g, SKY_H.b], scc = [sc.r, sc.g, sc.b];
+  const out = [];
+  for (let k = 0; k < 3; k++) {
+    const hemi = (hi[k] + (sk[k] - hi[k]) * hw) * hemiI;
+    const lit = col[k] * (s * scc[k] + hemi) + em[k];   // emissive glows regardless of light
+    out.push(Math.min(255, 255 * Math.pow(Math.min(1, lit), f)));
+  }
+  return out;
 }
 
 function render(era) {
   const built = buildEra(era);
   built.group.updateMatrixWorld(true);
   const hill = new THREE.Color(era.hill);
+  const night = era.night || 0;
+  const NOEM = new THREE.Color(0, 0, 0);
 
   const buf = new Uint8Array(W * H * 3);
   const zb = new Float32Array(W * H).fill(Infinity);
@@ -81,6 +85,7 @@ function render(era) {
     const pos = m.geometry.attributes.position;
     const idx = m.geometry.index;
     const col = m.material.color || new THREE.Color(0xffffff);
+    const em = m.material.emissive || NOEM;
     const count = idx ? idx.count : pos.count;
     for (let t = 0; t < count; t += 3) {
       const i0 = idx ? idx.getX(t) : t, i1 = idx ? idx.getX(t + 1) : t + 1, i2 = idx ? idx.getX(t + 2) : t + 2;
@@ -92,7 +97,7 @@ function render(era) {
       const vx = wc.x - wa.x, vy = wc.y - wa.y, vz = wc.z - wa.z;
       let nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
       const nl = Math.hypot(nx, ny, nz) || 1; nx /= nl; ny /= nl; nz /= nl;
-      const [r, g, bl] = shade(col, nx, ny, nz, hill);
+      const [r, g, bl] = shade(col, em, nx, ny, nz, hill, night);
 
       a.copy(wa).applyMatrix4(VP); b.copy(wb).applyMatrix4(VP); c.copy(wc).applyMatrix4(VP);
       raster(buf, zb, a, b, c, r, g, bl);

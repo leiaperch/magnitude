@@ -49,6 +49,7 @@ export function buildEra(era) {
 
   const movers = [];      // people, carts, trams — anything that goes somewhere
   const spinners = [];    // mill sails, turbine blades
+  const blinkers = [];    // aircraft beacons, hologram flicker
   const smoke = [];
   const mats = [];
   const mk = (color, opts = {}) => {
@@ -70,6 +71,12 @@ export function buildEra(era) {
   /* Before stone and brick houses, smoke left through the thatch — a proud
    * chimney on a wooden hovel is the classic tell of a fake medieval town. */
   const chimneys = era.smoke > 0 && era.house.material !== 'wood';
+
+  /* neon: an emissive material glows on its own, so it burns at night */
+  const NEON = [0x18e6ff, 0xff2f9e, 0x8b5cff, 0x2fffa8, 0xffd23f];
+  const neon = c => mk(c, { emissive: c, emissiveIntensity: 1 });
+  mats.__neon = NEON.map(neon);
+  const pickNeon = () => mats.__neon[Math.floor(g() * mats.__neon.length)];
 
   const add = (geo, mat, pos, scl, rotY = 0) => {
     const m = new THREE.Mesh(geo, mat);
@@ -239,6 +246,65 @@ export function buildEra(era) {
         if (kind === 'tower-solar') add(BOX, mk(0x3d5a8a), [x, 8.4, z], [3.4, 0.12, 3.4]);
         break;
       }
+      case 'megatower': {
+        /* a glass slab far taller than anything before it, its face a grid of
+         * lit and neon cells, an aircraft light blinking at the top */
+        const H = 14 + g() * 5, w = 2.6 + g();
+        add(BOX, mk(0x2a3550), [x, 0, z], [w, H, w]);
+        const cols = Math.max(3, Math.round(w / 0.7));
+        for (let r = 0; r < Math.floor(H / 0.72); r++) for (let i = 0; i < cols; i++) {
+          const win = g() > 0.82 ? pickNeon() : g() > 0.4 ? M.lit : mk(0x22304a);
+          add(BOX, win, [x - w / 2 + 0.25 + i * ((w - 0.5) / (cols - 1)), 0.6 + r * 0.72, z + w / 2 + 0.02], [0.4, 0.44, 0.05]);
+        }
+        add(BOX, neon(NEON[Math.floor(g() * NEON.length)]), [x, 0.4, z + w / 2 + 0.03], [w * 0.9, 0.12, 0.05]);   // ground-floor neon band
+        add(BOX, mk(0x1a2236), [x, H, z], [w * 0.5, 0.5, w * 0.5]);
+        const beacon = add(SPH, neon(0xff2f4f), [x, H + 0.7, z], [0.18, 0.18, 0.18]);
+        blinkers.push(beacon);
+        break;
+      }
+      case 'holotower': {
+        /* a slimmer tower wearing a giant holographic billboard */
+        const H = 11 + g() * 4, w = 2.0;
+        add(BOX, mk(0x232c44), [x, 0, z], [w, H, w]);
+        for (let r = 0; r < Math.floor(H / 0.7); r++) for (let i = 0; i < 3; i++)
+          add(BOX, g() > 0.5 ? M.lit : mk(0x2a3450), [x - 0.7 + i * 0.7, 0.6 + r * 0.7, z + w / 2 + 0.02], [0.4, 0.4, 0.05]);
+        const holo = neon(NEON[Math.floor(g() * NEON.length)]);
+        holo.transparent = true; holo.opacity = 0.55;
+        add(BOX, holo, [x, H * 0.55, z + w / 2 + 0.5], [w * 1.5, H * 0.5, 0.08]);
+        break;
+      }
+      case 'cathedral-scarred':
+        /* wars of religion: the saints hammered off, one spire snapped short */
+        add(BOX, M.stone, [x, 0, z], [7.4, 2.8, 3.6]);
+        add(PRISM_X, mk(0x6a4038), [x - 3.7, 2.8, z], [7.4, 1.6, 3.8]);
+        add(BOX, M.stone, [x - 3.4, 0, z], [1.9, 5.6, 1.9]);
+        add(CONE, mk(0x6a5048), [x - 3.4, 5.6, z], [2.5, 2.4, 2.5]);
+        add(BOX, mk(0x8f857a), [x + 3.4, 0, z], [1.9, 3.6, 1.9]);           // the broken tower, capped flat
+        add(BOX, mk(0x6a5048), [x + 3.4, 3.6, z], [2.1, 0.3, 2.1]);
+        add(SPH, mk(0x4a4a52), [x, 2.0, z + 1.85], [1.0, 1.0, 0.3]);        // the rose window, gone dark
+        break;
+      case 'cathedral-spire': {
+        /* the Gothic-revival restoration: cleaned stone, a tall central spire */
+        add(BOX, mk(0xd8d0c0), [x, 0, z], [7.6, 3.0, 3.7]);
+        add(PRISM_X, mk(0x8a4a3c), [x - 3.8, 3.0, z], [7.6, 1.7, 3.9]);
+        for (const dx of [-3.5, 3.5]) {
+          add(BOX, mk(0xd8d0c0), [x + dx, 0, z], [1.9, 5.8, 1.9]);
+          add(CONE, mk(0x7c5a49), [x + dx, 5.8, z], [2.4, 2.6, 2.4]);
+        }
+        add(BOX, mk(0xd8d0c0), [x, 3.0, z], [1.5, 3.2, 1.5]);
+        add(CONE, mk(0x6a7a6a), [x, 6.2, z], [2.0, 4.4, 2.0]);              // the great central spire
+        const rose = (era.night || 0) > 0.4 ? neon(0xffd23f) : M.glass;    // floodlit at night
+        add(SPH, rose, [x, 2.1, z + 1.9], [1.2, 1.2, 0.3]);
+        if ((era.night || 0) > 0.4)
+          for (const dx of [-2, 2]) add(SPH, neon(0x9fd8ff), [x + dx, 0.3, z + 2.2], [0.3, 0.3, 0.3]);  // uplighters
+        break;
+      }
+      case 'skybridge': {
+        /* a lit tube slung between two towers, high over the square */
+        for (let i = 0; i < 10; i++)
+          add(BOX, g() > 0.4 ? neon(NEON[i % NEON.length]) : M.glass, [x - 4 + i * 0.9, 9, z], [0.7, 0.7, 0.7]);
+        break;
+      }
     }
   };
   const spots = { 1: [[-4, -4]], 2: [[-6.5, -2], [-1.5, -6.5]], 3: [[-8, -1], [-4, -4.5], [0.5, -8]] };
@@ -258,6 +324,11 @@ export function buildEra(era) {
       if (era.house.roof === 'solar')
         for (let i = 0; i < Math.max(1, Math.floor(w / 0.8)); i++)
           add(BOX, mk(0x3d5a8a), [x + 0.4 + i * 0.8, h + 0.14, z + d / 2], [0.6, 0.06, d - 0.5]);
+      /* a neon strip along the street-side eave */
+      if (era.house.neon)
+        facing === 'z'
+          ? add(BOX, pickNeon(), [x + w / 2, h + 0.06, z + d + 0.02], [w, 0.08, 0.05])
+          : add(BOX, pickNeon(), [x + w + 0.02, h + 0.06, z + d / 2], [0.05, 0.08, d]);
     } else if (facing === 'z') {
       add(PRISM_X, M.roof, [x - 0.08, h, z + d / 2], [w + 0.16, RIDGE[era.house.roof], d + 0.16]);
     } else {
@@ -281,7 +352,8 @@ export function buildEra(era) {
         const u = pad + i * (0.34 + pad);
         const uw = kind === 'picture' ? 0.34 + pad * 0.5 : 0.34;
         if (kind === 'hole') { put(u, y, uw, 0.36, M.dark); continue; }
-        put(u, y, uw, kind === 'picture' ? 0.56 : 0.46, g() > 0.58 ? M.lit : M.glass);
+        const glass = era.house.neon ? (g() > 0.6 ? pickNeon() : g() > 0.35 ? M.lit : M.glass) : (g() > 0.58 ? M.lit : M.glass);
+        put(u, y, uw, kind === 'picture' ? 0.56 : 0.46, glass);
         if (kind === 'shutter') {
           put(u - 0.11, y, 0.09, 0.46, M.wood);
           put(u + uw + 0.02, y, 0.09, 0.46, M.wood);
@@ -489,6 +561,37 @@ export function buildEra(era) {
         add(BOX, M.metal, [x + 0.34, 0.3, z], [0.05, 0.7, 0.05]);
         for (const dx of [-0.32, 0.34]) add(BOX, M.dark, [x + dx, 0, z], [0.28, 0.28, 0.05]);
         break;
+      case 'drone': {
+        /* a delivery quadrotor, hovering and drifting, its underlight glowing */
+        const d = new THREE.Group();
+        const body = add(BOX, M.dark, [0, 0, 0], [0.5, 0.16, 0.5]);
+        const light = add(SPH, pickNeon(), [0, -0.12, 0], [0.18, 0.1, 0.18]);
+        const arms = [-0.3, 0.3].flatMap(ax => [-0.3, 0.3].map(az => add(BOX, M.metal, [ax, 0.06, az], [0.12, 0.05, 0.12])));
+        [body, light, ...arms].forEach(o => { group.remove(o); d.add(o); });
+        const fly = 3.5 + g() * 2.5;
+        d.position.set(x, fly, z);
+        group.add(d);
+        blinkers.push(light);
+        movers.push({ o: d, from: x, to: x + (g() - 0.5) * 9, t: g(), speed: 0.5 + g() * 0.5, axis: 'x', hover: g() * 6, baseY: fly });
+        break;
+      }
+      case 'holo-sign': {
+        /* a freestanding holographic advert, translucent and glowing */
+        add(BOX, M.dark, [x, 0, z], [0.2, 1.2, 0.2]);
+        const h = neon(NEON[Math.floor(g() * NEON.length)]);
+        h.transparent = true; h.opacity = 0.6;
+        add(BOX, h, [x, 2.3, z], [0.1, 2.0, 1.6]);
+        blinkers.push(add(SPH, h, [x, 1.2, z], [0.3, 0.3, 0.05]));
+        break;
+      }
+      case 'neon-tree':
+        add(BOX, M.dark, [x, 0, z], [0.18, 1.0, 0.18]);
+        add(SPH, neon(0x2fffa8), [x, 1.3, z], [1.1, 1.3, 1.1]);
+        break;
+      case 'neon-post':
+        add(BOX, M.dark, [x, 0, z], [0.12, 3.0, 0.12]);
+        add(BOX, neon(NEON[Math.floor(g() * NEON.length)]), [x, 0.5, z], [0.14, 2.2, 0.14]);
+        break;
     }
   }
   /* enough room that a busy era can actually look busy */
@@ -541,8 +644,10 @@ export function buildEra(era) {
         ? (dir >= 0 ? 0 : Math.PI)
         : (dir >= 0 ? -Math.PI / 2 : Math.PI / 2);
       if (m.bob !== undefined) m.o.position.y = Math.abs(Math.sin(time * 5 + m.bob)) * 0.06;
+      if (m.hover !== undefined) { m.o.position.y = m.baseY + Math.sin(time * 1.4 + m.hover) * 0.4; m.o.rotation.y = time * 0.3; }
     }
     for (const s of spinners) s.o.rotation.z = time * s.speed;
+    for (const b of blinkers) b.material.emissiveIntensity = 0.5 + 0.5 * Math.max(0, Math.sin(time * 3 + b.position.x));
     for (const s of smoke) {
       s.t = (s.t + s.speed * 0.008) % 1;
       s.o.position.set(s.x + s.t * 1.6, 5 + s.t * 7, s.z + s.t * 0.9);

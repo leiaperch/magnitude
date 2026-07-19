@@ -68,6 +68,7 @@ export class Ages {
     sun.shadow.bias = -0.0015;
     sun.shadow.normalBias = 0.04;
     this.scene.add(sun, sun.target);
+    this.sun = sun;
     this.hemi = new THREE.HemisphereLight(0xdfeaf0, 0x6d8a4e, 1.1);
     this.scene.add(this.hemi);
 
@@ -187,6 +188,17 @@ export class Ages {
     }
   }
 
+  /* Day dims to night as the town approaches 2050, so the neon has a dark
+   * ground to burn against. One sun for every era, so the two sides of a seam
+   * share a single dusk — which reads as the sun going down, not as an error. */
+  setLight(a, b, u) {
+    const night = (a.night || 0) * (1 - u) + (b.night || 0) * u;
+    this.sun.intensity = 2.1 - night * 1.78;
+    this.sun.color.set(0xfff2dd).lerp(new THREE.Color(0x9fb4e0), night);
+    this.hemi.intensity = 1.1 - night * 0.72;
+    this.scene.userData.night = night;
+  }
+
   /* progress: 0..1 across the whole track. Returns the era now being read. */
   update(progress) {
     if (!this.ready) return null;
@@ -203,6 +215,7 @@ export class Ages {
     }
     this.u = u;
     this.setSky(this.eras[i], this.eras[i + 1], u);
+    this.setLight(this.eras[i], this.eras[i + 1], u);
 
     /* left of the seam is always the older town, right of it the later one */
     const c = this.halfW - u * this.halfW * 2;

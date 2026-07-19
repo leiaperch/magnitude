@@ -86,12 +86,13 @@ for fn, n in [('space', 18), ('time', 11)]:
 
 # --- the ages only ask town3d for shapes it can build --------------------
 SKYLINE = {'motte', 'palisade', 'keep', 'keep-ruin', 'bridge', 'windmill', 'church',
-           'cathedral', 'cathedral-build', 'townhall', 'chimney', 'station',
-           'gasometer', 'crane', 'tower', 'tower-solar', 'turbine'}
+           'cathedral', 'cathedral-build', 'cathedral-scarred', 'cathedral-spire',
+           'townhall', 'chimney', 'station', 'gasometer', 'crane', 'tower',
+           'tower-solar', 'turbine', 'megatower', 'holotower', 'skybridge'}
 PROPS = {'barrel', 'pig', 'stall', 'cart', 'carriage', 'tram', 'car', 'bike',
          'lamp-oil', 'lamp-gas', 'lamp-electric', 'well', 'cross', 'crate', 'hay',
          'dog', 'horse', 'bench', 'fountain', 'tree', 'planter', 'traffic-light',
-         'phone-box', 'scooter'}
+         'phone-box', 'scooter', 'drone', 'holo-sign', 'neon-tree', 'neon-post'}
 WALLS = {'wood', 'timber', 'stone', 'brick', 'render', 'concrete'}
 ROOFS = {'thatch', 'tile', 'slate', 'flat', 'solar'}
 WINDOWS = {'hole', 'shutter', 'lead', 'sash', 'picture'}

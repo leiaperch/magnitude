@@ -520,7 +520,7 @@
       "hill": "#62794c",
       "ground": "cobble",
       "skyline": [
-        "cathedral",
+        "cathedral-scarred",
         "townhall",
         "windmill"
       ],
@@ -726,13 +726,13 @@
         "note": "L'air est brun, la rue est éclairée toute la nuit, et la capitale est à trois heures au lieu de trois jours."
       },
       "sky": [
-        "#b3b6ab",
-        "#ddddd2"
+        "#9a9a90",
+        "#d0c4a0"
       ],
       "hill": "#61764a",
       "ground": "setts",
       "skyline": [
-        "cathedral",
+        "cathedral-spire",
         "chimney",
         "station"
       ],
@@ -758,7 +758,8 @@
         "dog"
       ],
       "crowd": 18,
-      "smoke": 4
+      "smoke": 4,
+      "night": 0.12
     },
     {
       "year": 1900,
@@ -771,13 +772,13 @@
         "note": "La lumière électrique, un tramway, et une photographie de cette rue exacte qui existe encore."
       },
       "sky": [
-        "#adbdc4",
-        "#dfe6e2"
+        "#8a9aa8",
+        "#d8c9a8"
       ],
       "hill": "#64794c",
       "ground": "asphalt",
       "skyline": [
-        "cathedral",
+        "cathedral-spire",
         "gasometer",
         "station"
       ],
@@ -803,7 +804,8 @@
         "horse"
       ],
       "crowd": 18,
-      "smoke": 3
+      "smoke": 3,
+      "night": 0.22
     },
     {
       "year": 1950,
@@ -846,7 +848,8 @@
         "dog"
       ],
       "crowd": 11,
-      "smoke": 2
+      "smoke": 2,
+      "night": 0.12
     },
     {
       "year": 2000,
@@ -859,27 +862,29 @@
         "note": "La cathédrale n'est plus que la quatrième plus haute chose ici, et le plus bruyant dans la rue n'a pas de cheval dedans."
       },
       "sky": [
-        "#a6c6de",
-        "#e6eef0"
+        "#1c2f52",
+        "#c8794a"
       ],
-      "hill": "#6d8a4e",
+      "hill": "#3a4a63",
       "ground": "asphalt",
       "skyline": [
-        "cathedral",
-        "tower",
-        "gasometer"
+        "cathedral-spire",
+        "megatower",
+        "holotower"
       ],
       "house": {
         "material": "render",
         "storeys": 4,
         "roof": "flat",
         "window": "picture",
-        "sign": true
+        "sign": true,
+        "neon": true
       },
       "street": [
         "fountain",
         "car",
         "car",
+        "holo-sign",
         "lamp-electric",
         "bike",
         "bench",
@@ -887,56 +892,61 @@
         "planter",
         "traffic-light",
         "phone-box",
-        "dog"
+        "scooter"
       ],
       "crowd": 14,
-      "smoke": 0
+      "smoke": 0,
+      "night": 0.5
     },
     {
       "year": 2050,
       "en": {
-        "name": "Not yet",
-        "note": "The only slice on this page that has not happened. Everything above it is evidence; this one is a hope with solar panels on it."
+        "name": "Neon and rain",
+        "note": "The cathedral is a floodlit relic now, dwarfed by towers of glass and light. Drones cross where pigeons used to. The square is a thousand years old and has never held this many people."
       },
       "fr": {
-        "name": "Pas encore",
-        "note": "La seule tranche de cette page qui n'a pas eu lieu. Tout ce qui précède est une preuve ; celle-ci est un espoir avec des panneaux solaires dessus."
+        "name": "Néon et pluie",
+        "note": "La cathédrale n'est plus qu'une relique éclairée aux projecteurs, écrasée par des tours de verre et de lumière. Des drones passent où volaient les pigeons. La place a mille ans et n'a jamais réuni autant de monde."
       },
       "sky": [
-        "#a9cadf",
-        "#e8f0f0"
+        "#080c26",
+        "#241748"
       ],
-      "hill": "#74914f",
+      "hill": "#1e2445",
       "ground": "asphalt",
       "skyline": [
-        "cathedral",
-        "tower-solar",
-        "turbine"
+        "cathedral-spire",
+        "megatower",
+        "skybridge"
       ],
       "house": {
         "material": "render",
-        "storeys": 4,
+        "storeys": 5,
         "roof": "solar",
         "window": "picture",
         "sign": true,
+        "neon": true,
         "trees": true
       },
       "street": [
+        "holo-sign",
+        "drone",
+        "drone",
+        "drone",
+        "neon-tree",
+        "neon-tree",
+        "neon-post",
         "fountain",
-        "bike",
-        "bike",
-        "scooter",
-        "lamp-electric",
         "bench",
-        "tree",
-        "tree",
+        "scooter",
+        "scooter",
+        "bike",
         "planter",
-        "planter",
-        "dog",
-        "scooter"
+        "holo-sign"
       ],
-      "crowd": 13,
-      "smoke": 0
+      "crowd": 17,
+      "smoke": 0,
+      "night": 1.0
     }
   ]
 }
