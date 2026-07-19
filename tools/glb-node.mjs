@@ -1,9 +1,10 @@
 /* A tiny headless glTF/GLB reader for the snapshot renderer.
  *
  * The browser loads Kenney models with the real GLTFLoader; this exists only so
- * the offline snapshot can see the same models — it parses a GLB into a
- * BufferGeometry and decodes the external colormap PNG into a DataTexture, using
- * nothing but Node's zlib. Kenney models are one mesh, one shared palette.
+ * the offline snapshot can see the same models. It walks the node graph, bakes
+ * each node's world transform into its geometry, and gives every primitive a
+ * material carrying either the shared colormap texture or a flat base colour —
+ * enough for the flat-shaded Kenney look, using nothing but Node's zlib.
  */
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -12,8 +13,7 @@ import * as THREE from '../assets/vendor/three.module.js';
 
 /* ------------------------------------------------------------- PNG decode */
 function decodePNG(buf) {
-  let p = 8;
-  let w = 0, h = 0, bit = 8, ctype = 6, palette = null, trns = null;
+  let p = 8, w = 0, h = 0, bit = 8, ctype = 6, palette = null, trns = null;
   const idat = [];
   while (p < buf.length) {
     const len = buf.readUInt32BE(p); const type = buf.toString('ascii', p + 4, p + 8); p += 8;
@@ -25,9 +25,8 @@ function decodePNG(buf) {
     else if (type === 'IEND') break;
   }
   const raw = inflateSync(Buffer.concat(idat));
-  const chan = ctype === 6 ? 4 : ctype === 2 ? 3 : ctype === 0 ? 1 : 1;   // 3=palette→1
-  const bpp = Math.max(1, chan * bit / 8);
-  const stride = w * bpp;
+  const chan = ctype === 6 ? 4 : ctype === 2 ? 3 : 1;
+  const bpp = Math.max(1, chan * bit / 8), stride = w * bpp;
   const un = Buffer.alloc(h * stride);
   const paeth = (a, b, c) => { const pp = a + b - c, pa = Math.abs(pp - a), pb = Math.abs(pp - b), pc = Math.abs(pp - c); return pa <= pb && pa <= pc ? a : pb <= pc ? b : c; };
   let sp = 0;
@@ -61,7 +60,6 @@ function loadTexture(pngPath) {
   if (texCache.has(pngPath)) return texCache.get(pngPath);
   const img = decodePNG(readFileSync(pngPath));
   const tex = new THREE.DataTexture(img.data, img.width, img.height, THREE.RGBAFormat);
-  tex.flipY = true;                          // glTF UVs assume a flipped image
   tex.needsUpdate = true;
   texCache.set(pngPath, tex);
   return tex;
@@ -89,17 +87,43 @@ export function loadGLB(path) {
     const T = CT[a.componentType], comps = NUM[a.type];
     return new T(bin.buffer, bin.byteOffset + base, a.count * comps);
   };
-  const prim = json.meshes[0].primitives[0];
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(accessor(prim.attributes.POSITION)), 3));
-  if (prim.attributes.NORMAL) geo.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(accessor(prim.attributes.NORMAL)), 3));
-  if (prim.attributes.TEXCOORD_0) geo.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(accessor(prim.attributes.TEXCOORD_0)), 2));
-  if (prim.indices != null) geo.setIndex(new THREE.BufferAttribute(new Uint32Array(accessor(prim.indices)), 1));
-
-  let tex = null;
+  /* one shared colormap for the whole file, if it uses one */
   const img = json.images && json.images[0];
-  if (img && img.uri) tex = loadTexture(join(dirname(path), decodeURIComponent(img.uri)));
-  const out = { geometry: geo, texture: tex };
+  const sharedTex = img && img.uri ? loadTexture(join(dirname(path), decodeURIComponent(img.uri))) : null;
+
+  const object = new THREE.Group();
+  const walk = (nodeIdx, parentMatrix) => {
+    const n = json.nodes[nodeIdx];
+    const local = new THREE.Matrix4();
+    if (n.matrix) local.fromArray(n.matrix);
+    else local.compose(
+      new THREE.Vector3().fromArray(n.translation || [0, 0, 0]),
+      new THREE.Quaternion().fromArray(n.rotation || [0, 0, 0, 1]),
+      new THREE.Vector3().fromArray(n.scale || [1, 1, 1]));
+    const world = new THREE.Matrix4().multiplyMatrices(parentMatrix, local);
+    if (n.mesh != null) {
+      for (const prim of json.meshes[n.mesh].primitives) {
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(accessor(prim.attributes.POSITION)), 3));
+        if (prim.attributes.TEXCOORD_0) geo.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(accessor(prim.attributes.TEXCOORD_0)), 2));
+        if (prim.indices != null) geo.setIndex(new THREE.BufferAttribute(new Uint32Array(accessor(prim.indices)), 1));
+        geo.applyMatrix4(world);                                     // bake the node transform in
+        const mat = json.materials && prim.material != null ? json.materials[prim.material] : null;
+        const pbr = mat && mat.pbrMetallicRoughness || {};
+        const m = new THREE.MeshBasicMaterial();
+        if (sharedTex && pbr.baseColorTexture) m.map = sharedTex;
+        else if (pbr.baseColorFactor) m.color.setRGB(pbr.baseColorFactor[0], pbr.baseColorFactor[1], pbr.baseColorFactor[2]);
+        object.add(new THREE.Mesh(geo, m));
+      }
+    }
+    for (const c of (n.children || [])) walk(c, world);
+  };
+  const scene = json.scenes[json.scene || 0];
+  for (const nodeIdx of scene.nodes) walk(nodeIdx, new THREE.Matrix4());
+
+  object.updateMatrixWorld(true);
+  const bb = new THREE.Box3().setFromObject(object);
+  const out = { object, bb };
   glbCache.set(path, out);
   return out;
 }

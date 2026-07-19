@@ -35,6 +35,7 @@ const state = {
 
 const renderer = new Renderer(el.stage);
 const ages = new Ages(el.agesRoot);
+window.__ages = ages;
 const drone = new Drone();
 let UI = {}, CARDS = {}, LANDMARKS = {};
 
@@ -334,8 +335,12 @@ function frame(now) {
   updateHUD();
   drone.follow(state.shown, axis());
   if (!document.hidden) {
-    if (state.mode === 'a') ages.render(t);
-    else renderer.render({ time: t, e: state.shown, mode: state.mode === 't' ? 1 : 0, pointer: smooth, ping });
+    if (state.mode === 'a') {
+      /* drive the slice build/seam every frame — updateHUD stops calling
+       * ages.update once the scroll settles, which would leave past null */
+      ages.update(ages.span ? state.shown / ages.span : 0);
+      ages.render(t);
+    } else renderer.render({ time: t, e: state.shown, mode: state.mode === 't' ? 1 : 0, pointer: smooth, ping });
   }
   requestAnimationFrame(frame);
 }

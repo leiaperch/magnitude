@@ -7,8 +7,7 @@
  */
 
 import * as THREE from '../../vendor/three.module.js';
-import { GLTFLoader } from '../../vendor/GLTFLoader.js';
-import { buildEra as buildTown, MANIFEST } from './townkit.js';
+import { buildEra as buildTown } from './town.js';
 import { AXES, clamp } from '../config.js';
 
 const ELEV = 30 * Math.PI / 180;   // the angle, and it does not move for 1000 years
@@ -35,13 +34,6 @@ export class Ages {
     this.eras = data.eras;
     this.step = data.step;
 
-    this.models = new Map();
-    this.modelsReady = false;
-    /* simple townsfolk share two small geometries and a skin material */
-    this.personBody = new THREE.CapsuleGeometry(0.16, 0.4, 3, 6);
-    this.personHead = new THREE.SphereGeometry(0.16, 8, 6);
-    this.skinMat = new THREE.MeshStandardMaterial({ color: 0xe8bd96, roughness: 1 });
-
     this.root.innerHTML =
       '<canvas class="stage3d"></canvas>' +
       '<div class="seam" aria-hidden="true"><b class="y-past"></b><b class="y-future"></b></div>';
@@ -50,7 +42,7 @@ export class Ages {
     this.yPast = this.root.querySelector('.y-past');
     this.yFuture = this.root.querySelector('.y-future');
 
-    this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+    this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, preserveDrawingBuffer: true });
     this.renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.6));
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -62,7 +54,10 @@ export class Ages {
     this.camera.lookAt(TARGET);
 
     this.scene = new THREE.Scene();
-    this.fog = new THREE.Fog(0x9fc4e0, 100, 145);
+    /* the camera sits ~121 units out and the town is a ~35-unit-deep band around
+     * it, so fog must start beyond the near buildings or it milks the whole
+     * square. Only the deepest landmarks get a breath of aerial haze. */
+    this.fog = new THREE.Fog(0x9fc4e0, 132, 215);
     this.scene.fog = this.fog;
 
     /* one sun and one shadow map, shared by every era there has ever been */
@@ -134,67 +129,17 @@ export class Ages {
 
     this.resize();
     this.ready = true;
-    this.preloadModels();          // in the background: the page paints immediately
     return this;
-  }
-
-  /* Load every Kenney model the eras can ask for. They share geometry and
-   * material across instances, so a slice is just cloned meshes. Non-blocking:
-   * eras built before this finishes are left uncached and rebuild once ready. */
-  preloadModels() {
-    const loader = new GLTFLoader();
-    Promise.all(MANIFEST.map(name => new Promise(res => {
-      loader.load(`assets/models/${name}.glb`, gltf => {
-        let mesh = null;
-        gltf.scene.traverse(o => { if (o.isMesh && !mesh) mesh = o; });
-        if (mesh) {
-          mesh.geometry.computeBoundingBox();
-          const mat = mesh.material;
-          mat.metalness = 0; mat.roughness = 1;                 // Kenney is flat-lit, not PBR-shiny
-          this.models.set(name, { geometry: mesh.geometry, material: mat, bb: mesh.geometry.boundingBox.clone() });
-        }
-        res();
-      }, undefined, () => res());
-    }))).then(() => {
-      this.modelsReady = true;
-      for (const e of this.built.values()) this.scene.remove(e.group);   // drop the empty pre-load slices
-      this.built.clear(); this.index = -1; this.past = this.future = null;
-    });
   }
 
   get trackH() { return (this.eras.length - 1) * AXES.a.pxPerSlice; }
   get span() { return this.eras.length - 1; }
 
-  /* One slice, composed from cloned Kenney models. Geometry and material are
-   * shared with every other slice, so building is cheap and disposing a slice
-   * only drops its group — never the preloaded assets. */
+  /* One slice: the whole century generated in three.js as two merged meshes (a
+   * lit solid and an unlit glow), so building a slice is cheap and disposing it
+   * only drops its group. */
   build(era) {
-    const group = new THREE.Group();
-    const rng = (s => () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296)((era.year * 2654435761) >>> 0);
-    const place = (name, x, z, o = {}) => {
-      const md = this.models.get(name);
-      if (!md) return null;
-      const s = o.s || 1;
-      const m = new THREE.Mesh(md.geometry, md.material);
-      m.scale.setScalar(s);
-      m.position.set(x, (o.y || 0) - md.bb.min.y * s, z);
-      m.rotation.y = o.rot || 0;
-      m.castShadow = true; m.receiveShadow = true;
-      group.add(m);
-      return m;
-    };
-    const CLOTH = [0x3f4a5a, 0x6b3a3a, 0x4a5a3a, 0x5a4a6b, 0x2f3136, 0x7a6a4a];
-    const person = (x, z) => {
-      const p = new THREE.Group();
-      const body = new THREE.Mesh(this.personBody, new THREE.MeshStandardMaterial({ color: CLOTH[Math.floor(rng() * CLOTH.length)], roughness: 1 }));
-      body.position.y = 0.4; body.castShadow = true;
-      const head = new THREE.Mesh(this.personHead, this.skinMat);
-      head.position.y = 0.82;
-      p.add(body, head); p.position.set(x, 0, z);
-      group.add(p);
-    };
-    buildTown(era, { place, rng, person });
-    return { group };
+    return { group: buildTown(era) };
   }
 
   era(i) {
@@ -212,7 +157,8 @@ export class Ages {
     while (this.built.size > 5) {
       const [k, v] = this.built.entries().next().value;
       if (k === year) break;
-      this.scene.remove(v.group);              // shared assets stay; only the group goes
+      this.scene.remove(v.group);
+      v.group.traverse(o => { if (o.isMesh) o.geometry.dispose(); });   // each era owns its geometry now
       this.built.delete(k);
     }
     return e;

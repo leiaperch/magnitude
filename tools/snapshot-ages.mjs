@@ -24,13 +24,13 @@ function makeScene(era) {
   const scene = new THREE.Group();
   const rng = (s => () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296)((era.year * 2654435761) >>> 0);
   const place = (name, x, z, o = {}) => {
-    const { geometry, texture } = loadGLB(`assets/models/${name}.glb`);
-    if (!bbox.has(name)) { geometry.computeBoundingBox(); bbox.set(name, geometry.boundingBox.clone()); }
-    const bb = bbox.get(name), s = o.s || 1;
-    const m = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial());
-    m.userData.tex = texture; m.scale.setScalar(s);
-    m.position.set(x, (o.y || 0) - bb.min.y * s, z); m.rotation.y = o.rot || 0;
-    scene.add(m); return m;
+    const { object, bb } = loadGLB(`assets/models/${name}.glb`);
+    const s = o.s || 1;
+    const g = object.clone();
+    g.scale.setScalar(s);
+    g.position.set(x, (o.y || 0) - bb.min.y * s, z);
+    g.rotation.y = o.rot || 0;
+    scene.add(g); return g;
   };
   const CLOTH = [0x3f4a5a, 0x6b3a3a, 0x4a5a3a, 0x5a4a6b, 0x2f3136, 0x7a6a4a];
   const person = (x, z) => {
@@ -57,7 +57,8 @@ function render(scene, era) {
   scene.traverse(m => {
     if (!m.isMesh) return;
     const pos = m.geometry.attributes.position, uv = m.geometry.attributes.uv, idx = m.geometry.index;
-    const tex = m.userData.tex, td = tex && tex.image.data, tw = tex && tex.image.width, th = tex && tex.image.height, col = m.material.color;
+    const map = m.material.map, td = map && map.image.data, tw = map && map.image.width, th = map && map.image.height;
+    const col = map ? null : m.material.color;
     const count = idx ? idx.count : pos.count;
     for (let t = 0; t < count; t += 3) {
       const i0 = idx ? idx.getX(t) : t, i1 = idx ? idx.getX(t + 1) : t + 1, i2 = idx ? idx.getX(t + 2) : t + 2;
