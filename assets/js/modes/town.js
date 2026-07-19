@@ -25,7 +25,7 @@ function shade(hex, k) {
   return [Math.min(1, c.r * k), Math.min(1, c.g * k), Math.min(1, c.b * k)];
 }
 const WHITE = [1, 1, 1];
-const jit = rng => { const k = 0.9 + rng() * 0.2; return [k, k, k]; };   // grey per-house brightness
+const jit = rng => { const k = 0.95 + rng() * 0.1; return [k, k, k]; };   // gentle per-house brightness, not scatter
 
 const ROOF = { thatch: 'thatch', tile: 'tile', slate: 'slate', flat: 'flat', solar: 'flat' };
 const WARM = '#ffcf8a', NEONS = ['#ff5db1', '#43e0ff', '#b98cff', '#ffd23f', '#4dff9e'];
@@ -345,7 +345,17 @@ function house(B, w, spec, rng, night, lot) {
     chimney(B, lot.chimney || 0, bodyH, rh);
   }
 
-  if (spec.sign) hangingSign(B, w, floorH, front, lot);
+  if (lot.civic) clockTower(B, w, bodyH, front);
+  if (spec.sign && !lot.civic) hangingSign(B, w, floorH, front, lot);
+}
+/* a civic clock/bell tower rising above the roofline of the hall */
+function clockTower(B, w, bodyH, front) {
+  const tw = Math.min(1.3, w * 0.5), ty = bodyH + 0.2, fz = front - 0.7;
+  B.boxT('stone', 0, ty, fz, tw, 2.6, tw, WHITE);
+  B.box(0, ty + 1.7, fz + tw / 2 + 0.02, tw * 0.62, tw * 0.62, 0.05, C('#efe9d8'));            // clock face
+  B.box(0, ty + 1.7, fz + tw / 2 + 0.05, 0.04, tw * 0.42, 0.02, C('#2a2a2a')); B.box(0.02, ty + 1.72, fz + tw / 2 + 0.05, tw * 0.3, 0.04, 0.02, C('#2a2a2a'));  // hands
+  B.pyramid(0, ty + 2.6, fz, tw + 0.24, 1.1, tw + 0.24, C('#586a5a'));
+  B.cyl(0, ty + 3.7, fz, 0.06, 0.4, 6, C('#c8a23a'), false, 0.04);                             // finial
 }
 
 /* a glazed ground-floor shop with a striped awning and a fascia */
@@ -556,9 +566,38 @@ function prop(B, kind, rng, night) {
     case 'crates': for (let i = 0; i < 3; i++) B.boxT('wood', (i - 1) * 0.62, 0, 0, 0.58, 0.58, 0.58, WHITE); B.boxT('wood', -0.3, 0.58, 0, 0.56, 0.56, 0.56, WHITE); B.cyl(0.7, 0, 0.5, 0.32, 0.62, 8, C('#7a5c3a'), false, 0.28); break;
     case 'memorial': B.boxT('stone', 0, 0, 0, 1.4, 0.35, 1.4, WHITE); B.boxT('stone', 0, 0.35, 0, 1.0, 0.35, 1.0, WHITE); B.cyl(0, 0.7, 0, 0.24, 2.4, 8, C('#b6ad96')); B.box(0, 3.1, 0, 0.5, 0.5, 0.4, C('#8a8378')); B.box(0, 3.5, 0, 0.28, 0.5, 0.24, C('#6b5c4a')); break;
     case 'tree-box': B.boxT('wood', 0, 0, 0, 1.1, 0.5, 1.1, WHITE); B.at(0, 0.5, 0); tree(B, rng, false); B.pop(); break;
+    case 'firewood': for (let r = 0; r < 3; r++) for (let i = 0; i < 4 - r; i++) B.box(-0.5 + i * 0.28 + r * 0.14, r * 0.22 + 0.11, 0, 0.25, 0.22, 0.9, C(r % 2 ? '#7a5c3a' : '#8a6a44')); break;
+    case 'cafe': cafeSet(B, rng); break;
+    case 'farmbed': farmBed(B, rng); break;
+    case 'kiosk': B.box(0, 0, 0, 1.2, 1.9, 1.0, C('#2f5a3a')); B.box(0, 0.5, 0.52, 0.9, 1.0, 0.05, C('#cfe0d0')); for (let i = 0; i < 3; i++) B.box(-0.3 + i * 0.3, 0.6, 0.56, 0.22, 0.7, 0.03, C(['#c94a3a', '#3a6ab2', '#d8b83a'][i])); B.box(0, 1.9, 0.2, 1.5, 0.1, 1.4, C('#24402c')); break;
+    case 'bus-shelter': for (const sx of [-0.9, 0.9]) B.box(sx, 0, -0.3, 0.08, 2.0, 0.08, C('#3a3f46')); B.box(0, 2.0, -0.1, 2.0, 0.1, 0.7, C('#4a4f56')); B.box(-0.9, 0.4, -0.6, 0.06, 1.5, 0.7, night > .05 ? C('#8fb4c8') : C('#a9c4d0')); B.box(0.3, 0.35, 0, 1.1, 0.1, 0.35, C('#5a5f66')); B.box(0.3, 0.55, -0.15, 1.1, 0.35, 0.06, C('#5a5f66')); break;
+    case 'bike-rack': for (let i = 0; i < 4; i++) { B.at(-0.9 + i * 0.6, 0, (i % 2) * 0.2, Math.PI / 2 + (rng() - .5) * 0.3); bike(B); B.pop(); } break;
+    case 'charger': B.box(0, 0, 0, 0.3, 1.2, 0.2, C('#e8e4d8')); B.box(0, 0.8, 0.11, 0.22, 0.3, 0.04, C('#2bd6ff'), true); break;
+    case 'bin': B.cyl(0, 0, 0, 0.22, 0.7, 8, C('#3a5a3a')); B.cyl(0, 0.7, 0, 0.24, 0.08, 8, C('#2a4a2a')); break;
     case 'holo-sign': B.box(0, 0, 0, 0.1, 2.2, 0.1, C('#39424c')); B.box(0, 2.4, 0, 1.0, 0.9, 0.05, C(NEONS[(rng() * NEONS.length) | 0]), true); break;
     case 'drone': B.at((rng() - .5) * 4, 3 + rng() * 2, (rng() - .5) * 3); B.box(0, 0, 0, 0.4, 0.14, 0.4, C('#26324c')); for (const [dx, dz] of [[.3, .3], [-.3, .3], [.3, -.3], [-.3, -.3]]) { B.box(dx, 0.05, dz, 0.22, 0.03, 0.22, C('#39424c')); B.box(dx, 0.02, dz, 0.05, 0.05, 0.05, C('#43e0ff'), true); } B.pop(); break;
     default: break;
+  }
+}
+/* café terrace: a couple of round tables with a parasol and chairs */
+function cafeSet(B, rng) {
+  const pal = ['#c94a4a', '#3a7a4a', '#3a6ab2', '#c8902a'][(rng() * 4) | 0];
+  for (const [tx, tz] of [[-0.7, 0], [0.7, 0.3]]) {
+    B.cyl(tx, 0, tz, 0.06, 0.7, 6, C('#5a5f66'), false, 0.06); B.cyl(tx, 0.7, tz, 0.4, 0.06, 10, C('#e8e4d8'), false, 0.4);
+    for (const [dx, dz] of [[0.4, 0], [-0.4, 0], [0, 0.4]]) { B.box(tx + dx, 0, tz + dz, 0.28, 0.42, 0.28, C('#4a4036')); B.box(tx + dx, 0.42, tz + dz + (dz ? -0.13 : 0), 0.28, 0.36, 0.06, C('#4a4036')); }
+  }
+  B.cyl(0, 0, 0.15, 0.05, 2.2, 6, C('#8a8378'), false, 0.05);                    // parasol pole
+  for (let i = 0; i < 6; i++) { const a = i / 6 * 6.2832; B.tri(0, 2.2, 0.15, Math.cos(a) * 1.1, 1.85, 0.15 + Math.sin(a) * 1.1, Math.cos(a + 1.05) * 1.1, 1.85, 0.15 + Math.sin(a + 1.05) * 1.1, C(i % 2 ? pal : '#e8e4d8')); }
+}
+/* raised urban-farm bed with rows of crops */
+function farmBed(B, rng) {
+  B.boxT('wood', 0, 0, 0, 1.8, 0.44, 0.9, WHITE);
+  B.box(0, 0.44, 0, 1.7, 0.06, 0.8, C('#3a2e22'));                               // soil
+  const crops = ['#5f8f4b', '#6d9a54', '#7aa03a', '#4a7a2a'], flow = ['#c94a5a', '#d8b83a', '#c96a3a', '#b06ac0', '#e0902a'];
+  for (let r = 0; r < 3; r++) for (let i = 0; i < 6; i++) {
+    const x = -0.75 + i * 0.3, z = -0.28 + r * 0.28;
+    B.blob(x, 0.6, z, 0.12 + rng() * 0.04, C(crops[(r + i) % crops.length]));
+    if (rng() < 0.4) B.blob(x, 0.72, z, 0.06, C(flow[(rng() * flow.length) | 0]));
   }
 }
 /* a trestle produce table piled with colourful goods under a small awning */
@@ -625,26 +664,53 @@ function person(B, rng) {
  * only ages. A tiny per-lot seeded rng adds grain (shade, window lighting),
  * never position. */
 const BACK = -7.0, LEFTX = -7.0;
-/* [width, gableToStreet, storeyDelta, dormerX|0, chimneyX] along the back run */
+/* [width, gableToStreet, storeyDelta, dormerX|0, chimneyX, role] along a run.
+ * The storey deltas are authored, not random, to give a deliberate, uneven but
+ * organised roofline: a couple of tall accents, one civic tower, a few low
+ * houses between. role: '' normal, 'tall', 'low', 'civic' (a clock tower). */
 const BACK_LOTS = [
-  [2.6, 1, 1, 0, 0.6], [2.0, 0, 0, 0, -0.4], [3.0, 0, 0, 0.6, 0.7], [2.3, 1, 0, 0, 0], [2.7, 0, 1, -0.5, 0.5],
-  [2.2, 1, 0, 0, -0.3], [3.1, 0, 0, 0.7, 0.6], [2.0, 1, -1, 0, 0], [2.6, 0, 0, -0.4, 0.4],
+  [2.4, 1, 0, 0, 0.5, ''], [2.0, 0, -1, 0, -0.4, 'low'], [2.8, 0, 1, 0.6, 0.6, ''], [2.2, 1, 2, 0, 0, 'tall'],
+  [3.0, 0, 0, 0.7, 0.5, 'civic'], [2.2, 1, 0, 0, -0.3, ''], [2.6, 0, 1, 0.6, 0.6, ''], [2.0, 1, -1, 0, 0, 'low'], [2.6, 0, 0, -0.4, 0.4, ''],
 ];
 const LEFT_LOTS = [
-  [2.5, 0, 0, 0.5, 0.5], [2.8, 1, 1, 0, -0.4], [2.2, 0, 0, 0, 0.3], [3.0, 1, 0, 0.6, 0.6], [2.6, 0, 0, -0.5, 0], [2.4, 1, 0, 0, 0.4],
+  [2.5, 0, 1, 0.5, 0.5, ''], [2.8, 1, 0, 0, -0.4, ''], [2.2, 0, 2, 0, 0.3, 'tall'], [3.0, 1, 0, 0.6, 0.6, ''], [2.4, 0, -1, -0.5, 0, 'low'], [2.4, 1, 1, 0, 0.4, ''],
 ];
 /* fixed prop stations in the plaza */
 const STALL_ROWS = [-3.7, -1.85, 0, 1.85, 3.7];
 const TREE_SPOTS = [[-4.7, 5.3], [4.9, 4.9], [-1.6, 6.3], [2.3, 6.1]];
 const LAMP_SPOTS = [[6.4, -3], [6.4, 0.2], [6.4, 3.4], [3, 6.6], [-1, 6.6]];
 const BENCH_SPOTS = [[-4.4, 5.6, Math.PI], [5.6, 2.6, -Math.PI / 2], [0.2, 6.2, Math.PI]];
-const VEH_LANE = [[-3.4, 6.5], [0.4, 6.6], [4.2, 6.5]];
+const VEH_LANE = [[-4.5, 9.9], [0.5, 10.0], [5.5, 9.9]];          // out on the front road
+const CAFE_SPOTS = [[-3.3, 4.6], [3.1, 5.2], [-0.4, 5.9], [4.4, 3.4]];
+const FARM_SPOTS = [[-3.4, 4.3], [-0.7, 5.4], [2.4, 4.2], [-4.2, 5.9], [1.3, 6.2], [3.6, 5.6], [0.4, 3.4], [-1.9, 6.6]];
+const CIVIC_SPOTS = [[4.7, 4.2], [-4.5, 4.6], [2.2, 6.4], [-2.0, 6.6], [5.4, 1.6]];
 const CROWD_KNOTS = [[-3.7, 1.0], [-1.85, 1.1], [0, 0.9], [1.85, 1.1], [3.7, 1.0], [1.2, 4.6], [-2.4, 5.2], [3.4, 5.6]];
+
+/* the street around the near edges of the square, from a dirt cart track to a
+ * marked asphalt road with a pedestrian crossing and, by 2050, a cycle lane */
+function road(B, era) {
+  const y = era.year, asphalt = y >= 1950, dirt = y < 1200;
+  const rk = asphalt ? 'concrete' : 'cobble';
+  const col = dirt ? [0.52, 0.45, 0.34] : asphalt ? [0.34, 0.34, 0.36] : [0.82, 0.78, 0.7];
+  const F = 8.4, R = 8.4, W = 3.4, E = 13;
+  B.boxT(rk, 0, 0.015, F + W / 2, 2 * E, 0.03, W, col);
+  B.boxT(rk, R + W / 2, 0.015, 0, W, 0.03, 2 * E, col);
+  if (!dirt) { B.box(0, 0.02, F - 0.08, 2 * E, 0.18, 0.14, C('#b2ac9e')); B.box(R - 0.08, 0.02, 0, 0.14, 0.18, 2 * E, C('#b2ac9e')); }
+  if (asphalt) {
+    for (let x = -E + 1; x < E; x += 1.7) B.box(x, 0.035, F + W / 2, 0.8, 0.02, 0.12, C('#d8d2c2'));
+    for (let z = -E + 1; z < E; z += 1.7) B.box(R + W / 2, 0.035, z, 0.12, 0.02, 0.8, C('#d8d2c2'));
+    for (let i = 0; i < 7; i++) B.box(-1.5 + i * 0.5, 0.04, F + W / 2, 0.3, 0.02, W * 0.86, C('#ece7db'));   // crossing
+    if (y >= 2050) { B.box(0, 0.03, F + 0.55, 2 * E, 0.02, 0.8, C('#33608f')); B.box(R + 0.55, 0.03, 0, 0.8, 0.02, 2 * E, C('#33608f')); }  // cycle lane
+  }
+  if (y >= 1700) { for (let x = -E + 1.5; x < E; x += 2.6) B.cyl(x, 0, F - 0.35, 0.09, 0.55, 6, C('#2f333a'), false, 0.07); for (let z = -E + 1.5; z < E; z += 2.6) B.cyl(R - 0.35, 0, z, 0.09, 0.55, 6, C('#2f333a'), false, 0.07); }
+}
 
 export function buildEra(era, mats) {
   const B = new Builder();
   const rng = (s => () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296)((era.year * 2654435761) >>> 0);
   const night = era.night || 0, spec = era.house;
+
+  road(B, era);
 
   /* skyline landmarks, set well back on fixed slots */
   const marks = era.skyline || [], slots = [[-6, -15], [2.5, -16.5], [8.5, -14]];
@@ -653,9 +719,9 @@ export function buildEra(era, mats) {
   /* the two terraces, lot by fixed lot */
   let sign = 0, neon = 0;
   const place = (lots, atFn) => {
-    for (const [w, gb, ds, dm, cm] of lots) {
+    for (const [w, gb, ds, dm, cm, role] of lots) {
       const si = sign++;
-      const lot = { gable: !!gb, ds, dormer: dm, chimney: cm, depth: 3.0, sign: si % 4, awn: (si * 5 + 2) % 4, neon: neon++ };
+      const lot = { gable: !!gb, ds, dormer: dm, chimney: cm, depth: 3.0, sign: si % 4, awn: (si * 5 + 2) % 4, neon: neon++, role: role || '', civic: role === 'civic' && era.year >= 1450 };
       if (spec.gap && rng() < 0.13) { atFn(w, 0.02, true); for (let r = 0; r < 4; r++) B.box((rng() - .5) * w, 0, (rng() - .5) * 2, 0.4 + rng() * 0.3, 0.3 + rng() * 0.4, 0.4, shade('#8a8378', 0.9 + rng() * 0.2)); B.pop(); }
       else { atFn(w, 0, false); house(B, w, spec, rng, night, lot); B.pop(); }
     }
@@ -665,9 +731,9 @@ export function buildEra(era, mats) {
   let lz = -4.2;
   place(LEFT_LOTS, (w, y) => { B.at(LEFTX, y, lz + w / 2, Math.PI / 2); lz += w + 0.06; });
 
-  /* the market and street, from the era's fixed prop list into fixed stations */
+  /* the square's contents, from the era's fixed prop list into fixed stations */
   const street = era.street || [];
-  let si = 0, ti = 0, li = 0, bi = 0, vi = 0, misc = 0;
+  let si = 0, ti = 0, li = 0, bi = 0, vi = 0, ci = 0, fi = 0, gi = 0, misc = 0;
   for (const k of street) {
     if (k === 'stall') { const r = si < 5 ? -0.6 : 1.7, sx = STALL_ROWS[si % 5]; B.at(sx, 0, r, si < 5 ? 0 : Math.PI); prop(B, 'stall', rng, night); B.pop(); si++; }
     else if (k === 'cross' || k === 'fountain') { B.at(1.2, 0, 3.5); prop(B, k, rng, night); B.pop(); }
@@ -675,23 +741,44 @@ export function buildEra(era, mats) {
     else if (k.startsWith('lamp') || k === 'neon-post' || k === 'traffic-light' || k === 'phone-box' || k === 'holo-sign') { const [x, z] = LAMP_SPOTS[li % LAMP_SPOTS.length]; B.at(x, 0, z); prop(B, k, rng, night); B.pop(); li++; }
     else if (k === 'tree' || k === 'neon-tree') { const [x, z] = TREE_SPOTS[ti % TREE_SPOTS.length]; B.at(x, 0, z); prop(B, k, rng, night); B.pop(); ti++; }
     else if (k === 'bench' || k === 'planter') { const [x, z, r] = BENCH_SPOTS[bi % BENCH_SPOTS.length]; B.at(x, 0, z, r); prop(B, k, rng, night); B.pop(); bi++; }
-    else if (k === 'tram' || k === 'car' || k === 'carriage' || k === 'cart' || k === 'loadcart' || k === 'bike' || k === 'scooter') { const [x, z] = VEH_LANE[vi % VEH_LANE.length]; B.at(x, 0, z, Math.PI / 2); prop(B, k, rng, night); B.pop(); vi++; }
+    else if (k === 'cafe') { const [x, z] = CAFE_SPOTS[ci % CAFE_SPOTS.length]; B.at(x, 0, z); prop(B, 'cafe', rng, night); B.pop(); ci++; }
+    else if (k === 'farmbed') { const [x, z] = FARM_SPOTS[fi % FARM_SPOTS.length]; B.at(x, 0, z, (fi % 2) * Math.PI / 2); prop(B, 'farmbed', rng, night); B.pop(); fi++; }
+    else if (k === 'kiosk' || k === 'bus-shelter' || k === 'bike-rack' || k === 'charger' || k === 'bin') { const [x, z] = CIVIC_SPOTS[gi % CIVIC_SPOTS.length]; B.at(x, 0, z); prop(B, k, rng, night); B.pop(); gi++; }
+    else if (k === 'tram' || k === 'car' || k === 'carriage' || k === 'cart' || k === 'loadcart' || k === 'bike' || k === 'scooter') { const [x, z] = VEH_LANE[vi % VEH_LANE.length]; B.at(x, 0, z); prop(B, k, rng, night); B.pop(); vi++; }
     else if (k === 'horse' || k === 'pig' || k === 'dog') { B.at(-2 + misc * 1.3, 0, 2.6 + misc * 0.3, -Math.PI / 3); prop(B, k, rng, night); B.pop(); misc++; }
     else if (k === 'drone') { prop(B, 'drone', rng, night); }
     else { B.at(-4.6 + (misc % 5) * 1.0, 0, 3.2, 0); prop(B, k, rng, night); B.pop(); misc++; }
   }
 
-  /* dress the middle of the square so it never reads as empty paving: produce
-   * tables, crate stacks, a loaded cart, hay and a tree in a box for the market
-   * centuries; a war memorial once the town has one to mourn */
-  if (era.year <= 1900 && (street.includes('stall') || era.year >= 1150)) {
-    for (const [x, z] of [[-3.3, 4.5], [3.1, 5.3], [-0.5, 5.9]]) { B.at(x, 0, z, (rng() - 0.5)); prop(B, 'table', rng, night); B.pop(); }
+  /* dress the middle by era so it never reads as empty paving, and so the square
+   * changes job over time instead of being a market for a thousand years */
+  const y = era.year;
+  if (y <= 1150) {                                                    // village: goods, fuel, livestock
+    for (const [x, z] of [[-3.4, 4.5], [2.6, 5.4]]) { B.at(x, 0, z, (rng() - .5)); prop(B, 'table', rng, night); B.pop(); }
+    B.at(-4.4, 0, 5.8); prop(B, 'firewood', rng, night); B.pop();
+    B.at(4.2, 0, 5.6); prop(B, 'hay', rng, night); B.pop();
+    B.at(4.4, 0, 4.0); prop(B, 'crates', rng, night); B.pop();
+  } else if (y <= 1850) {                                             // the market centuries: busy stalls and carts
+    for (const [x, z] of [[-3.3, 4.5], [3.1, 5.3], [-0.5, 5.9]]) { B.at(x, 0, z, (rng() - .5)); prop(B, 'table', rng, night); B.pop(); }
     for (const [x, z] of [[4.8, 4.1], [-4.7, 5.4]]) { B.at(x, 0, z); prop(B, 'crates', rng, night); B.pop(); }
     B.at(4.4, 0, 6.3); prop(B, 'hay', rng, night); B.pop();
     B.at(-2.6, 0, 6.5, Math.PI / 2); prop(B, 'loadcart', rng, night); B.pop();
     B.at(-4.3, 0, 3.9); prop(B, 'tree-box', rng, night); B.pop();
+  } else if (y <= 1950) {                                             // civic square: a memorial, seats, greenery
+    B.at(3.0, 0, 4.8); prop(B, 'memorial', rng, night); B.pop();
+    B.at(-4.3, 0, 3.9); prop(B, 'tree-box', rng, night); B.pop();
+    B.at(-3.4, 0, 5.6, Math.PI); prop(B, 'bench', rng, night); B.pop();
+    B.at(1.4, 0, 6.2, Math.PI); prop(B, 'bench', rng, night); B.pop();
+  } else if (y < 2050) {                                             // pedestrian café plaza
+    B.at(-3.4, 0, 4.4); prop(B, 'cafe', rng, night); B.pop();
+    B.at(2.8, 0, 5.4); prop(B, 'cafe', rng, night); B.pop();
+    B.at(-4.3, 0, 3.9); prop(B, 'tree-box', rng, night); B.pop();
+    for (const [x, z] of [[0.4, 6.2], [4.4, 4.2]]) { B.at(x, 0, z); prop(B, 'planter', rng, night); B.pop(); }
+  } else {                                                            // 2050 eco garden: dense raised beds and cafés
+    for (const [x, z] of FARM_SPOTS) { B.at(x, 0, z, (x + z | 0) % 2 ? Math.PI / 2 : 0); prop(B, 'farmbed', rng, night); B.pop(); }
+    for (const [x, z] of [[-3.6, 4.2], [3.4, 5.2]]) { B.at(x, 0, z); prop(B, 'cafe', rng, night); B.pop(); }
+    B.at(-4.4, 0, 6.0); prop(B, 'charger', rng, night); B.pop();
   }
-  if (era.year >= 1850 && era.year <= 1950) { B.at(3.0, 0, 4.8); prop(B, 'memorial', rng, night); B.pop(); }
 
   /* crowd: fixed knots, tiny seeded jitter within each */
   const crowd = Math.min(era.crowd || 6, 20);

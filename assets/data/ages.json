@@ -838,15 +838,15 @@
         "fountain",
         "tram",
         "lamp-electric",
-        "lamp-electric",
         "stall",
-        "bike",
         "bench",
         "tree",
+        "kiosk",
+        "bike-rack",
+        "bench",
         "phone-box",
-        "crate",
-        "dog",
-        "horse"
+        "planter",
+        "tree"
       ],
       "crowd": 18,
       "smoke": 3,
@@ -885,14 +885,16 @@
       "street": [
         "fountain",
         "car",
+        "car",
         "lamp-electric",
-        "bike",
         "bench",
         "tree",
+        "kiosk",
+        "bus-shelter",
+        "bench",
         "phone-box",
         "traffic-light",
-        "crate",
-        "dog"
+        "planter"
       ],
       "crowd": 11,
       "smoke": 2,
@@ -901,11 +903,11 @@
     {
       "year": 2000,
       "en": {
-        "name": "The tower block",
+        "name": "The pedestrian square",
         "note": "The cathedral is now the fourth tallest thing here, and the loudest thing in the street has no horse in it."
       },
       "fr": {
-        "name": "La tour",
+        "name": "La place piétonne",
         "note": "La cathédrale n'est plus que la quatrième plus haute chose ici, et le plus bruyant dans la rue n'a pas de cheval dedans."
       },
       "sky": [
@@ -931,15 +933,15 @@
         "fountain",
         "car",
         "car",
-        "planter",
-        "lamp-electric",
-        "bike",
+        "cafe",
+        "cafe",
+        "tree",
+        "kiosk",
+        "bike-rack",
         "bench",
         "tree",
-        "planter",
-        "traffic-light",
-        "phone-box",
-        "scooter"
+        "bus-shelter",
+        "planter"
       ],
       "crowd": 14,
       "smoke": 0,
@@ -948,12 +950,12 @@
     {
       "year": 2050,
       "en": {
-        "name": "Neon and rain",
-        "note": "The cathedral is a floodlit relic now, dwarfed by towers of glass and light. Drones cross where pigeons used to. The square is a thousand years old and has never held this many people."
+        "name": "The green city",
+        "note": "Rooftop gardens, solar over the slates, and a market square turned to raised beds and cafe tables. A thousand years old, and greener than it has been since the forest was cleared."
       },
       "fr": {
-        "name": "Néon et pluie",
-        "note": "La cathédrale n'est plus qu'une relique éclairée aux projecteurs, écrasée par des tours de verre et de lumière. Des drones passent où volaient les pigeons. La place a mille ans et n'a jamais réuni autant de monde."
+        "name": "La ville-jardin",
+        "note": "Des jardins sur les toits, du solaire sur les ardoises, et une place de marche devenue potagers et terrasses de cafe. Mille ans, et plus verte qu'elle ne l'a ete depuis qu'on a defriche la foret."
       },
       "sky": [
         "#a9c4d6",
@@ -976,18 +978,17 @@
         "solar": true
       },
       "street": [
-        "tree",
-        "planter",
-        "planter",
-        "bench",
-        "bike",
         "car",
         "tree",
-        "planter",
+        "bike-rack",
         "bench",
-        "scooter",
+        "kiosk",
+        "tree",
+        "bench",
         "planter",
-        "tree"
+        "tree",
+        "car",
+        "charger"
       ],
       "crowd": 17,
       "smoke": 0,
