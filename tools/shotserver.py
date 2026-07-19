@@ -1,9 +1,10 @@
 """Tiny upload sink: the page POSTs a canvas dataURL as text/plain, we decode
 and save it to tools/snapshots/browser.png. Sidesteps the flaky screenshot
 tool and any copy-paste of base64. Run: python tools/shotserver.py"""
-import base64, os
-from http.server import BaseHTTPRequestHandler, HTTPServer
+import base64, os, sys
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
+PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8500
 OUT = os.path.join(os.path.dirname(__file__), 'snapshots')
 os.makedirs(OUT, exist_ok=True)
 
@@ -25,4 +26,4 @@ class H(BaseHTTPRequestHandler):
         self.wfile.write(b'ok')
     def log_message(self, *a): pass
 
-HTTPServer(('127.0.0.1', 8500), H).serve_forever()
+ThreadingHTTPServer(('127.0.0.1', PORT), H).serve_forever()

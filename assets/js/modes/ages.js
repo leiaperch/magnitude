@@ -7,7 +7,7 @@
  */
 
 import * as THREE from '../../vendor/three.module.js';
-import { buildEra as buildTown } from './town.js';
+import { buildEra as buildTown, makeMaterials } from './town.js';
 import { AXES, clamp } from '../config.js';
 
 const ELEV = 30 * Math.PI / 180;   // the angle, and it does not move for 1000 years
@@ -47,6 +47,12 @@ export class Ages {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.autoClear = false;
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 0.92;
+
+    /* shared PBR materials (brick/plaster/stone/timber/tile/slate + normal maps)
+     * and a PMREM sky environment, built once and reused by every era */
+    this.mats = makeMaterials(this.renderer);
 
     this.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 1, 400);
     const off = new THREE.Vector3(1, Math.SQRT2 * Math.tan(ELEV), 1).normalize().multiplyScalar(DIST);
@@ -54,6 +60,7 @@ export class Ages {
     this.camera.lookAt(TARGET);
 
     this.scene = new THREE.Scene();
+    this.scene.environment = this.mats.env;
     /* the camera sits ~121 units out and the town is a ~35-unit-deep band around
      * it, so fog must start beyond the near buildings or it milks the whole
      * square. Only the deepest landmarks get a breath of aerial haze. */
@@ -75,8 +82,11 @@ export class Ages {
     this.hemi = new THREE.HemisphereLight(0xdfeaf0, 0x6d8a4e, 1.1);
     this.scene.add(this.hemi);
 
-    /* one paved ground under every era */
-    const ground = new THREE.Mesh(new THREE.PlaneGeometry(120, 120), new THREE.MeshStandardMaterial({ color: 0xb0aa9e, roughness: 1 }));
+    /* one paved ground under every era: the shared cobble texture, tiled and
+     * tinted per era (mud, setts, cobble, asphalt) */
+    const gmap = this.mats.cobble.map.clone(), gnrm = this.mats.cobble.normalMap.clone();
+    gmap.repeat.set(48, 48); gnrm.repeat.set(48, 48); gmap.needsUpdate = gnrm.needsUpdate = true;
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(120, 120), new THREE.MeshStandardMaterial({ map: gmap, normalMap: gnrm, normalScale: new THREE.Vector2(0.7, 0.7), roughness: 1, color: 0xb0aa9e }));
     ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true;
     this.scene.add(ground);
     this.groundMat = ground.material;
@@ -139,7 +149,15 @@ export class Ages {
    * lit solid and an unlit glow), so building a slice is cheap and disposing it
    * only drops its group. */
   build(era) {
-    return { group: buildTown(era) };
+    return { group: buildTown(era, this.mats) };
+  }
+
+  /* the ground reads differently across the ages: bare mud, then cobble, setts,
+   * and finally dark asphalt */
+  groundTint(era) {
+    const g = era.ground;
+    const c = g === 'asphalt' ? 0x54524e : g === 'setts' ? 0xa39c8e : g === 'cobble' ? 0xaca595 : 0xb2a385;
+    this.groundMat.color.setHex(c);
   }
 
   era(i) {
@@ -207,9 +225,9 @@ export class Ages {
    * share a single dusk — which reads as the sun going down, not as an error. */
   setLight(a, b, u) {
     const night = (a.night || 0) * (1 - u) + (b.night || 0) * u;
-    this.sun.intensity = 1.5 - night * 1.32;      // cooler exposure: colours stay rich, no blown-out roofs
+    this.sun.intensity = 2.3 - night * 2.0;        // the sky env now fills shadows, so the sun can be the clear key
     this.sun.color.set(0xfff2dd).lerp(new THREE.Color(0x9fb4e0), night);
-    this.hemi.intensity = 0.7 - night * 0.38;
+    this.hemi.intensity = 0.28 - night * 0.2;      // low: env map carries the ambient
     this.scene.userData.night = night;
   }
 
@@ -230,6 +248,7 @@ export class Ages {
     this.u = u;
     this.setSky(this.eras[i], this.eras[i + 1], u);
     this.setLight(this.eras[i], this.eras[i + 1], u);
+    this.groundTint(this.eras[u < 0.5 ? i : i + 1]);
 
     /* left of the seam is always the older town, right of it the later one */
     const c = this.halfW - u * this.halfW * 2;
