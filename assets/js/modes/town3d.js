@@ -41,6 +41,14 @@ function rng(seed) {
   return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
 }
 
+/* darken (<1) or lighten (>1) a hex colour, for cornices, sills and quoins */
+function shade(hex, f) {
+  const r = Math.min(255, ((hex >> 16) & 255) * f) & 255;
+  const g = Math.min(255, ((hex >> 8) & 255) * f) & 255;
+  const b = Math.min(255, (hex & 255) * f) & 255;
+  return (r << 16) | (g << 8) | b;
+}
+
 const countMeshes = o3 => { let n = 0; o3.traverse(o => { if (o.isMesh) n++; }); return n; };
 
 export function buildEra(era) {
@@ -335,33 +343,69 @@ export function buildEra(era) {
       add(PRISM_Z, M.roof, [x + w / 2, h, z - 0.08], [w + 0.16, RIDGE[era.house.roof], d + 0.16]);
     }
 
-    /* windows and a door go on whichever wall looks at the square */
+    /* windows and a door go on whichever wall looks at the square. `panel`
+     * places a slab on that wall; `off` pushes it proud (+) or recessed (-) so
+     * frames, sills and courses catch the light instead of lying flush. */
     const span = facing === 'z' ? w : d;
     const n = Math.max(1, Math.round(span / 0.72));
     const pad = (span - n * 0.34) / (n + 1);
-    const face = facing === 'z' ? z + d + 0.03 : x + w + 0.03;
-    const put = (u, y, uw, uh, mat) => facing === 'z'
-      ? add(BOX, mat, [x + u + uw / 2, y, face], [uw, uh, 0.07])
-      : add(BOX, mat, [face, y, z + u + uw / 2], [0.07, uh, uw]);
+    const wallFace = facing === 'z' ? z + d : x + w;
+    const panel = (u, y, uw, uh, depth, off, mat, rot = 0) => facing === 'z'
+      ? add(BOX, mat, [x + u + uw / 2, y, wallFace + off], [uw, uh, depth], rot)
+      : add(BOX, mat, [wallFace + off, y, z + u + uw / 2], [depth, uh, uw], rot);
+    const put = (u, y, uw, uh, mat) => panel(u, y, uw, uh, 0.07, 0.035, mat);
+    const band = (y, uh, off, mat) => panel(-0.05, y, span + 0.1, uh, 0.12, off, mat);
+
+    const frameM = era.house.material === 'timber' ? M.wood
+      : era.house.material === 'brick' ? mk(0xc9bfa8) : mk(0xbfb6a4);
 
     const kind = era.house.window;
+    /* a recessed pane inside a proud frame, with a sill under it */
+    const window = (u, y, uw, uh, glass) => {
+      panel(u - 0.06, y - 0.06, uw + 0.12, uh + 0.12, 0.09, 0.02, frameM);   // frame
+      panel(u, y, uw, uh, 0.05, -0.03, glass);                               // recessed pane
+      panel(u - 0.08, y - 0.1, uw + 0.16, 0.07, 0.14, 0.07, frameM);         // sill
+      if (kind === 'lead' || kind === 'shutter')                            // a glazing bar
+        panel(u + uw / 2 - 0.015, y, 0.03, uh, 0.06, 0.05, frameM);
+    };
+
     for (let r = 0; r < era.house.storeys; r++) {
       const y = 0.42 + r * 0.92;
       if (y + 0.5 > h) break;
       for (let i = 0; i < n; i++) {
         const u = pad + i * (0.34 + pad);
         const uw = kind === 'picture' ? 0.34 + pad * 0.5 : 0.34;
-        if (kind === 'hole') { put(u, y, uw, 0.36, M.dark); continue; }
-        const glass = era.house.neon ? (g() > 0.6 ? pickNeon() : g() > 0.35 ? M.lit : M.glass) : (g() > 0.58 ? M.lit : M.glass);
-        put(u, y, uw, kind === 'picture' ? 0.56 : 0.46, glass);
+        if (kind === 'hole') { panel(u, y, uw, 0.36, 0.05, -0.02, M.dark); continue; }
+        if (era.house.neon) {
+          /* at night the glow must sit proud and bare — a recessed pane behind
+           * a stone frame swallows the neon, which the frames just proved. */
+          const lit = g() > 0.6 ? pickNeon() : g() > 0.32 ? M.lit : mk(0x1a2740);
+          panel(u - 0.03, y - 0.03, uw + 0.06, 0.62, 0.05, 0.055, lit);
+          continue;
+        }
+        window(u, y, uw, kind === 'picture' ? 0.56 : 0.46, g() > 0.58 ? M.lit : M.glass);
         if (kind === 'shutter') {
-          put(u - 0.11, y, 0.09, 0.46, M.wood);
-          put(u + uw + 0.02, y, 0.09, 0.46, M.wood);
+          panel(u - 0.13, y, 0.11, 0.5, 0.06, 0.06, M.wood);
+          panel(u + uw + 0.02, y, 0.11, 0.5, 0.06, 0.06, M.wood);
         }
       }
+      /* a string course ruling off each upper floor */
+      if (r > 0 && era.house.material !== 'wood') band(y - 0.24, 0.08, 0.05, mk(shade(PALETTE.wall[era.house.material], 0.86)));
     }
-    put(span / 2 - 0.17, 0, 0.34, 0.64, M.wood);
-    if (era.house.sign && g() > 0.4) put(span - 0.8, 1.05, 0.5, 0.3, mk([0xc8a13c, 0x7a8f5a, 0x9c5340][Math.floor(g() * 3)]));
+
+    /* a doorway with a proud surround and a step */
+    const dm = span / 2 - 0.17;
+    panel(dm - 0.07, 0, 0.48, 0.72, 0.1, 0.02, frameM);
+    panel(dm, 0, 0.34, 0.64, 0.05, -0.02, M.wood);
+    panel(dm - 0.12, 0, 0.58, 0.06, 0.22, 0.11, mk(shade(PALETTE.ground[era.ground], 1.05)));
+    if (era.house.sign && g() > 0.4) panel(span - 0.85, 1.05, 0.5, 0.3, 0.06, 0.12, mk([0xc8a13c, 0x7a8f5a, 0x9c5340][Math.floor(g() * 3)]));
+
+    /* a cornice capping the wall, and quoins down the near corner */
+    band(h - 0.12, 0.16, 0.1, mk(shade(PALETTE.wall[era.house.material], 1.08)));
+    if (era.house.material === 'stone' || era.house.material === 'brick') {
+      const qc = mk(shade(PALETTE.wall[era.house.material], 1.12));
+      for (let qy = 0; qy < h - 0.2; qy += 0.6) panel(span - 0.18, qy, 0.18, 0.3, 0.14, 0.06, qc);
+    }
 
     /* dormers punched through the roof, once roofs are worth living under */
     if (!flat && era.house.storeys >= 3 && g() > 0.35) {
