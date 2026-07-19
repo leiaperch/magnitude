@@ -874,10 +874,12 @@
         "chimney"
       ],
       "house": {
-        "material": "concrete",
-        "storeys": 3,
-        "roof": "flat",
-        "window": "picture",
+        "material": "brick",
+        "storeys": 4,
+        "roof": "mansard",
+        "window": "sash",
+        "shutter": true,
+        "sign": true,
         "gap": true
       },
       "street": [
@@ -907,29 +909,29 @@
         "note": "La cathédrale n'est plus que la quatrième plus haute chose ici, et le plus bruyant dans la rue n'a pas de cheval dedans."
       },
       "sky": [
-        "#1c2f52",
-        "#c8794a"
+        "#a6c1d4",
+        "#e4ece9"
       ],
-      "hill": "#3a4a63",
+      "hill": "#68824a",
       "ground": "asphalt",
       "skyline": [
         "cathedral-spire",
-        "megatower",
-        "holotower"
+        "townhall",
+        "station"
       ],
       "house": {
-        "material": "render",
+        "material": "brick",
         "storeys": 4,
-        "roof": "flat",
-        "window": "picture",
-        "sign": true,
-        "neon": true
+        "roof": "mansard",
+        "window": "sash",
+        "shutter": true,
+        "sign": true
       },
       "street": [
         "fountain",
         "car",
         "car",
-        "holo-sign",
+        "planter",
         "lamp-electric",
         "bike",
         "bench",
@@ -941,7 +943,7 @@
       ],
       "crowd": 14,
       "smoke": 0,
-      "night": 0.15
+      "night": 0
     },
     {
       "year": 2050,
@@ -954,44 +956,42 @@
         "note": "La cathédrale n'est plus qu'une relique éclairée aux projecteurs, écrasée par des tours de verre et de lumière. Des drones passent où volaient les pigeons. La place a mille ans et n'a jamais réuni autant de monde."
       },
       "sky": [
-        "#080c26",
-        "#241748"
+        "#a9c4d6",
+        "#e8efe8"
       ],
-      "hill": "#1e2445",
+      "hill": "#6f8a4e",
       "ground": "asphalt",
       "skyline": [
         "cathedral-spire",
-        "megatower",
-        "skybridge"
+        "townhall",
+        "station"
       ],
       "house": {
-        "material": "render",
-        "storeys": 5,
-        "roof": "solar",
-        "window": "picture",
+        "material": "brick",
+        "storeys": 4,
+        "roof": "green",
+        "window": "sash",
         "sign": true,
-        "neon": true,
-        "trees": true
+        "trees": true,
+        "solar": true
       },
       "street": [
-        "holo-sign",
-        "drone",
-        "drone",
-        "drone",
-        "neon-tree",
-        "neon-tree",
-        "neon-post",
-        "fountain",
+        "tree",
+        "planter",
+        "planter",
+        "bench",
+        "bike",
+        "car",
+        "tree",
+        "planter",
         "bench",
         "scooter",
-        "scooter",
-        "bike",
         "planter",
-        "holo-sign"
+        "tree"
       ],
       "crowd": 17,
       "smoke": 0,
-      "night": 0.35
+      "night": 0
     }
   ]
 }

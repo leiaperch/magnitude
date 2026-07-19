@@ -99,9 +99,7 @@ function sceneFor(v) {
   if (state.mode === 'a') {
     const i = clamp(Math.round(v), 0, ages.eras.length - 1);
     const e = ages.eras[i];
-    return [state.lang === 'fr' ? e.fr.name : e.en.name,
-            state.lang === 'fr' ? e.fr.note : e.en.note,
-            '#dfc47c', i];
+    return [state.lang === 'fr' ? e.fr.name : e.en.name, '', '#dfc47c', i];   // no per-slice sub-text
   }
   const SC = SCENES[state.mode], SF = SCENES_FR[state.mode];
   let best = -1, bi = 0;
