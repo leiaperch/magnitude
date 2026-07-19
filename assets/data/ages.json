@@ -36,7 +36,8 @@
         "tree"
       ],
       "crowd": 5,
-      "smoke": 1
+      "smoke": 1,
+      "night": 0
     },
     {
       "year": 1050,
@@ -76,7 +77,8 @@
         "horse"
       ],
       "crowd": 6,
-      "smoke": 1
+      "smoke": 1,
+      "night": 0
     },
     {
       "year": 1100,
@@ -114,7 +116,8 @@
         "dog"
       ],
       "crowd": 6,
-      "smoke": 1
+      "smoke": 1,
+      "night": 0
     },
     {
       "year": 1150,
@@ -155,7 +158,8 @@
         "dog"
       ],
       "crowd": 9,
-      "smoke": 1
+      "smoke": 1,
+      "night": 0
     },
     {
       "year": 1200,
@@ -198,7 +202,8 @@
         "hay"
       ],
       "crowd": 11,
-      "smoke": 1
+      "smoke": 1,
+      "night": 0
     },
     {
       "year": 1250,
@@ -232,6 +237,9 @@
         "cross",
         "stall",
         "stall",
+        "stall",
+        "loadcart",
+        "stall",
         "barrel",
         "cart",
         "crate",
@@ -242,7 +250,8 @@
         "pig"
       ],
       "crowd": 13,
-      "smoke": 2
+      "smoke": 2,
+      "night": 0
     },
     {
       "year": 1300,
@@ -277,6 +286,10 @@
         "stall",
         "stall",
         "stall",
+        "stall",
+        "loadcart",
+        "stall",
+        "stall",
         "barrel",
         "cart",
         "crate",
@@ -289,7 +302,8 @@
         "bench"
       ],
       "crowd": 18,
-      "smoke": 2
+      "smoke": 2,
+      "night": 0
     },
     {
       "year": 1350,
@@ -329,7 +343,8 @@
         "tree"
       ],
       "crowd": 3,
-      "smoke": 1
+      "smoke": 1,
+      "night": 0
     },
     {
       "year": 1400,
@@ -372,7 +387,8 @@
         "bench"
       ],
       "crowd": 10,
-      "smoke": 2
+      "smoke": 2,
+      "night": 0
     },
     {
       "year": 1450,
@@ -406,6 +422,9 @@
         "cross",
         "stall",
         "stall",
+        "stall",
+        "loadcart",
+        "stall",
         "cart",
         "barrel",
         "horse",
@@ -415,7 +434,8 @@
         "crate"
       ],
       "crowd": 13,
-      "smoke": 2
+      "smoke": 2,
+      "night": 0
     },
     {
       "year": 1500,
@@ -459,7 +479,8 @@
         "dog"
       ],
       "crowd": 13,
-      "smoke": 2
+      "smoke": 2,
+      "night": 0
     },
     {
       "year": 1550,
@@ -493,6 +514,9 @@
         "fountain",
         "cross",
         "stall",
+        "stall",
+        "stall",
+        "loadcart",
         "cart",
         "barrel",
         "horse",
@@ -501,7 +525,8 @@
         "crate"
       ],
       "crowd": 11,
-      "smoke": 2
+      "smoke": 2,
+      "night": 0
     },
     {
       "year": 1600,
@@ -539,7 +564,8 @@
         "tree"
       ],
       "crowd": 3,
-      "smoke": 1
+      "smoke": 1,
+      "night": 0
     },
     {
       "year": 1650,
@@ -573,6 +599,9 @@
         "fountain",
         "cross",
         "stall",
+        "stall",
+        "stall",
+        "loadcart",
         "cart",
         "barrel",
         "horse",
@@ -582,7 +611,8 @@
         "dog"
       ],
       "crowd": 12,
-      "smoke": 2
+      "smoke": 2,
+      "night": 0
     },
     {
       "year": 1700,
@@ -616,6 +646,9 @@
         "fountain",
         "cross",
         "stall",
+        "stall",
+        "stall",
+        "loadcart",
         "lamp-oil",
         "cart",
         "horse",
@@ -625,7 +658,8 @@
         "crate"
       ],
       "crowd": 12,
-      "smoke": 2
+      "smoke": 2,
+      "night": 0
     },
     {
       "year": 1750,
@@ -658,7 +692,10 @@
       "street": [
         "fountain",
         "cross",
+        "stall",
+        "stall",
         "carriage",
+        "loadcart",
         "lamp-oil",
         "stall",
         "horse",
@@ -669,7 +706,8 @@
         "dog"
       ],
       "crowd": 13,
-      "smoke": 2
+      "smoke": 2,
+      "night": 0
     },
     {
       "year": 1800,
@@ -702,7 +740,10 @@
       "street": [
         "fountain",
         "cross",
+        "stall",
+        "stall",
         "carriage",
+        "loadcart",
         "lamp-oil",
         "stall",
         "cart",
@@ -713,7 +754,8 @@
         "crate"
       ],
       "crowd": 14,
-      "smoke": 3
+      "smoke": 3,
+      "night": 0
     },
     {
       "year": 1850,
@@ -746,7 +788,10 @@
       "street": [
         "fountain",
         "carriage",
+        "stall",
+        "stall",
         "lamp-gas",
+        "loadcart",
         "lamp-gas",
         "stall",
         "cart",
@@ -759,7 +804,7 @@
       ],
       "crowd": 18,
       "smoke": 4,
-      "night": 0.12
+      "night": 0
     },
     {
       "year": 1900,
@@ -805,7 +850,7 @@
       ],
       "crowd": 18,
       "smoke": 3,
-      "night": 0.22
+      "night": 0
     },
     {
       "year": 1950,
@@ -849,7 +894,7 @@
       ],
       "crowd": 11,
       "smoke": 2,
-      "night": 0.12
+      "night": 0
     },
     {
       "year": 2000,
@@ -896,7 +941,7 @@
       ],
       "crowd": 14,
       "smoke": 0,
-      "night": 0.5
+      "night": 0.15
     },
     {
       "year": 2050,
@@ -946,7 +991,7 @@
       ],
       "crowd": 17,
       "smoke": 0,
-      "night": 1.0
+      "night": 0.35
     }
   ]
 }

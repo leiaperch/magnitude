@@ -7,13 +7,14 @@
  */
 
 import * as THREE from '../../vendor/three.module.js';
-import { buildEra } from './town3d.js';
+import { GLTFLoader } from '../../vendor/GLTFLoader.js';
+import { buildEra as buildTown, MANIFEST } from './townkit.js';
 import { AXES, clamp } from '../config.js';
 
-const ELEV = 20 * Math.PI / 180;   // the angle, and it does not move for 1000 years
-const DIST = 100;
-const TARGET = new THREE.Vector3(4.5, 1.5, 4.5);
-const VIEW_W = 32, VIEW_H = 19;    // world units guaranteed on screen
+const ELEV = 30 * Math.PI / 180;   // the angle, and it does not move for 1000 years
+const DIST = 120;
+const TARGET = new THREE.Vector3(0.5, 1.4, 0.5);
+const VIEW_W = 25, VIEW_H = 15;    // world units guaranteed on screen
 
 /* The camera's screen-right vector: the seam plane rides along it, so its
  * position on screen is exactly linear in the plane's constant. */
@@ -33,6 +34,13 @@ export class Ages {
     const data = await fetch('assets/data/ages.json').then(r => r.json());
     this.eras = data.eras;
     this.step = data.step;
+
+    this.models = new Map();
+    this.modelsReady = false;
+    /* simple townsfolk share two small geometries and a skin material */
+    this.personBody = new THREE.CapsuleGeometry(0.16, 0.4, 3, 6);
+    this.personHead = new THREE.SphereGeometry(0.16, 8, 6);
+    this.skinMat = new THREE.MeshStandardMaterial({ color: 0xe8bd96, roughness: 1 });
 
     this.root.innerHTML =
       '<canvas class="stage3d"></canvas>' +
@@ -71,6 +79,12 @@ export class Ages {
     this.sun = sun;
     this.hemi = new THREE.HemisphereLight(0xdfeaf0, 0x6d8a4e, 1.1);
     this.scene.add(this.hemi);
+
+    /* one paved ground under every era */
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(120, 120), new THREE.MeshStandardMaterial({ color: 0xb0aa9e, roughness: 1 }));
+    ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true;
+    this.scene.add(ground);
+    this.groundMat = ground.material;
 
     /* the sky is one plane behind everything, and the only thing that crossfades
      * rather than wiping: two adjacent skies are near enough that a seam in the
@@ -120,19 +134,74 @@ export class Ages {
 
     this.resize();
     this.ready = true;
+    this.preloadModels();          // in the background: the page paints immediately
     return this;
+  }
+
+  /* Load every Kenney model the eras can ask for. They share geometry and
+   * material across instances, so a slice is just cloned meshes. Non-blocking:
+   * eras built before this finishes are left uncached and rebuild once ready. */
+  preloadModels() {
+    const loader = new GLTFLoader();
+    Promise.all(MANIFEST.map(name => new Promise(res => {
+      loader.load(`assets/models/${name}.glb`, gltf => {
+        let mesh = null;
+        gltf.scene.traverse(o => { if (o.isMesh && !mesh) mesh = o; });
+        if (mesh) {
+          mesh.geometry.computeBoundingBox();
+          const mat = mesh.material;
+          mat.metalness = 0; mat.roughness = 1;                 // Kenney is flat-lit, not PBR-shiny
+          this.models.set(name, { geometry: mesh.geometry, material: mat, bb: mesh.geometry.boundingBox.clone() });
+        }
+        res();
+      }, undefined, () => res());
+    }))).then(() => {
+      this.modelsReady = true;
+      for (const e of this.built.values()) this.scene.remove(e.group);   // drop the empty pre-load slices
+      this.built.clear(); this.index = -1; this.past = this.future = null;
+    });
   }
 
   get trackH() { return (this.eras.length - 1) * AXES.a.pxPerSlice; }
   get span() { return this.eras.length - 1; }
 
-  /* Built eras are cheap (every mesh shares one of seven geometries) but not
-   * free, so keep a few around: crossing a boundary twice shouldn't rebuild. */
+  /* One slice, composed from cloned Kenney models. Geometry and material are
+   * shared with every other slice, so building is cheap and disposing a slice
+   * only drops its group — never the preloaded assets. */
+  build(era) {
+    const group = new THREE.Group();
+    const rng = (s => () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296)((era.year * 2654435761) >>> 0);
+    const place = (name, x, z, o = {}) => {
+      const md = this.models.get(name);
+      if (!md) return null;
+      const s = o.s || 1;
+      const m = new THREE.Mesh(md.geometry, md.material);
+      m.scale.setScalar(s);
+      m.position.set(x, (o.y || 0) - md.bb.min.y * s, z);
+      m.rotation.y = o.rot || 0;
+      m.castShadow = true; m.receiveShadow = true;
+      group.add(m);
+      return m;
+    };
+    const CLOTH = [0x3f4a5a, 0x6b3a3a, 0x4a5a3a, 0x5a4a6b, 0x2f3136, 0x7a6a4a];
+    const person = (x, z) => {
+      const p = new THREE.Group();
+      const body = new THREE.Mesh(this.personBody, new THREE.MeshStandardMaterial({ color: CLOTH[Math.floor(rng() * CLOTH.length)], roughness: 1 }));
+      body.position.y = 0.4; body.castShadow = true;
+      const head = new THREE.Mesh(this.personHead, this.skinMat);
+      head.position.y = 0.82;
+      p.add(body, head); p.position.set(x, 0, z);
+      group.add(p);
+    };
+    buildTown(era, { place, rng, person });
+    return { group };
+  }
+
   era(i) {
     const year = this.eras[i].year;
     let e = this.built.get(year);
     if (!e) {
-      e = buildEra(this.eras[i]);
+      e = this.build(this.eras[i]);
       e.group.visible = false;
       this.scene.add(e.group);
       this.built.set(year, e);
@@ -143,8 +212,7 @@ export class Ages {
     while (this.built.size > 5) {
       const [k, v] = this.built.entries().next().value;
       if (k === year) break;
-      this.scene.remove(v.group);
-      v.dispose();
+      this.scene.remove(v.group);              // shared assets stay; only the group goes
       this.built.delete(k);
     }
     return e;
@@ -229,8 +297,6 @@ export class Ages {
 
   render(time) {
     if (!this.ready || !this.past) return;
-    this.past.tick(time);
-    this.future.tick(time);
     const r = this.renderer;
     r.clear();
 
@@ -253,6 +319,8 @@ export class Ages {
 
   show(on) {
     this.root.hidden = !on;
-    if (on) this.resize();
+    /* size the renderer once the canvas has actually been laid out; sizing it
+     * while #ages is still display:none leaves a 0×0 drawing buffer */
+    if (on) { this.resize(); requestAnimationFrame(() => this.resize()); }
   }
 }

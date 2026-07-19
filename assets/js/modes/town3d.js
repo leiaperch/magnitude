@@ -13,6 +13,7 @@ import { texture } from './textures.js';
 
 /* ---------------------------------------------------------------- shared */
 const BOX = new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0);   // sits on the ground
+const BEAM = new THREE.BoxGeometry(1, 1, 1);                        // centred, for rotated timbers
 const SPH = new THREE.SphereGeometry(0.5, 8, 6);
 const CYL = new THREE.CylinderGeometry(0.5, 0.5, 1, 8).translate(0, 0.5, 0);
 const CONE = new THREE.ConeGeometry(0.5, 1, 7).translate(0, 0.5, 0);
@@ -27,7 +28,7 @@ function prism(alongX) {
 }
 const PRISM_X = prism(true);    // occupies x∈[0,1] y∈[0,1] z∈[-.5,.5]
 const PRISM_Z = prism(false);   // occupies x∈[-.5,.5] y∈[0,1] z∈[0,1]
-const SHARED = new Set([BOX, SPH, CYL, CONE, CAP, PRISM_X, PRISM_Z]);
+const SHARED = new Set([BOX, BEAM, SPH, CYL, CONE, CAP, PRISM_X, PRISM_Z]);
 
 export const PALETTE = {
   wall: { wood: 0x8a6a44, timber: 0xded2b8, stone: 0xc2b9a6, brick: 0x9d5140, render: 0xd3c9b6, concrete: 0xadaba3 },
@@ -77,7 +78,7 @@ export function buildEra(era) {
   const M = {
     wall: mkTex('wall.' + era.house.material, 1.4, 1.4),
     roof: mkTex('roof.' + era.house.roof, 2.2, 1.6),
-    ground: mkTex('ground.' + era.ground, 132, 132),
+    ground: mkTex('ground.' + era.ground, 88, 88),
     stone: mk(0xb9b0a0), wood: mk(0x7a5c3c), brick: mk(0x8d4a38),
     dark: mk(0x4a443d), metal: mk(0x6e737a), cloth: mk(0xefe6d2),
     glass: mk(0x8fa3b0), leaf: mk(0x4a7a3c), chimney: mk(0x5a4a40),
@@ -468,9 +469,28 @@ export function buildEra(era) {
       front(u + 0.86, 0, 0.44, 0.32, 0.44, 0.32, M.wood);                     // a barrel-ish crate
     }
 
-    /* timber framing */
-    if (era.house.material === 'timber')
-      for (let r = 0; r < era.house.storeys; r++) put(0, 0.55 + r * 0.92, span, 0.1, M.wood);
+    /* Half-timbering: bold dark oak studs, rails and braces over the pale infill
+     * of the upper storeys. `beam` is a centred box tilted flat on the wall. */
+    if (era.house.material === 'timber') {
+      const oak = mk(0x4a3218);
+      const beam = (cu, cy, len, th, deg) => {
+        const m = new THREE.Mesh(BEAM, oak);
+        const rad = deg * Math.PI / 180;
+        if (facing === 'z') { m.position.set(x + cu, cy, wallFace + 0.07); m.scale.set(len, th, 0.11); m.rotation.z = rad; }
+        else { m.position.set(wallFace + 0.07, cy, z + cu); m.scale.set(0.11, th, len); m.rotation.x = -rad; }
+        m.castShadow = m.receiveShadow = true; group.add(m);
+      };
+      const bot = 0.95, top = h - 0.14;                    // masonry ground floor below `bot`
+      const bays = Math.max(2, Math.round(span / 0.66)), bw = span / bays;
+      for (let yy = bot; yy <= top + 0.01; yy += 0.92) beam(span / 2, yy, span + 0.02, 0.12, 0);  // rails
+      for (let b = 0; b <= bays; b++) beam(b * bw, (bot + top) / 2, top - bot, 0.11, 90);          // studs
+      for (let s = 0; bot + s * 0.92 < top - 0.12; s++) {
+        const y0 = bot + s * 0.92, y1 = Math.min(top, y0 + 0.92), mid = (y0 + y1) / 2, hh = y1 - y0;
+        const ang = Math.atan2(hh, bw) * 180 / Math.PI, diag = Math.hypot(bw, hh) * 0.92;
+        for (let b = 0; b < bays; b++) if ((b + s) % 2 === 0) beam((b + 0.5) * bw, mid, diag, 0.09, b % 2 ? ang : -ang);
+      }
+      beam(span / 2, bot, span + 0.06, 0.18, 0);            // a heavy bressummer over the shopfront
+    }
     /* a chimney with pots, and not on every roof */
     if (chimneys && !flat && g() > 0.4) {
       const cm = era.house.material === 'brick' ? M.brick : M.chimney;
@@ -525,17 +545,42 @@ export function buildEra(era) {
       case 'barrel': add(CYL, M.wood, [x, 0, z], [0.42, 0.55, 0.42]); break;
       case 'pig': add(CAP, mk(0xcf9d92), [x, 0.1, z], [0.22, 0.3, 0.22], Math.PI / 2); break;
       case 'stall': {
-        const c = mk([0xb8443a, 0x3f7f6d, 0xc8973c, 0x5b6fa8][Math.floor(g() * 4)]);
-        add(BOX, M.wood, [x, 0, z], [1.6, 0.55, 1.1]);
-        for (const dx of [-0.7, 0.7]) for (const dz of [-0.45, 0.45]) add(BOX, M.wood, [x + dx, 0.55, z + dz], [0.08, 0.9, 0.08]);
-        for (let i = 0; i < 4; i++) add(BOX, i % 2 ? c : M.cloth, [x - 0.6 + i * 0.4, 1.45, z], [0.4, 0.08, 1.5]);
-        for (let i = 0; i < 5; i++) add(SPH, mk([0xb8443a, 0x7d9c46, 0xc8973c][i % 3]),
-          [x - 0.5 + (i % 3) * 0.45, 0.6, z - 0.2 + Math.floor(i / 3) * 0.4], [0.2, 0.2, 0.2]);
+        const cs = [0xb8443a, 0x3f7f6d, 0xc8973c, 0x5b6fa8, 0x8a5a2a];
+        const cA = mk(cs[Math.floor(g() * cs.length)]);
+        add(BOX, M.wood, [x, 0, z], [1.7, 0.6, 1.2]);                            // trestle table
+        for (const dx of [-0.75, 0.75]) for (const dz of [-0.5, 0.5]) add(BOX, M.wood, [x + dx, 0.6, z + dz], [0.08, 1.05, 0.08]);
+        for (let i = 0; i < 5; i++) add(BOX, i % 2 ? cA : M.cloth, [x - 0.68 + i * 0.34, 1.62, z], [0.34, 0.07, 1.7]);   // striped awning
+        add(BOX, cA, [x, 1.5, z + 0.86], [1.7, 0.22, 0.05]);                     // valance
+        /* produce heaped in trays: rows of coloured mounds spilling over the table */
+        const PROD = [0xb8443a, 0x7d9c46, 0xc8973c, 0xd8a24a, 0x9c5340, 0xdccf6a, 0x6f8f3a];
+        for (let r = 0; r < 3; r++) for (let cI = 0; cI < 4; cI++) {
+          add(BOX, M.wood, [x - 0.6 + cI * 0.4, 0.6, z - 0.35 + r * 0.35], [0.34, 0.14, 0.3]);   // a tray
+          for (let k = 0; k < 3; k++) add(SPH, mk(PROD[Math.floor(g() * PROD.length)]),
+            [x - 0.68 + cI * 0.4 + (k % 2) * 0.14, 0.78, z - 0.4 + r * 0.35 + Math.floor(k / 2) * 0.12], [0.12, 0.12, 0.12]);
+        }
+        if (g() > 0.5) add(SPH, mk([0xb8443a, 0x7d9c46, 0xc8973c][Math.floor(g() * 3)]),  // a hanging string of wares
+          [x + 0.8, 1.2, z], [0.14, 0.5, 0.14]);
         break;
       }
       case 'cart': {
-        add(BOX, M.wood, [x, 0.3, z], [1.3, 0.4, 0.7]);
-        for (const dx of [-0.45, 0.45]) for (const dz of [-0.4, 0.4]) add(BOX, M.dark, [x + dx, 0, z + dz], [0.12, 0.3, 0.3]);
+        add(BOX, M.wood, [x, 0.32, z], [1.4, 0.36, 0.8]);
+        for (const s of [-0.5, 0.5]) add(BOX, M.wood, [x + s * 0.66, 0.5, z], [0.06, 0.3, 0.8]);   // side boards
+        for (const dx of [-0.5, 0.5]) for (const dz of [-0.45, 0.45]) add(CYL, M.dark, [x + dx, 0.28, z + dz], [0.56, 0.1, 0.56], Math.PI / 2);
+        /* loaded: barrels and crates piled on the bed */
+        add(CYL, M.wood, [x - 0.35, 0.5, z], [0.4, 0.5, 0.4]);
+        add(CYL, M.wood, [x + 0.05, 0.5, z + 0.2], [0.36, 0.46, 0.36]);
+        add(BOX, M.wood, [x + 0.4, 0.5, z - 0.15], [0.4, 0.4, 0.5]);
+        for (let k = 0; k < 3; k++) add(SPH, mk([0xb8443a, 0x7d9c46, 0xc8973c][k]), [x + 0.4, 0.78, z - 0.25 + k * 0.16], [0.12, 0.12, 0.12]);
+        add(BOX, M.wood, [x - 0.85, 0.42, z - 0.3], [0.7, 0.06, 0.06]);   // a shaft
+        break;
+      }
+      case 'loadcart': {
+        /* a big four-wheel dray, heaped with barrels and produce sacks */
+        add(BOX, M.wood, [x, 0.42, z], [2.0, 0.4, 1.0]);
+        for (const s of [-0.5, 0.5]) add(BOX, M.wood, [x + s * 0.96, 0.62, z], [0.06, 0.32, 1.0]);
+        for (const dx of [-0.7, 0.7]) for (const dz of [-0.55, 0.55]) add(CYL, M.dark, [x + dx, 0.34, z + dz], [0.68, 0.12, 0.68], Math.PI / 2);
+        for (let i = 0; i < 4; i++) add(CYL, M.wood, [x - 0.7 + i * 0.46, 0.62, z + (i % 2) * 0.3 - 0.15], [0.42, 0.56, 0.42]);
+        for (let i = 0; i < 3; i++) { add(BOX, mk(0xbfa46a), [x + 0.5 + (i % 2) * 0.2, 0.62, z - 0.2 + i * 0.2], [0.34, 0.4, 0.3]); }
         break;
       }
       case 'carriage': case 'tram': case 'car': {
