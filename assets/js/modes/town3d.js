@@ -9,6 +9,7 @@
  */
 
 import * as THREE from '../../vendor/three.module.js';
+import { texture } from './textures.js';
 
 /* ---------------------------------------------------------------- shared */
 const BOX = new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0);   // sits on the ground
@@ -65,14 +66,23 @@ export function buildEra(era) {
     mats.push(m);
     return m;
   };
+  /* a textured surface carries its colour in the map, so the material is white;
+   * repeat is set per surface type since a unit box face maps the map 0..1 */
+  const mkTex = (key, rx, ry) => {
+    const m = mk(0xffffff, { flatShading: false });
+    const tex = texture(key);
+    if (tex) { m.map = tex; tex.repeat.set(rx, ry); } else m.color.set(0xcccccc);
+    return m;
+  };
   const M = {
-    wall: mk(PALETTE.wall[era.house.material]),
-    roof: mk(PALETTE.roof[era.house.roof]),
-    ground: mk(PALETTE.ground[era.ground]),
+    wall: mkTex('wall.' + era.house.material, 1.4, 1.4),
+    roof: mkTex('roof.' + era.house.roof, 2.2, 1.6),
+    ground: mkTex('ground.' + era.ground, 132, 132),
     stone: mk(0xb9b0a0), wood: mk(0x7a5c3c), brick: mk(0x8d4a38),
     dark: mk(0x4a443d), metal: mk(0x6e737a), cloth: mk(0xefe6d2),
     glass: mk(0x8fa3b0), leaf: mk(0x4a7a3c), chimney: mk(0x5a4a40),
     lit: mk(0xf6e2a0, { emissive: 0x6a5520 }),
+    warm: mk(0xffcf7a, { emissive: 0xc98a2a }),        // a shop interior glowing at dusk
     glow: mk(0xf5eab4, { emissive: 0xb99a3a }),
   };
 
@@ -101,14 +111,6 @@ export function buildEra(era) {
   ground.rotation.x = -Math.PI / 2;
   ground.receiveShadow = true;
   group.add(ground);
-
-  /* the square itself, a shade apart from the land around it */
-  const plaza = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), mk(
-    new THREE.Color(PALETTE.ground[era.ground]).offsetHSL(0, 0, era.ground === 'asphalt' ? 0.04 : -0.03)));
-  plaza.rotation.x = -Math.PI / 2;
-  plaza.position.set(5.5, 0.02, 5.5);
-  plaza.receiveShadow = true;
-  group.add(plaza);
 
   /* The river is the one thing older than the town and the reason it is here.
    * It runs behind everything, in every era, and never moves. */
@@ -355,6 +357,14 @@ export function buildEra(era) {
       : add(BOX, mat, [wallFace + off, y, z + u + uw / 2], [depth, uh, uw], rot);
     const put = (u, y, uw, uh, mat) => panel(u, y, uw, uh, 0.07, 0.035, mat);
     const band = (y, uh, off, mat) => panel(-0.05, y, span + 0.1, uh, 0.12, off, mat);
+    /* a full 3D volume standing proud of the square-facing wall: awnings,
+     * goods, signs. `along` runs with the wall, `deep` out toward the square. */
+    const front = (u, y, out, along, up, deep, mat, rot = 0) => facing === 'z'
+      ? add(BOX, mat, [x + u, y, z + d + out], [along, up, deep], rot)
+      : add(BOX, mat, [x + w + out, y, z + u], [deep, up, along], rot);
+    const frontMesh = (geo, u, y, out, s, mat, rot = 0) => facing === 'z'
+      ? add(geo, mat, [x + u, y, z + d + out], s, rot)
+      : add(geo, mat, [x + w + out, y, z + u], [s[2], s[1], s[0]], rot);
 
     const frameM = era.house.material === 'timber' ? M.wood
       : era.house.material === 'brick' ? mk(0xc9bfa8) : mk(0xbfb6a4);
@@ -407,41 +417,68 @@ export function buildEra(era) {
       for (let qy = 0; qy < h - 0.2; qy += 0.6) panel(span - 0.18, qy, 0.18, 0.3, 0.14, 0.06, qc);
     }
 
-    /* dormers punched through the roof, once roofs are worth living under */
-    if (!flat && era.house.storeys >= 3 && g() > 0.35) {
-      const n2 = 1 + Math.floor(g() * 2);
+    /* dormers, thick along the roof once there is an attic to light */
+    if (!flat && era.house.storeys >= 2) {
+      const n2 = span > 1.5 ? 2 + Math.floor(g() * 2) : 1 + Math.floor(g() * 2);
       for (let i = 0; i < n2; i++) {
-        const u = span * (0.28 + i * 0.42);
-        const dy = h + RIDGE[era.house.roof] * 0.34;
+        const u = span * (0.16 + i * (0.68 / Math.max(1, n2 - 1)) + (n2 === 1 ? 0.34 : 0));
+        const dy = h + RIDGE[era.house.roof] * 0.3;
+        const dw = 0.42;
         facing === 'z'
-          ? add(BOX, M.roof, [x + u, dy, z + d - 0.3], [0.4, 0.42, 0.5])
-          : add(BOX, M.roof, [x + w - 0.3, dy, z + u], [0.5, 0.42, 0.4]);
-        put(u - 0.02, dy - h + 0.08, 0.24, 0.26, g() > 0.5 ? M.lit : M.glass);
+          ? add(BOX, M.wall, [x + u, dy, z + d - 0.34], [dw, 0.44, 0.5])
+          : add(BOX, M.wall, [x + w - 0.34, dy, z + u], [0.5, 0.44, dw]);
+        facing === 'z'
+          ? add(PRISM_X, M.roof, [x + u - dw / 2 - 0.05, dy + 0.44, z + d - 0.34], [dw + 0.1, 0.3, 0.52])
+          : add(PRISM_Z, M.roof, [x + w - 0.34, dy + 0.44, z + u - dw / 2 - 0.05], [0.52, 0.3, dw + 0.1]);
+        put(u - 0.09, dy - h + 0.1, 0.18, 0.26, g() > 0.45 ? M.lit : M.glass);
       }
     }
-    /* a shopfront: a wider opening and an awning, once there is a trade */
-    if (era.house.sign && g() > 0.55) {
-      put(span / 2 - 0.55, 0.12, 0.5, 0.5, M.glass);
-      const aw = mk([0xb8443a, 0x3f7f6d, 0x5b6fa8][Math.floor(g() * 3)]);
-      facing === 'z'
-        ? add(BOX, aw, [x + span / 2, 0.78, z + d + 0.24], [1.1, 0.06, 0.5])
-        : add(BOX, aw, [x + w + 0.24, 0.78, z + span / 2], [0.5, 0.06, 1.1]);
+
+    /* a shopfront: a broad lit window, a striped awning with a valance, a
+     * hanging sign, and goods spilling onto the square — the reference's heart */
+    if (era.house.sign) {
+      const AW = [[0xb8443a, 0xefe6d2], [0x3f7f6d, 0xefe6d2], [0x2f5a8f, 0xd8c9a0], [0x8a5a2a, 0xefe6d2]][Math.floor(g() * 4)];
+      const mA = mk(AW[0]), mB = mk(AW[1]);
+      panel(span * 0.5 - 0.42, 0.16, 0.84, 0.6, 0.05, -0.02, frameM);          // shop window frame
+      panel(span * 0.5 - 0.38, 0.2, 0.76, 0.52, 0.05, 0.03, M.warm);           // warm-lit glass
+      const aw = span - 0.16, u0 = 0.08, nS = Math.max(4, Math.round(aw / 0.17)), sw = aw / nS;
+      for (let i = 0; i < nS; i++) {
+        const c = i % 2 ? mA : mB;
+        front(u0 + sw * (i + 0.5), 0.98, 0.3, sw * 0.98, 0.05, 0.56, c);       // sloped slab
+        front(u0 + sw * (i + 0.5), 0.86, 0.57, sw * 0.98, 0.15, 0.04, c);      // hanging valance
+      }
+      front(span - 0.55, 0.86, 0.02, 0.02, 0.5, 0.02, M.metal);               // sign bracket
+      front(span - 0.62, 1.2, 0.16, 0.46, 0.26, 0.05, mk([0x2e2a26, 0x4a3b2a, 0x3a4a3a][Math.floor(g() * 3)]));
+      shopGoods(u0 + 0.2 + g() * 0.3);
     }
     /* a balcony, once anyone wants to be seen on one */
-    if (era.year >= 1550 && era.house.storeys >= 3 && g() > 0.6) {
-      facing === 'z'
-        ? add(BOX, M.metal, [x + span / 2, 1.3, z + d + 0.16], [0.9, 0.06, 0.32])
-        : add(BOX, M.metal, [x + w + 0.16, 1.3, z + span / 2], [0.32, 0.06, 0.9]);
+    if (era.year >= 1550 && era.house.storeys >= 3 && !era.house.sign && g() > 0.6) {
+      front(span / 2, 1.3, 0.12, 0.9, 0.06, 0.3, M.metal);
+      for (let i = 0; i < 6; i++) front(span / 2 - 0.42 + i * 0.17, 1.42, 0.24, 0.03, 0.22, 0.03, M.metal);
+    }
+
+    function shopGoods(u) {
+      const prod = [0xb8443a, 0x7d9c46, 0xc8973c, 0x9c5340, 0xd8a24a];
+      for (let c = 0; c < 2; c++) {
+        const uu = u + c * 0.42;
+        front(uu, 0, 0.42, 0.36, 0.3, 0.36, M.wood);                          // a crate
+        for (let k = 0; k < 4; k++)
+          frontMesh(SPH, uu - 0.1 + (k % 2) * 0.2, 0.34, 0.32 + Math.floor(k / 2) * 0.16, [0.14, 0.14, 0.14], mk(prod[Math.floor(g() * prod.length)]));
+      }
+      front(u + 0.86, 0, 0.44, 0.32, 0.44, 0.32, M.wood);                     // a barrel-ish crate
     }
 
     /* timber framing */
     if (era.house.material === 'timber')
       for (let r = 0; r < era.house.storeys; r++) put(0, 0.55 + r * 0.92, span, 0.1, M.wood);
-    /* a chimney: thin, sooty, sitting near the ridge, and not on every roof */
-    if (chimneys && !flat && g() > 0.5) {
+    /* a chimney with pots, and not on every roof */
+    if (chimneys && !flat && g() > 0.4) {
       const cm = era.house.material === 'brick' ? M.brick : M.chimney;
-      add(BOX, cm, [x + w * 0.66, h + RIDGE[era.house.roof] * 0.35, z + d * 0.34],
-        [0.16, 0.5 + RIDGE[era.house.roof] * 0.4, 0.16]);
+      const ch = 0.5 + RIDGE[era.house.roof] * 0.5, cx = x + w * (0.5 + g() * 0.3), cz = z + d * 0.3;
+      add(BOX, cm, [cx, h + RIDGE[era.house.roof] * 0.3, cz], [0.2, ch, 0.2]);
+      const pots = 1 + Math.floor(g() * 3);
+      for (let p = 0; p < pots; p++)
+        add(CYL, mk(0xb5623f), [cx - 0.05 + (p % 2) * 0.1, h + RIDGE[era.house.roof] * 0.3 + ch, cz - 0.05 + Math.floor(p / 2) * 0.1], [0.07, 0.16, 0.07]);
     }
     if (era.house.trees && g() > 0.5) {
       const tx = facing === 'z' ? x + w / 2 : x + w + 0.9, tz = facing === 'z' ? z + d + 0.9 : z + d / 2;
@@ -528,11 +565,22 @@ export function buildEra(era) {
         break;
       }
       case 'lamp-oil': case 'lamp-gas': case 'lamp-electric': {
-        const tall = kind === 'lamp-electric' ? 2.6 : kind === 'lamp-gas' ? 2.1 : 1.7;
-        add(BOX, M.dark, [x, 0, z], [0.14, tall, 0.14]);
-        add(SPH, M.glow, [x, tall + 0.1, z], [0.4, 0.4, 0.4]);
+        /* an ornate cast-iron standard: stepped base, fluted column, a scrolled
+         * bracket and a glazed lantern that glows */
+        const tall = kind === 'lamp-electric' ? 2.7 : kind === 'lamp-gas' ? 2.3 : 1.9;
+        add(BOX, M.dark, [x, 0, z], [0.34, 0.12, 0.34]);
+        add(BOX, M.dark, [x, 0.12, z], [0.24, 0.16, 0.24]);
+        add(CYL, M.dark, [x, 0.28, z], [0.11, tall - 0.28, 0.11]);
+        add(SPH, M.dark, [x, tall * 0.55, z], [0.17, 0.14, 0.17]);          // a collar knop
+        add(BOX, M.dark, [x, tall, z], [0.26, 0.1, 0.26]);
+        add(BOX, M.glow, [x, tall + 0.02, z], [0.2, 0.34, 0.2]);            // the lantern
+        add(CONE, M.dark, [x, tall + 0.36, z], [0.3, 0.22, 0.3]);          // the cap
         break;
       }
+      case 'bollard':
+        add(CYL, M.dark, [x, 0, z], [0.16, 0.62, 0.16]);
+        add(SPH, M.dark, [x, 0.62, z], [0.18, 0.16, 0.18]);
+        break;
       case 'bike': {
         add(BOX, M.metal, [x, 0.5, z], [0.9, 0.06, 0.06]);
         for (const dx of [-0.4, 0.4]) add(BOX, M.dark, [x + dx, 0, z], [0.62, 0.62, 0.05]);
@@ -649,21 +697,41 @@ export function buildEra(era) {
     propAt(k, s[0] + (g() - 0.5) * 0.8, s[1] + (g() - 0.5) * 0.8);
   });
 
-  /* people: a body, a head, and somewhere to be going */
+  /* the square is ringed with cast-iron bollards and lit by ornate lamps, once
+   * a town paves and polices its market — the reference's iron perimeter */
+  if (era.year >= 1650 && era.year < 2000) {
+    const E = 13.2;
+    for (let t = 1; t < E; t += 1.15) { propAt('bollard', E, t); propAt('bollard', t, E); }
+    const lamp = era.year >= 1890 ? 'lamp-electric' : era.year >= 1810 ? 'lamp-gas' : 'lamp-oil';
+    for (const [lx, lz] of [[E, 2.5], [E, 8.5], [2.5, E], [8.5, E], [E, E]]) propAt(lamp, lx, lz);
+  }
+
+  /* people: a body, a head, a hat if the century wears one, somewhere to go */
   const SKIN = [0xe8bd96, 0xc98d63, 0x8d5a3b, 0xf0d3b0, 0x6f4630];
   const CLOTH = era.year < 1500 ? [0x7a5c3c, 0x5b6b4a, 0x8a4a3c, 0x4a5a6b, 0x6b5a7a]
     : era.year < 1850 ? [0x3f4a5a, 0x6b3a3a, 0x4a5a3a, 0x5a4a6b, 0x7a6a4a]
-      : [0x2f3136, 0x3f6f9c, 0x9c4038, 0x4a4a4a, 0x6b6b6b];
-  for (let i = 0; i < era.crowd; i++) {
+      : era.night ? [0x2f3136, 0x3f6f9c, 0x9c4038, 0x4a4a4a, 0x6b6b6b]
+        : [0x2f3136, 0x40506b, 0x7a3b3b, 0x3a3a3a, 0x5a4a3a];
+  const person = (px, pz) => {
     const p = new THREE.Group();
-    /* CAP spans y 0..2 before scaling, so the body tops out at 2*0.38 */
-    const body = add(CAP, mk(CLOTH[Math.floor(g() * CLOTH.length)]), [0, 0, 0], [0.28, 0.38, 0.28]);
-    const head = add(SPH, mk(SKIN[Math.floor(g() * SKIN.length)]), [0, 0.84, 0], [0.3, 0.32, 0.3]);
-    [body, head].forEach(o => { group.remove(o); p.add(o); });
-    const x = -0.5 + g() * 10, z = -0.5 + g() * 10;
-    p.position.set(x, 0, z);
+    const long = era.year < 1920 && g() > 0.5;                    // a long coat or dress
+    const body = add(CAP, mk(CLOTH[Math.floor(g() * CLOTH.length)]), [0, 0, 0], [0.28, long ? 0.44 : 0.38, 0.28]);
+    const head = add(SPH, mk(SKIN[Math.floor(g() * SKIN.length)]), [0, long ? 0.96 : 0.84, 0], [0.3, 0.32, 0.3]);
+    const parts = [body, head];
+    if (era.year >= 1750 && era.year < 1950 && g() > 0.45) {      // a top hat
+      parts.push(add(CYL, M.dark, [0, long ? 1.12 : 1.0, 0], [0.22, 0.26, 0.22]));
+      parts.push(add(CYL, M.dark, [0, long ? 1.12 : 1.0, 0], [0.34, 0.04, 0.34]));
+    }
+    parts.forEach(o => { group.remove(o); p.add(o); });
+    p.position.set(px, 0, pz);
     group.add(p);
-    movers.push({ o: p, from: x, to: x + (g() - 0.5) * 7, t: g(), speed: 0.14 + g() * 0.12, axis: g() > 0.5 ? 'x' : 'z', z, bob: g() * 6 });
+    movers.push({ o: p, from: px, to: px + (g() - 0.5) * 7, t: g(), speed: 0.14 + g() * 0.12, axis: g() > 0.5 ? 'x' : 'z', z: pz, bob: g() * 6 });
+  };
+  for (let i = 0; i < era.crowd; i++) person(-0.5 + g() * 11, -0.5 + g() * 11);
+  /* a few knots of people, standing together as at a real market */
+  for (let c = 0; c < Math.floor(era.crowd / 6); c++) {
+    const cx = 1 + g() * 9, cz = 1 + g() * 9;
+    for (let k = 0; k < 3; k++) person(cx + (g() - 0.5) * 0.9, cz + (g() - 0.5) * 0.9);
   }
 
   /* chimney smoke — each puff fades on its own, so each needs its own material */

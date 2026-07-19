@@ -193,9 +193,9 @@ export class Ages {
    * share a single dusk — which reads as the sun going down, not as an error. */
   setLight(a, b, u) {
     const night = (a.night || 0) * (1 - u) + (b.night || 0) * u;
-    this.sun.intensity = 2.1 - night * 1.78;
+    this.sun.intensity = 1.5 - night * 1.32;      // cooler exposure: colours stay rich, no blown-out roofs
     this.sun.color.set(0xfff2dd).lerp(new THREE.Color(0x9fb4e0), night);
-    this.hemi.intensity = 1.1 - night * 0.72;
+    this.hemi.intensity = 0.7 - night * 0.38;
     this.scene.userData.night = night;
   }
 

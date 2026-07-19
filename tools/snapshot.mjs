@@ -39,22 +39,17 @@ const VP = new THREE.Matrix4().multiplyMatrices(cam.projectionMatrix, cam.matrix
 const SUN = new THREE.Vector3(-24, 34, 16).normalize();
 const SKY_H = new THREE.Color(0xdfeaf0);
 
-function shade(color, emissive, nx, ny, nz, hill, night) {
-  const sunI = 2.1 - night * 1.78, hemiI = 1.1 - night * 0.72;
+/* the per-triangle light term: sun (directional, warm→cool at night) plus a
+ * hemisphere fill. Returned per channel so a per-pixel texel can modulate it. */
+function lightOf(nx, ny, nz, hill, night) {
+  const sunI = 1.5 - night * 1.32, hemiI = 0.7 - night * 0.38;
   const sc = new THREE.Color(0xfff2dd).lerp(new THREE.Color(0x9fb4e0), night);
   const s = Math.max(0, nx * SUN.x + ny * SUN.y + nz * SUN.z) * sunI;
-  const hw = 0.5 * (ny + 1);                       // hemisphere: sky above, ground below
-  const f = 1 / 2.2;                               // rough gamma, so mids don't blow out
-  const col = [color.r, color.g, color.b], em = [emissive.r, emissive.g, emissive.b];
+  const hw = 0.5 * (ny + 1);
   const hi = [hill.r, hill.g, hill.b], sk = [SKY_H.r, SKY_H.g, SKY_H.b], scc = [sc.r, sc.g, sc.b];
-  const out = [];
-  for (let k = 0; k < 3; k++) {
-    const hemi = (hi[k] + (sk[k] - hi[k]) * hw) * hemiI;
-    const lit = col[k] * (s * scc[k] + hemi) + em[k];   // emissive glows regardless of light
-    out.push(Math.min(255, 255 * Math.pow(Math.min(1, lit), f)));
-  }
-  return out;
+  return [0, 1, 2].map(k => s * scc[k] + (hi[k] + (sk[k] - hi[k]) * hw) * hemiI);
 }
+const GAMMA = 1 / 2.2;
 
 function render(era) {
   const built = buildEra(era);
@@ -83,24 +78,27 @@ function render(era) {
   built.group.traverse(m => {
     if (!m.isMesh || !m.geometry.attributes.position) return;
     const pos = m.geometry.attributes.position;
+    const uv = m.geometry.attributes.uv;
     const idx = m.geometry.index;
     const col = m.material.color || new THREE.Color(0xffffff);
     const em = m.material.emissive || NOEM;
+    const map = m.material.map || null;
+    const tex = map ? { d: map.image.data, w: map.image.width, h: map.image.height, rx: map.repeat.x, ry: map.repeat.y } : null;
     const count = idx ? idx.count : pos.count;
     for (let t = 0; t < count; t += 3) {
       const i0 = idx ? idx.getX(t) : t, i1 = idx ? idx.getX(t + 1) : t + 1, i2 = idx ? idx.getX(t + 2) : t + 2;
       wa.fromBufferAttribute(pos, i0).applyMatrix4(m.matrixWorld);
       wb.fromBufferAttribute(pos, i1).applyMatrix4(m.matrixWorld);
       wc.fromBufferAttribute(pos, i2).applyMatrix4(m.matrixWorld);
-      /* flat normal from world triangle */
       const ux = wb.x - wa.x, uy = wb.y - wa.y, uz = wb.z - wa.z;
       const vx = wc.x - wa.x, vy = wc.y - wa.y, vz = wc.z - wa.z;
       let nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
       const nl = Math.hypot(nx, ny, nz) || 1; nx /= nl; ny /= nl; nz /= nl;
-      const [r, g, bl] = shade(col, em, nx, ny, nz, hill, night);
+      const light = lightOf(nx, ny, nz, hill, night);
+      const uvs = uv ? [uv.getX(i0), uv.getY(i0), uv.getX(i1), uv.getY(i1), uv.getX(i2), uv.getY(i2)] : null;
 
       a.copy(wa).applyMatrix4(VP); b.copy(wb).applyMatrix4(VP); c.copy(wc).applyMatrix4(VP);
-      raster(buf, zb, a, b, c, r, g, bl);
+      raster(buf, zb, a, b, c, col, em, light, tex, uvs);
       tris++;
     }
   });
@@ -109,8 +107,8 @@ function render(era) {
   return { buf, tris };
 }
 
-/* screen-space triangle fill with a z-buffer */
-function raster(buf, zb, A, B, C, r, g, b) {
+/* screen-space triangle fill with a z-buffer, texture and flat light */
+function raster(buf, zb, A, B, C, col, em, light, tex, uvs) {
   const sx = v => (v.x * 0.5 + 0.5) * W, sy = v => (1 - (v.y * 0.5 + 0.5)) * H;
   const ax = sx(A), ay = sy(A), bx = sx(B), by = sy(B), cx = sx(C), cy = sy(C);
   const minX = Math.max(0, Math.floor(Math.min(ax, bx, cx)));
@@ -120,6 +118,7 @@ function raster(buf, zb, A, B, C, r, g, b) {
   const area = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax);
   if (Math.abs(area) < 1e-6) return;
   const inv = 1 / area;
+  const cr = col.r, cg = col.g, cb = col.b, er = em.r, eg = em.g, eb = em.b;
   for (let y = minY; y <= maxY; y++) {
     for (let x = minX; x <= maxX; x++) {
       const px = x + 0.5, py = y + 0.5;
@@ -131,7 +130,19 @@ function raster(buf, zb, A, B, C, r, g, b) {
       const k = y * W + x;
       if (z >= zb[k]) continue;
       zb[k] = z;
-      const i = k * 3; buf[i] = r; buf[i + 1] = g; buf[i + 2] = b;
+      let tr = 1, tg = 1, tb = 1;
+      if (tex) {                                        // nearest-sample the tiled map
+        let uu = (w0 * uvs[0] + w1 * uvs[2] + w2 * uvs[4]) * tex.rx;
+        let vv = (w0 * uvs[1] + w1 * uvs[3] + w2 * uvs[5]) * tex.ry;
+        uu -= Math.floor(uu); vv -= Math.floor(vv);
+        const tx = Math.min(tex.w - 1, uu * tex.w | 0), ty = Math.min(tex.h - 1, (1 - vv) * tex.h | 0);
+        const ti = (ty * tex.w + tx) * 4;
+        tr = tex.d[ti] / 255; tg = tex.d[ti + 1] / 255; tb = tex.d[ti + 2] / 255;
+      }
+      const i = k * 3;
+      buf[i] = 255 * Math.pow(Math.min(1, cr * tr * light[0] + er), GAMMA);
+      buf[i + 1] = 255 * Math.pow(Math.min(1, cg * tg * light[1] + eg), GAMMA);
+      buf[i + 2] = 255 * Math.pow(Math.min(1, cb * tb * light[2] + eb), GAMMA);
     }
   }
 }

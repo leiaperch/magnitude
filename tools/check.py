@@ -92,7 +92,7 @@ SKYLINE = {'motte', 'palisade', 'keep', 'keep-ruin', 'bridge', 'windmill', 'chur
 PROPS = {'barrel', 'pig', 'stall', 'cart', 'carriage', 'tram', 'car', 'bike',
          'lamp-oil', 'lamp-gas', 'lamp-electric', 'well', 'cross', 'crate', 'hay',
          'dog', 'horse', 'bench', 'fountain', 'tree', 'planter', 'traffic-light',
-         'phone-box', 'scooter', 'drone', 'holo-sign', 'neon-tree', 'neon-post'}
+         'phone-box', 'scooter', 'drone', 'holo-sign', 'neon-tree', 'neon-post', 'bollard'}
 WALLS = {'wood', 'timber', 'stone', 'brick', 'render', 'concrete'}
 ROOFS = {'thatch', 'tile', 'slate', 'flat', 'solar'}
 WINDOWS = {'hole', 'shutter', 'lead', 'sash', 'picture'}
