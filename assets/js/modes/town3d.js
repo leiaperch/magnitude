@@ -62,10 +62,14 @@ export function buildEra(era) {
     ground: mk(PALETTE.ground[era.ground]),
     stone: mk(0xb9b0a0), wood: mk(0x7a5c3c), brick: mk(0x8d4a38),
     dark: mk(0x4a443d), metal: mk(0x6e737a), cloth: mk(0xefe6d2),
-    glass: mk(0x8fa3b0), leaf: mk(0x4a7a3c),
+    glass: mk(0x8fa3b0), leaf: mk(0x4a7a3c), chimney: mk(0x5a4a40),
     lit: mk(0xf6e2a0, { emissive: 0x6a5520 }),
     glow: mk(0xf5eab4, { emissive: 0xb99a3a }),
   };
+
+  /* Before stone and brick houses, smoke left through the thatch — a proud
+   * chimney on a wooden hovel is the classic tell of a fake medieval town. */
+  const chimneys = era.smoke > 0 && era.house.material !== 'wood';
 
   const add = (geo, mat, pos, scl, rotY = 0) => {
     const m = new THREE.Mesh(geo, mat);
@@ -314,12 +318,15 @@ export function buildEra(era) {
         : add(BOX, M.metal, [x + w + 0.16, 1.3, z + span / 2], [0.32, 0.06, 0.9]);
     }
 
-    /* timber framing, and a chimney once there is anything worth heating */
+    /* timber framing */
     if (era.house.material === 'timber')
       for (let r = 0; r < era.house.storeys; r++) put(0, 0.55 + r * 0.92, span, 0.1, M.wood);
-    if (era.smoke > 0 && !flat)
-      add(BOX, era.house.material === 'brick' ? M.brick : M.stone,
-        [x + w * 0.72, h, z + d * 0.3], [0.24, 0.8 + RIDGE[era.house.roof], 0.24]);
+    /* a chimney: thin, sooty, sitting near the ridge, and not on every roof */
+    if (chimneys && !flat && g() > 0.5) {
+      const cm = era.house.material === 'brick' ? M.brick : M.chimney;
+      add(BOX, cm, [x + w * 0.66, h + RIDGE[era.house.roof] * 0.35, z + d * 0.34],
+        [0.16, 0.5 + RIDGE[era.house.roof] * 0.4, 0.16]);
+    }
     if (era.house.trees && g() > 0.5) {
       const tx = facing === 'z' ? x + w / 2 : x + w + 0.9, tz = facing === 'z' ? z + d + 0.9 : z + d / 2;
       add(CYL, M.wood, [tx, 0, tz], [0.16, 0.7, 0.16]);
@@ -355,8 +362,8 @@ export function buildEra(era) {
       add(BOX, M.roof, [x + w / 2, h, z + d / 2], [w + 0.1, 0.14, d + 0.1]);
     else if (w >= d) add(PRISM_X, M.roof, [x, h, z + d / 2], [w, RIDGE[era.house.roof], d + 0.14]);
     else add(PRISM_Z, M.roof, [x + w / 2, h, z], [w + 0.14, RIDGE[era.house.roof], d]);
-    if (era.smoke > 0 && RIDGE[era.house.roof] > 0)
-      add(BOX, era.house.material === 'brick' ? M.brick : M.stone, [x + w * 0.7, h, z + d * 0.4], [0.2, 0.7, 0.2]);
+    if (chimneys && RIDGE[era.house.roof] > 0 && g() > 0.55)
+      add(BOX, era.house.material === 'brick' ? M.brick : M.chimney, [x + w * 0.66, h, z + d * 0.4], [0.15, 0.5, 0.15]);
   }
 
   /* ---------------------------------------------------------- what moves */
@@ -457,9 +464,9 @@ export function buildEra(era) {
         add(SPH, mk(0x8fc4d0), [x, 1.7, z], [0.5, 0.5, 0.5]);
         break;
       case 'tree':
-        add(CYL, M.wood, [x, 0, z], [0.3, 1.3, 0.3]);
-        add(SPH, M.leaf, [x, 1.3, z], [2.2, 2.4, 2.2]);
-        add(SPH, M.leaf, [x + 0.5, 2.1, z + 0.3], [1.4, 1.4, 1.4]);
+        add(CYL, M.wood, [x, 0, z], [0.26, 1.4, 0.26]);
+        add(SPH, M.leaf, [x, 1.5, z], [1.5, 1.7, 1.5]);
+        add(SPH, M.leaf, [x + 0.35, 2.1, z + 0.25], [0.95, 0.95, 0.95]);
         break;
       case 'planter':
         add(BOX, mk(0x8f8579), [x, 0, z], [1.2, 0.45, 0.7]);
