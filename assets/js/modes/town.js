@@ -320,12 +320,14 @@ function house(B, w, spec, rng, night, lot) {
     const ww = w - 0.05 + grow, dd = depth + grow, fz = depth / 2 + grow;   // the widened wall's true front face
     B.boxT(wallK, 0, y, grow / 2, ww, floorH, dd, tint);
     if (timber && s === 1) B.box(0, y - 0.04, fz, ww, 0.1, 0.12, beam);          // jetty beam over the stone base
+    if (s === 0) plinth(B, ww, fz, sMat);                                        // a base course grounds the wall
     if (s === 0 && shop) shopfront(B, ww, floorH, fz, spec, rng, night, lot);
-    else facade(B, ww, floorH, fz, y, s, storeys, spec, sMat, beam, rng, night);
+    else facade(B, ww, floorH, fz, y, s, storeys, spec, sMat, beam, rng, night, lot.year);
     y += floorH;
   }
   const bodyH = y, front = depth / 2 + growMax;
   const rw = w + 0.5 + growMax, rd = depth + 0.5 + growMax, eave = C('#241a12');
+  if (mat === 'stone' || mat === 'brick' || mat === 'render') cornice(B, w, bodyH, front, mat);   // projecting eaves moulding
 
   if (roof === 'green') greenRoof(B, w, depth, bodyH, spec, rng);
   else if (roof === 'flat') { B.boxT('concrete', 0, bodyH, 0, w + 0.05, 0.12, depth + 0.05, tint); B.box(0, bodyH, front - 0.05, w + 0.05, 0.4, 0.12, shade('#a8a49a', 0.9)); }
@@ -375,17 +377,28 @@ function clockTower(B, w, bodyH, front) {
   B.cyl(0, ty + 3.7, fz, 0.06, 0.4, 6, C('#c8a23a'), false, 0.04);                             // finial
 }
 
-/* a glazed ground-floor shop with a striped awning and a fascia */
+/* a glazed ground-floor shop. Its shade is era-appropriate: a plain timber
+ * pentice before the 1650s, the striped canvas awning of 1650-1950, a flat
+ * modern canopy after, and none once the future takes over. */
 function shopfront(B, w, h, front, spec, rng, night, lot) {
-  const lit = night > 0.02 || rng() < 0.5, fz = front + 0.02;
-  B.boxT('stone', 0, 0, front + 0.005, w, 0.32, 0.05, WHITE);                    // stallriser
-  const gW = w * 0.5, gH = h * 0.5, gy = 0.34;
+  const y = lot.year, lit = night > 0.02 || rng() < 0.5, fz = front + 0.02;
+  B.boxT('stone', 0, 0, front + 0.005, w, 0.34, 0.05, WHITE);                    // stallriser
+  const gW = w * 0.52, gH = h * 0.5, gy = 0.36;
   B.qUV('glass', [-gW / 2, gy, fz + 0.03], [gW / 2, gy, fz + 0.03], [gW / 2, gy + gH, fz + 0.03], [-gW / 2, gy + gH, fz + 0.03], [0, 0], [1, 0], [1, 1], [0, 1], lit ? C('#ffdca0') : C('#3a4a52'));
   if (lit) B.box(0, gy + gH / 2, fz + 0.035, gW, gH, 0.02, C('#ffdca0'), true);   // warm interior glow
-  B.box(0, gy, fz + 0.06, 0.05, gH, 0.03, C('#efe9dc')); B.box(0, gy + gH / 2, fz + 0.06, gW, 0.05, 0.03, C('#efe9dc'));
-  B.box(w * 0.33, 0, fz, 0.5, h * 0.72, 0.06, C('#3a2818'));                      // door
-  B.box(0, h - 0.2, fz + 0.04, w * 0.92, 0.24, 0.08, C('#33261a'));               // fascia (signboard)
-  awning(B, w * 0.86, front, h - 0.24, lot.awn || 0);
+  for (let m = 1; m < 3; m++) B.box(-gW / 2 + gW * m / 3, gy, fz + 0.06, 0.05, gH, 0.03, C('#efe9dc'));  // shop-window mullions
+  B.box(0, gy + gH / 2, fz + 0.06, gW, 0.05, 0.03, C('#efe9dc'));
+  B.box(w * 0.34, 0, fz, 0.5, h * 0.72, 0.06, C(y > 1980 ? '#33414c' : '#3a2818'));  // door
+  B.box(0, h - 0.19, fz + 0.05, w * 0.92, 0.26, 0.09, C('#33261a'));              // fascia (signboard)
+  if (y < 1650) pentice(B, w * 0.9, front, h - 0.22);
+  else if (y <= 1950) awning(B, w * 0.86, front, h - 0.24, lot.awn || 0);
+  else if (y <= 2050) B.box(0, h - 0.32, front + 0.42, w * 0.86, 0.06, 0.85, C(['#3a5a4a', '#4a4a5a', '#5a4a4a'][lot.awn % 3]));  // flat modern canopy
+}
+/* plain sloped wooden shelter over a medieval/renaissance shopfront */
+function pentice(B, w, front, y) {
+  const proj = 0.7, n = 6, sw = w / n;
+  for (let i = 0; i < n; i++) { const x = -w / 2 + sw * (i + 0.5); B.quad([x - sw / 2, y, front], [x + sw / 2, y, front], [x + sw / 2, y - 0.22, front + proj], [x - sw / 2, y - 0.22, front + proj], shade('#6b4f34', i % 2 ? 1.05 : 0.92)); }
+  for (const px of [-w / 2 + 0.1, w / 2 - 0.1]) B.box(px, y - 0.5, front + proj - 0.1, 0.08, 0.5, 0.08, C('#4a3826'));  // props
 }
 function awning(B, w, front, y, style) {
   const pal = [['#b23a3a', '#e8e4d8'], ['#3a6ab2', '#e8e4d8'], ['#3a7a4a', '#e8e4d8'], ['#c8a23a', '#e8e4d8']][style % 4];
@@ -393,13 +406,25 @@ function awning(B, w, front, y, style) {
   for (let i = 0; i < n; i++) { const x = -w / 2 + sw * (i + 0.5); B.quad([x - sw / 2, y, front], [x + sw / 2, y, front], [x + sw / 2, y - 0.28, front + proj], [x - sw / 2, y - 0.28, front + proj], C(pal[i % 2])); }
   for (let i = 0; i < n; i++) { const x = -w / 2 + sw * (i + 0.5); B.quad([x - sw / 2, y - 0.28, front + proj], [x + sw / 2, y - 0.28, front + proj], [x + sw / 2, y - 0.44, front + proj], [x - sw / 2, y - 0.44, front + proj], C(pal[i % 2])); } // valance
 }
+/* a slightly proud, darker base course under the ground floor */
+function plinth(B, w, front, mat) {
+  const k = mat === 'timber' || mat === 'wood' ? 'stone' : mat;
+  B.boxT(k, 0, 0, front + 0.03, w + 0.08, 0.3, 0.08, [0.8, 0.8, 0.8]);
+}
+/* a projecting eaves moulding along the top of a masonry front */
+function cornice(B, w, bodyH, front, mat) {
+  const c = mat === 'brick' ? C('#d6cdb4') : C('#e2dac6');
+  B.box(0, bodyH - 0.22, front + 0.06, w + 0.18, 0.14, 0.16, c);
+  B.box(0, bodyH - 0.34, front + 0.02, w + 0.1, 0.06, 0.1, c);   // a second, smaller band
+}
 
-function facade(B, w, h, front, y, s, storeys, spec, mat, beam, rng, night) {
+function facade(B, w, h, front, y, s, storeys, spec, mat, beam, rng, night, year) {
   const win = spec.window;
   const lit = night > 0.04 && rng() < 0.5;
   const glassHex = win === 'hole' ? '#221d18' : win === 'picture' ? '#8fb4c8' : '#c2d6dc';
   const gcol = lit ? C(WARM) : C(glassHex);
   const fz = front + 0.02;
+  const masonry = mat === 'stone' || mat === 'brick' || mat === 'render';
 
   if (mat === 'timber' || mat === 'wood') {
     const t = 0.16;
@@ -407,14 +432,15 @@ function facade(B, w, h, front, y, s, storeys, spec, mat, beam, rng, night) {
     const posts = w > 2.6 ? 5 : 4;
     for (let p = 0; p <= posts; p++) B.box(-w / 2 + (w / posts) * p, y, fz, t * 0.85, h, 0.07, beam);
     if (mat === 'timber') { B.box(0, y + h / 2, fz, w, 0.12, 0.06, beam); brace(B, -w / 4, y, h / 2, w / 3, fz, beam); brace(B, w / 4, y + h / 2, h / 2, -w / 3, fz, beam); }
-  } else if (mat === 'stone' || mat === 'brick' || mat === 'render') {
+  } else if (masonry) {
     for (const px of [-w / 2 + 0.11, w / 2 - 0.11]) B.boxT('stone', px, y, front + 0.02, 0.2, h, 0.05, WHITE);   // quoins
-    if (s > 0) B.boxT('stone', 0, y - 0.02, front + 0.02, w, 0.13, 0.06, WHITE);                                 // string course
+    if (s >= 1) B.box(0, y - 0.05, front + 0.05, w, 0.12, 0.1, C(mat === 'brick' ? '#cfc6ac' : '#ddd4bf'));       // string course at the floor line
   }
 
   const n = w > 2.7 ? 3 : 2, gap = w / n, big = win === 'picture';
-  const winW = gap * (big ? 0.6 : 0.44), winH = Math.min(big ? 0.9 : 0.78, h * 0.52);
+  const winW = gap * (big ? 0.6 : 0.42), winH = Math.min(big ? 0.9 : 0.82, h * 0.56);
   const shut = spec.shutter || win === 'shutter';
+  const balcony = masonry && year >= 1750 && year <= 1950 && s === 1;
   for (let i = 0; i < n; i++) {
     const px = -w / 2 + gap * (i + 0.5);
     if (s === 0 && i === (n >> 1)) {
@@ -422,15 +448,32 @@ function facade(B, w, h, front, y, s, storeys, spec, mat, beam, rng, night) {
       B.box(px, y + Math.min(1.05, h * 0.72), front + 0.02, 0.66, 0.1, 0.07, beam);
       continue;
     }
-    const wy = y + h * 0.3;
-    B.box(px, wy - 0.06, front + 0.04, winW + 0.16, 0.08, 0.05, C('#efe9dc'));
-    B.box(px, wy + winH, front + 0.04, winW + 0.16, 0.09, 0.05, C('#efe9dc'));
-    B.qUV('glass', [px - winW / 2, wy, front + 0.05], [px + winW / 2, wy, front + 0.05], [px + winW / 2, wy + winH, front + 0.05], [px - winW / 2, wy + winH, front + 0.05], [0, 0], [1, 0], [1, 1], [0, 1], gcol);
-    if (lit) B.box(px, wy + winH / 2, front + 0.055, winW, winH, 0.02, gcol, true);
-    if (win === 'lead' || win === 'sash') { B.box(px, wy + winH / 2, front + 0.07, winW, 0.045, 0.03, C('#eee7d8')); B.box(px, wy, front + 0.07, 0.045, winH, 0.03, C('#eee7d8')); }
-    if (shut) for (const sx of [-winW / 2 - 0.09, winW / 2 + 0.09]) B.box(px + sx, wy, front + 0.03, 0.15, winH, 0.05, C(SHUTTER[(i + (px > 0 ? 1 : 0)) % SHUTTER.length]));
-    if (spec.sign && s >= 1 && !big) { B.box(px, wy - 0.12, front + 0.12, winW + 0.1, 0.12, 0.14, C('#5a4030')); for (let f = -1; f <= 1; f++) B.blob(px + f * winW * 0.32, wy - 0.02, front + 0.15, 0.08, C(['#c94a5a', '#d8b83a', '#c96a3a'][(i + f + 1) % 3])); } // window flower box
+    const wy = y + h * 0.28;
+    B.box(px, wy - 0.07, front + 0.03, winW + 0.2, 0.1, 0.06, C('#efe9dc'));                        // moulded sill, proud
+    if (masonry && !big) {                                                                         // window head: lintel + keystone
+      B.box(px, wy + winH + 0.07, front + 0.03, winW + 0.14, 0.11, 0.06, C(mat === 'brick' ? '#a5533a' : '#ded5c0'));
+      B.box(px, wy + winH + 0.09, front + 0.06, 0.16, 0.2, 0.06, C(mat === 'brick' ? '#c96a4a' : '#ece4d0'));
+    } else B.box(px, wy + winH, front + 0.03, winW + 0.2, 0.09, 0.06, C('#efe9dc'));
+    B.box(px, wy, front + 0.02, winW + 0.05, winH, 0.04, C('#d8d0c0'));                             // reveal (window sits recessed)
+    B.qUV('glass', [px - winW / 2, wy, front + 0.06], [px + winW / 2, wy, front + 0.06], [px + winW / 2, wy + winH, front + 0.06], [px - winW / 2, wy + winH, front + 0.06], [0, 0], [1, 0], [1, 1], [0, 1], gcol);
+    if (lit) B.box(px, wy + winH / 2, front + 0.065, winW, winH, 0.02, gcol, true);
+    if (win === 'sash') {                                                                          // six-over-six glazing bars
+      for (let m = 1; m < 3; m++) B.box(px - winW / 2 + winW * m / 3, wy + winH / 2, front + 0.08, 0.035, winH, 0.03, C('#eee7d8'));
+      for (let r = 1; r < 3; r++) B.box(px, wy + winH * r / 3, front + 0.08, winW, 0.035, 0.03, C('#eee7d8'));
+    } else if (win === 'lead') {
+      B.box(px, wy + winH / 2, front + 0.08, winW, 0.04, 0.03, C('#eee7d8')); B.box(px, wy + winH / 2, front + 0.08, 0.04, winH, 0.03, C('#eee7d8'));
+    }
+    if (shut) for (const sx of [-winW / 2 - 0.1, winW / 2 + 0.1]) B.box(px + sx, wy, front + 0.02, 0.16, winH, 0.05, C(SHUTTER[(i + (px > 0 ? 1 : 0)) % SHUTTER.length]));
+    if (balcony) railing(B, px, wy - 0.14, front, winW + 0.28);
+    else if (spec.sign && s >= 1 && !big && year < 1750) { B.box(px, wy - 0.13, front + 0.12, winW + 0.1, 0.12, 0.14, C('#5a4030')); for (let f = -1; f <= 1; f++) B.blob(px + f * winW * 0.32, wy - 0.03, front + 0.15, 0.08, C(['#c94a5a', '#d8b83a', '#c96a3a'][(i + f + 1) % 3])); }  // window flower box (early eras)
   }
+}
+/* a small wrought-iron balcony under a window */
+function railing(B, cx, y, front, w) {
+  B.box(cx, y, front + 0.24, w, 0.05, 0.42, C('#33373e'));                     // slab
+  B.box(cx, y + 0.36, front + 0.44, w, 0.04, 0.04, C('#2a2e33'));              // top rail
+  const n = Math.max(5, Math.round(w / 0.16));
+  for (let i = 0; i <= n; i++) B.box(cx - w / 2 + w * i / n, y + 0.18, front + 0.44, 0.028, 0.36, 0.028, C('#2a2e33'));
 }
 function brace(B, x, y, h, run, fz, col) { const steps = 5; for (let i = 0; i < steps; i++) B.box(x + run * (i / steps) * 0.5, y + h * (i / steps), fz, 0.14, h / steps + 0.06, 0.06, col); }
 function gableTrim(B, w, bodyH, front, rh, mat, beam, wallK, night, rng) {
@@ -749,7 +792,7 @@ export function buildEra(era, mats) {
   const place = (lots, atFn) => {
     for (const [w, gb, ds, dm, cm, role] of lots) {
       const si = sign++;
-      const lot = { gable: !!gb, ds, dormer: dm, chimney: cm, depth: 3.0, sign: si % 4, awn: (si * 5 + 2) % 4, neon: neon++, role: role || '', civic: role === 'civic' && era.year >= 1450 };
+      const lot = { gable: !!gb, ds, dormer: dm, chimney: cm, depth: 3.0, sign: si % 4, awn: (si * 5 + 2) % 4, neon: neon++, role: role || '', civic: role === 'civic' && era.year >= 1450, year: era.year };
       if (spec.gap && rng() < 0.13) { atFn(w, 0.02, true); for (let r = 0; r < 4; r++) B.box((rng() - .5) * w, 0, (rng() - .5) * 2, 0.4 + rng() * 0.3, 0.3 + rng() * 0.4, 0.4, shade('#8a8378', 0.9 + rng() * 0.2)); B.pop(); }
       else { atFn(w, 0, false); house(B, w, spec, rng, night, lot); B.pop(); }
     }
