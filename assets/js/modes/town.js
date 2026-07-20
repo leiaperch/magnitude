@@ -339,7 +339,7 @@ const SHUTTER = ['#4a6a4a', '#3a5a7a', '#6a4a3a', '#5a6a5a'];
  * and carry a row of dormers. lot = authored {gable, ds, chimney, dormer,...}. */
 function house(B, w, spec, rng, night, lot) {
   const mat = spec.material;
-  const storeys = Math.max(1, (spec.storeys || 2) + (lot.ds || 0));
+  const storeys = Math.max(1, Math.min(lot.year <= 1150 ? 2 : 99, (spec.storeys || 2) + (lot.ds || 0)));   // village stays low
   const floorH = (mat === 'wood' ? 1.25 : 1.45);
   const depth = lot.depth || 3.0;
   const beam = C('#4a331f');
@@ -759,6 +759,31 @@ function car(B, rng, night) {
 }
 function bike(B) { for (const wx of [0.4, -0.4]) B.cyl(wx, 0, 0, 0.28, 0.06, 8, C('#20242a')); B.box(0, 0.5, 0, 0.7, 0.08, 0.08, C('#8a2a2a')); B.box(-0.4, 0.5, 0, 0.08, 0.5, 0.08, C('#8a2a2a')); B.box(0.4, 0.6, 0, 0.08, 0.5, 0.08, C('#8a2a2a')); }
 
+/* a fenced kitchen garden on a lot the town has not built on yet */
+function garden(B, w, rng) {
+  const fz = 1.5;
+  for (let i = 0; i <= 6; i++) B.box(-w / 2 + w * i / 6, 0, fz, 0.05, 0.5, 0.05, C('#6b4f34'));
+  B.box(0, 0.26, fz, w, 0.05, 0.05, C('#5a4030'));
+  for (let r = 0; r < 3; r++) for (let i = 0; i < 4; i++) B.blob(-w / 2 + 0.5 + i * (w - 1) / 3, 0.16, fz - 0.6 - r * 0.6, 0.13, C(['#5f8f4b', '#6d9a54', '#7aa03a'][(r + i) % 3]));
+  B.at((rng() - .5) * w * 0.4, 0, -0.6); tree(B, rng, false); B.pop();
+}
+/* the curated rural scene for the village (to 1150): a covered well at the
+ * heart, goods on trestle tables (no covered stalls), fuel and fodder grouped
+ * by the track, a cart and livestock, a couple of trees, lots of open ground */
+function villageContent(B, era, rng, night) {
+  B.at(0.8, 0, 2.6); prop(B, 'well', rng, night); B.pop();
+  for (const [x, z, r] of [[-3.0, 3.6, 0.3], [2.8, 3.0, -0.2]]) { B.at(x, 0, z, r); prop(B, 'table', rng, night); B.pop(); }
+  B.at(-4.3, 0, 5.2); prop(B, 'firewood', rng, night); B.pop();
+  B.at(-3.1, 0, 5.9); prop(B, 'hay', rng, night); B.pop();
+  B.at(-2.2, 0, 5.4); prop(B, 'crates', rng, night); B.pop();
+  B.at(-3.9, 0, 6.5); prop(B, 'barrel', rng, night); B.pop();
+  B.at(3.4, 0, 5.6, Math.PI / 2); prop(B, 'loadcart', rng, night); B.pop();
+  B.at(2.2, 0, 6.3, -Math.PI / 3); prop(B, 'horse', rng, night); B.pop();
+  B.at(3.9, 0, 6.7); prop(B, 'pig', rng, night); B.pop();
+  B.at(1.3, 0, 5.7); prop(B, 'dog', rng, night); B.pop();
+  for (const [x, z] of [[-4.6, 2.2], [4.4, 3.8]]) { B.at(x, 0, z); prop(B, 'tree', rng, night); B.pop(); }
+}
+
 /* --------------------------------------------------------------- townsfolk */
 const CLOTH = ['#3f4a5a', '#6b3a3a', '#4a5a3a', '#5a4a6b', '#2f3136', '#7a6a4a', '#8a4a3a', '#3a5a6a'];
 function person(B, rng) {
@@ -781,12 +806,14 @@ const BACK = -7.0, LEFTX = -7.0;
  * The storey deltas are authored, not random, to give a deliberate, uneven but
  * organised roofline: a couple of tall accents, one civic tower, a few low
  * houses between. role: '' normal, 'tall', 'low', 'civic' (a clock tower). */
+/* a 7th field `since` = the year the lot is first built; before it the lot is a
+ * garden, so the village is sparse and the town visibly fills in over time. */
 const BACK_LOTS = [
-  [2.4, 1, 0, 0, 0.5, ''], [2.0, 0, -1, 0, -0.4, 'low'], [2.8, 0, 1, 0.6, 0.6, ''], [2.2, 1, 2, 0, 0, 'tall'],
-  [3.0, 0, 0, 0.7, 0.5, 'civic'], [2.2, 1, 0, 0, -0.3, ''], [2.6, 0, 1, 0.6, 0.6, ''], [2.0, 1, -1, 0, 0, 'low'], [2.6, 0, 0, -0.4, 0.4, ''],
+  [2.4, 1, 0, 0, 0.5, ''], [2.0, 0, -1, 0, -0.4, 'low'], [2.8, 0, 1, 0.6, 0.6, '', 1250], [2.2, 1, 2, 0, 0, 'tall'],
+  [3.0, 0, 0, 0.7, 0.5, 'civic'], [2.2, 1, 0, 0, -0.3, ''], [2.6, 0, 1, 0.6, 0.6, ''], [2.0, 1, -1, 0, 0, 'low', 1200], [2.6, 0, 0, -0.4, 0.4, ''],
 ];
 const LEFT_LOTS = [
-  [2.5, 0, 1, 0.5, 0.5, ''], [2.8, 1, 0, 0, -0.4, ''], [2.2, 0, 2, 0, 0.3, 'tall'], [3.0, 1, 0, 0.6, 0.6, ''], [2.4, 0, -1, -0.5, 0, 'low'], [2.4, 1, 1, 0, 0.4, ''],
+  [2.5, 0, 1, 0.5, 0.5, ''], [2.8, 1, 0, 0, -0.4, ''], [2.2, 0, 2, 0, 0.3, 'tall'], [3.0, 1, 0, 0.6, 0.6, ''], [2.4, 0, -1, -0.5, 0, 'low', 1200], [2.4, 1, 1, 0, 0.4, ''],
 ];
 /* fixed prop stations in the plaza */
 const STALL_ROWS = [-3.7, -1.85, 0, 1.85, 3.7];
@@ -832,10 +859,11 @@ export function buildEra(era, mats) {
   /* the two terraces, lot by fixed lot */
   let sign = 0, neon = 0;
   const place = (lots, atFn) => {
-    for (const [w, gb, ds, dm, cm, role] of lots) {
+    for (const [w, gb, ds, dm, cm, role, since] of lots) {
       const si = sign++;
       const lot = { gable: !!gb, ds, dormer: dm, chimney: cm, depth: 3.0, sign: si % 4, awn: (si * 5 + 2) % 4, neon: neon++, role: role || '', civic: role === 'civic' && era.year >= 1450, year: era.year };
-      if (spec.gap && rng() < 0.13) { atFn(w, 0.02, true); for (let r = 0; r < 4; r++) B.box((rng() - .5) * w, 0, (rng() - .5) * 2, 0.4 + rng() * 0.3, 0.3 + rng() * 0.4, 0.4, shade('#8a8378', 0.9 + rng() * 0.2)); B.pop(); }
+      if (since && era.year < since) { atFn(w, 0, false); garden(B, w, rng); B.pop(); }        // lot not built yet
+      else if (spec.gap && rng() < 0.13) { atFn(w, 0.02, true); for (let r = 0; r < 4; r++) B.box((rng() - .5) * w, 0, (rng() - .5) * 2, 0.4 + rng() * 0.3, 0.3 + rng() * 0.4, 0.4, shade('#8a8378', 0.9 + rng() * 0.2)); B.pop(); }
       else { atFn(w, 0, false); house(B, w, spec, rng, night, lot); B.pop(); }
     }
   };
@@ -844,7 +872,11 @@ export function buildEra(era, mats) {
   let lz = -4.2;
   place(LEFT_LOTS, (w, y) => { B.at(LEFTX, y, lz + w / 2, Math.PI / 2); lz += w + 0.06; });
 
-  /* the square's contents, from the era's fixed prop list into fixed stations */
+  /* the square's contents. The village (to 1150) is a curated rural scene; from
+   * 1200 the era's prop list fills fixed stations, then a per-phase dressing. */
+  const y = era.year;
+  if (y <= 1150) { villageContent(B, era, rng, night); return finishEra(B, era, rng, mats); }
+
   const street = era.street || [];
   let si = 0, ti = 0, li = 0, bi = 0, vi = 0, ci = 0, fi = 0, gi = 0, misc = 0;
   for (const k of street) {
@@ -865,13 +897,7 @@ export function buildEra(era, mats) {
 
   /* dress the middle by era so it never reads as empty paving, and so the square
    * changes job over time instead of being a market for a thousand years */
-  const y = era.year;
-  if (y <= 1150) {                                                    // village: goods, fuel, livestock
-    for (const [x, z] of [[-3.4, 4.5], [2.6, 5.4]]) { B.at(x, 0, z, (rng() - .5)); prop(B, 'table', rng, night); B.pop(); }
-    B.at(-4.4, 0, 5.8); prop(B, 'firewood', rng, night); B.pop();
-    B.at(4.2, 0, 5.6); prop(B, 'hay', rng, night); B.pop();
-    B.at(4.4, 0, 4.0); prop(B, 'crates', rng, night); B.pop();
-  } else if (y <= 1850) {                                             // the market centuries: busy stalls and carts
+  if (y <= 1850) {                                                    // the market centuries: busy stalls and carts
     for (const [x, z] of [[-3.3, 4.5], [3.1, 5.3], [-0.5, 5.9]]) { B.at(x, 0, z, (rng() - .5)); prop(B, 'table', rng, night); B.pop(); }
     for (const [x, z] of [[4.8, 4.1], [-4.7, 5.4]]) { B.at(x, 0, z); prop(B, 'crates', rng, night); B.pop(); }
     B.at(4.4, 0, 6.3); prop(B, 'hay', rng, night); B.pop();
@@ -902,19 +928,19 @@ export function buildEra(era, mats) {
     for (const [x, z] of [[0.4, 6.2], [-4.4, 6.0], [4.6, 3.6]]) { B.at(x, 0, z); prop(B, 'tree-box', rng, night); B.pop(); }
   }
 
-  /* festive bunting on the busy market days only (quiet years stay bare) */
+  return finishEra(B, era, rng, mats);
+}
+/* bunting on busy market days, the crowd in fixed knots, chimney smoke, then
+ * merge — shared by the village path and the from-1200 path */
+function finishEra(B, era, rng, mats) {
+  const y = era.year;
   if (y >= 1200 && y <= 1850 && (era.crowd || 0) >= 11) {
     const cols = ['#c94a3a', '#e0b02a', '#3a6ab2', '#e8e4d8', '#3a7a4a'];
     bunting(B, -5.5, 1.5, 5.5, 2.5, 4.6, cols);
     bunting(B, -5.5, 4.5, 4.5, -1.0, 4.9, cols);
   }
-
-  /* crowd: fixed knots, tiny seeded jitter within each */
   const crowd = Math.min(era.crowd || 6, 20);
   for (let i = 0; i < crowd; i++) { const [kx, kz] = CROWD_KNOTS[i % CROWD_KNOTS.length]; B.at(kx + (rng() - 0.5) * 1.1, 0, kz + (rng() - 0.5) * 0.9, rng() * 6.28); person(B, rng); B.pop(); }
-
-  /* chimney smoke — drifts up and away on a loop */
   for (let i = 0; i < (era.smoke || 0); i++) { B.anim(3, rng() * 6.283, 0); B.blob(-5 + i * 3.5 + (rng() - .5), 6 + rng() * 1.5, BACK, 0.5 + rng() * 0.3, shade('#c9cdd2', 0.9 + rng() * 0.2)); B.anim(0, 0, 0); }
-
   return B.finish(mats);
 }
