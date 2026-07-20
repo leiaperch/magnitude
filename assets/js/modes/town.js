@@ -601,22 +601,69 @@ function keep(B, ruin) {
   const turrets = ruin ? [[1.8, 1.8]] : [[1.8, 1.8], [-1.8, 1.8], [1.8, -1.8], [-1.8, -1.8]];
   for (const [tx, tz] of turrets) { B.cyl(tx, 0, tz, 0.7, h + (ruin ? -1 : 0.8), 8, C('#cbc2ab')); if (!ruin) B.cone(tx, h + 0.8, tz, 0.85, 1.2, 8, C('#6a5545')); }
 }
+/* a proper Gothic cathedral: nave + side aisles + clerestory, flying buttresses,
+ * transept, polygonal apse, twin west towers with spires and corner pinnacles,
+ * a central flèche and a rose window over the portal. West front faces +z. */
 function cathedral(B, variant, night) {
-  const scar = variant === 'scarred', stoneC = scar ? shade(WHITE, .86) : WHITE;
-  B.boxT('stone', 0, 0, 1, 4, 4.2, 6, stoneC);
-  B.gableT('slate', 0, 4.2, 1, 4.4, 1.4, 6.2, WHITE);
-  B.boxT('stone', 0, 0, -2.3, 5.6, 3.4, 1.6, stoneC);
-  const towerH = variant === 'build' ? 4.5 : 6.5;
-  for (const tx of [-1.5, 1.5]) {
-    B.boxT('stone', tx, 0, 4.0, 1.5, towerH, 1.5, stoneC);
-    if (variant === 'build' && tx > 0) scaffold(B, tx, towerH, 4.0);
-    else if (variant === 'spire' && tx > 0) B.cone(tx, towerH, 4.0, 1.0, 3.2, 6, C('#5a6570'));
-    else B.boxT('stone', tx, towerH, 4.0, 1.7, 0.4, 1.7, stoneC);
+  const scar = variant === 'scarred', small = variant === 'small', build = variant === 'build';
+  const S = scar ? shade(WHITE, .85) : WHITE, roof = C('#59666e'), lit = night > 0.05;
+  const nW = 3.0, nH = small ? 3.6 : 4.8, L = small ? 5.5 : 8.0, zf = L / 2, zb = -L / 2;
+
+  for (const sx of [-1, 1]) {                                                   // side aisles
+    const ax = sx * (nW / 2 + 0.95);
+    B.boxT('stone', ax, 0, 0, 1.7, nH * 0.55, L, S);
+    B.gableT('slate', ax, nH * 0.55, 0, 2.1, 0.45, L, S);
+    for (let z = zb + 1.2; z < zf - 1.0; z += 1.5) pointedWindow(B, ax + sx * 0.86, 0.7, z, 0.42, 1.4, sx, lit);
   }
-  if (variant === 'spire' || variant === 'full') B.cone(0, 4.2, 1, 0.7, 2.4, 6, C('#6a7580'));
-  B.box(0, 1.4, 5.0, 1.2, 1.6, 0.2, night > 0.05 ? C(WARM) : C('#7a95b0'), night > 0.05);
-  if (variant === 'build') B.box(2.6, 0, 4, 0.4, 5.5, 0.4, C('#8a7a44'));
+  B.boxT('stone', 0, 0, 0, nW, nH, L, S);                                       // nave + clerestory
+  B.gableT('slate', 0, nH, 0, nW + 0.5, 1.3, L + 0.3, roof);
+  if (!small) for (const sx of [-1, 1]) for (let z = zb + 1.5; z < zf - 1.0; z += 1.7) pointedWindow(B, sx * nW / 2 * 0.99, nH * 0.5, z, 0.34, 1.6, sx, lit);
+  if (!small) for (const sx of [-1, 1]) for (let z = zb + 1.6; z < zf - 0.5; z += 2.1) {     // flying buttresses + pier pinnacles
+    const pierX = sx * (nW / 2 + 2.0);
+    B.boxT('stone', pierX, 0, z, 0.34, nH * 0.72, 0.34, S);
+    flyer(B, sx * (nW / 2 + 0.1), nH * 0.82, pierX, nH * 0.5, z, S);
+    pinnacle(B, pierX, nH * 0.72, z, 0.28, roof);
+  }
+  if (!small) for (let z = zb + 1.2; z <= zf - 1.2; z += 2.0) for (const sx of [-1, 1]) pinnacle(B, sx * (nW / 2 + 0.05), nH, z, 0.16, roof);
+  if (!build) { B.cone(0, nH + 1.3, -0.5, 0.75, 3.4, 6, roof); B.cyl(0, nH + 4.4, -0.5, 0.1, 0.7, 6, C('#c8a23a'), false, 0.05); }   // crossing flèche
+  B.boxT('stone', 0, 0, zb + 1.6, nW + 4.2, nH * 0.92, 1.9, S);                 // transept
+  B.gableT('slate', 0, nH * 0.92, zb + 1.6, nW + 4.6, 1.1, 2.1, roof);
+  for (let i = -2; i <= 2; i++) { const a = i * 0.42; B.boxT('stone', Math.sin(a) * (nW / 2 + 0.3), 0, zb - 0.2 + Math.cos(a) * 0.5, 1.0, nH * 0.82, 0.9, S); }   // apse
+  B.cone(0, nH * 0.82, zb - 0.1, nW / 2 + 0.7, 1.4, 8, roof);
+
+  const twH = small ? nH + 1.5 : nH + 3.2;                                      // twin west towers
+  for (const tx of [-1, 1]) {
+    const txx = tx * (nW / 2 + 0.75);
+    B.boxT('stone', txx, 0, zf + 0.4, 1.7, twH, 1.7, S);
+    for (const fy of [twH * 0.6, twH * 0.8]) B.box(txx, fy, zf + 1.26, 1.0, 0.7, 0.06, lit ? C(WARM) : C('#3a4652'), lit);   // belfry openings
+    if (build && tx > 0) scaffold(B, txx, twH, zf + 0.4);
+    else {
+      B.cone(txx, twH, zf + 0.4, 1.15, variant === 'spire' ? 3.4 : 2.2, 8, roof);
+      for (const [px, pz] of [[0.75, 0.75], [-0.75, 0.75], [0.75, -0.75], [-0.75, -0.75]]) pinnacle(B, txx + px, twH, zf + 0.4 + pz, 0.2, roof);
+    }
+  }
+  B.boxT('stone', 0, 0, zf + 0.3, nW, nH * 0.9, 0.6, S);                        // west gable + rose + portal
+  B.gableT('stone', 0, nH * 0.9, zf + 0.3, nW + 0.2, 1.0, 0.6, S);
+  roseWindow(B, 0, nH * 0.62, zf + 0.62, 0.8, lit);
+  B.box(0, 0, zf + 0.62, 1.0, 1.9, 0.14, C('#3a2c1e'));
+  B.gableT('stone', 0, 1.9, zf + 0.55, 1.3, 0.5, 0.4, S);
+  if (build) B.box(nW / 2 + 2.6, 0, zf, 0.42, twH + 1, 0.42, C('#8a7a44'));
 }
+function pointedWindow(B, x, y, z, w, h, faceSign, lit) {
+  const xx = x + faceSign * 0.02, gcol = lit ? C(WARM) : C('#7a95b0');
+  B.box(xx, y, z, 0.05, h, w + 0.1, C('#39424c'));
+  B.tri(xx, y + h, z - w / 2, xx, y + h, z + w / 2, xx, y + h + w * 0.7, z, C('#39424c'));
+  B.box(xx + faceSign * 0.03, y + 0.1, z, 0.05, h - 0.2, w * 0.7, gcol, lit);
+}
+function roseWindow(B, x, y, z, r, lit) {
+  for (let i = 0; i < 8; i++) { const a0 = i / 8 * 6.283, a1 = (i + 1) / 8 * 6.283; B.tri(x, y, z, x + Math.cos(a0) * r, y + Math.sin(a0) * r, z, x + Math.cos(a1) * r, y + Math.sin(a1) * r, z, C(lit ? (i % 2 ? '#ffcf8a' : '#e0a85a') : (i % 2 ? '#8a9fc0' : '#6a80a0')), lit); }
+  for (let i = 0; i < 6; i++) { const a = i / 6 * 6.283; B.box(x + Math.cos(a) * r * 0.5, y + Math.sin(a) * r * 0.5, z + 0.03, 0.05, r, 0.04, C('#cfc6ac')); }
+}
+function flyer(B, x0, y0, x1, y1, z, col) {
+  const steps = 5;
+  for (let i = 0; i < steps; i++) { const t = i / steps, xa = x0 + (x1 - x0) * t, ya = y0 - (y0 - y1) * t * t; B.box(xa, ya, z, Math.abs(x1 - x0) / steps + 0.12, 0.16, 0.16, col); }
+}
+function pinnacle(B, x, y, z, r, col) { B.box(x, y, z, r * 1.6, r * 1.2, r * 1.6, col); B.cone(x, y + r * 1.2, z, r, r * 2.6, 4, col); }
 function scaffold(B, x, h, z) { for (let i = 0; i <= 3; i++) B.box(x, i * (h / 3), z + 0.85, 1.7, 0.08, 0.08, C('#9a854a')); for (const sx of [-0.8, 0.8]) B.box(x + sx, 0, z + 0.85, 0.08, h, 0.08, C('#9a854a')); }
 function windmillSails(B) { B.at(0, 4.6, 1.1); for (let k = 0; k < 4; k++) { B.push(new THREE.Matrix4().makeRotationZ(k * Math.PI / 2)); B.box(0, 1.4, 0, 0.18, 2.8, 0.1, C('#6b4f34')); B.box(0.35, 1.4, 0.02, 0.5, 2.4, 0.04, C('#d8d2c2')); B.pop(); } B.pop(); }
 function halfVault(B, cx, baseY, cz, r, h, d, color) { const seg = 8; for (let i = 0; i < seg; i++) { const a0 = Math.PI * i / seg, a1 = Math.PI * (i + 1) / seg; const y0 = baseY + Math.sin(a0) * h, x0 = cx - Math.cos(a0) * r, y1 = baseY + Math.sin(a1) * h, x1 = cx - Math.cos(a1) * r; B.quad([x0, y0, cz - d / 2], [x1, y1, cz - d / 2], [x1, y1, cz + d / 2], [x0, y0, cz + d / 2], color); } }
@@ -893,16 +940,43 @@ function road(B, era) {
   if (y >= 1700) { for (let x = -E + 1.5; x < E; x += 2.6) B.cyl(x, 0, F - 0.35, 0.09, 0.55, 6, C('#2f333a'), false, 0.07); for (let z = -E + 1.5; z < E; z += 2.6) B.cyl(R - 0.35, 0, z, 0.09, 0.55, 6, C('#2f333a'), false, 0.07); }
 }
 
+/* the wider town: a mass of simple rooftops receding into the haze behind the
+ * two terraces, styled from the era's own material and roof, so the square never
+ * floats — it sits in a city. Deterministic (position hash), and lit at night. */
+function backdrop(B, era) {
+  const spec = era.house, mat = spec.material, roofS = spec.roof, night = era.night || 0;
+  const wallK = mat === 'timber' ? 'plaster' : mat;
+  const flat = roofS === 'flat' || roofS === 'green' || roofS === 'solar';
+  const roofK = roofS === 'thatch' ? 'thatch' : (roofS === 'slate' || roofS === 'mansard') ? 'slate' : 'tile';
+  const H = (a, b) => { const n = Math.sin(a * 12.9898 + b * 78.233) * 43758.5453; return n - Math.floor(n); };
+  const slots = [[-5.5, -11.5], [2.5, -12.5], [8.5, -10.5]];
+  const near = (x, z) => slots.some(([sx, sz]) => Math.abs(x - sx) < 5.2 && Math.abs(z - sz) < 5.0) || (x > -9 && z > -9);   // keep clear of the landmarks and the square itself
+  const house = (x, z) => {
+    const r = H(x, z), r2 = H(x * 1.7 + 3, z * 0.9 - 2);
+    const w = 1.7 + r * 1.5, h = 1.5 + r2 * (night > 0.3 ? 5.5 : 2.1), d = 1.7 + r2 * 1.3;   // low distant town by day (rises only at night)
+    const tint = [0.86 + r * 0.14, 0.86 + r * 0.14, 0.86 + r * 0.14];
+    B.boxT(wallK, x, 0, z, w, h, d, tint);
+    if (flat) { B.box(x, h, z, w + 0.1, 0.18, d + 0.1, [0.68, 0.68, 0.68]); if (roofS === 'green') B.blob(x + (r - .5), h + 0.4, z, 0.34, C('#5f8f4b')); if (roofS === 'solar') B.box(x, h + 0.16, z, w * 0.7, 0.05, d * 0.6, C('#1f3d6b')); }
+    else B.gableT(roofK, x, h, z, w + 0.4, 0.6 + r2 * 0.5, d + 0.4, tint);
+    if (r2 > 0.55) B.box(x + (r - 0.5) * w * 0.5, h + 0.5, z, 0.2, 0.6, 0.2, C(mat === 'brick' || mat === 'render' ? '#8a4a34' : '#7a5c3a'));
+    if (night > 0.3) for (let f = 0; f < 3; f++) if (H(x + f * 3, z) > 0.45) B.box(x - w / 2 + 0.02, 0.6 + f * 0.7, z + (H(x, z + f) - .5) * d, 0.05, 0.3, 0.32, C('#ffdca0'), true);
+  };
+  for (let row = 0; row < 5; row++) for (let x = -17; x <= 17; x += 2.3) { const z = -9.6 - row * 2.7 + (H(x, row) - 0.5); if (!near(x, z)) house(x + (H(x + 9, row) - 0.5), z); }
+  for (let row = 0; row < 4; row++) for (let z = -8; z <= 11; z += 2.3) { const x = -9.6 - row * 2.7 + (H(z, row + 5) - 0.5); if (!near(x, z)) house(x, z + (H(z + 3, row) - 0.5)); }
+}
+
 export function buildEra(era, mats) {
   const B = new Builder();
   const rng = (s => () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296)((era.year * 2654435761) >>> 0);
   const night = era.night || 0, spec = era.house;
 
   road(B, era);
+  backdrop(B, era);                                  // the wider town behind the square
 
-  /* skyline landmarks, set well back on fixed slots */
-  const marks = era.skyline || [], slots = [[-6, -15], [2.5, -16.5], [8.5, -14]];
-  marks.forEach((k, i) => { const [x, z] = slots[i % slots.length]; B.at(x, 0, z, 0.16 * (i - 1)); landmark(B, k, night); B.pop(); });
+  /* skyline landmarks, just behind the terraces so they rise clearly above the
+   * roofline (and above the backdrop) instead of being cut off far away */
+  const marks = era.skyline || [], slots = [[-5.5, -11.5], [2.5, -12.8], [8.5, -10.5]];
+  marks.forEach((k, i) => { const [x, z] = slots[i % slots.length]; B.at(x, 0, z, 0.16 * (i - 1), 1.35); landmark(B, k, night); B.pop(); });   // scaled up to dominate the skyline
 
   /* the two terraces, lot by fixed lot */
   let sign = 0, neon = 0;

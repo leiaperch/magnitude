@@ -12,8 +12,8 @@ import { AXES, clamp } from '../config.js';
 
 const ELEV = 30 * Math.PI / 180;   // the angle, and it does not move for 1000 years
 const DIST = 120;
-const TARGET = new THREE.Vector3(0.5, 1.4, 0.5);
-const VIEW_W = 25, VIEW_H = 15;    // world units guaranteed on screen
+const TARGET = new THREE.Vector3(0.5, 3.2, 0.5);   // raised so the skyline reads above the rooftops
+const VIEW_W = 29, VIEW_H = 18;    // world units guaranteed on screen — a little headroom for the monuments and the wider town
 
 /* The camera's screen-right vector: the seam plane rides along it, so its
  * position on screen is exactly linear in the plane's constant. */
