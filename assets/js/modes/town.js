@@ -164,18 +164,49 @@ export function makeMaterials(renderer) {
   const pmrem = new THREE.PMREMGenerator(renderer); const env = pmrem.fromEquirectangular(skyTex).texture; skyTex.dispose(); pmrem.dispose();
   mats.env = env;
 
-  /* shader injection: a soft world-height ambient occlusion so walls sit into
-   * the ground and crevices read, the grounded look the references have. Real
-   * GLSL, and onBeforeCompile keeps clipping/shadows/tonemapping intact. */
-  for (const k of [...Object.keys(TEXDRAW), 'solid']) groundAO(mats[k]);
+  /* shader injection. The textured walls/roofs get a soft world-height ambient
+   * occlusion so they sit into the ground. The 'solid' bucket (people, foliage,
+   * flags, smoke, drones) gets that AO plus vertex animation driven by a per-
+   * vertex `anim` tag and a uTime uniform; the 'glow' bucket gets a neon shimmer
+   * and the drone bob. onBeforeCompile keeps clipping/shadows/tonemapping. */
+  for (const k of Object.keys(TEXDRAW)) groundAO(mats[k]);
+  solidShader(mats.solid);
+  glowShader(mats.glow);
   return mats;
 }
+const AO_FRAG = '#include <color_fragment>\n diffuseColor.rgb *= mix(0.6, 1.0, clamp(vWY/1.15, 0.0, 1.0));';
+/* the vertex GLSL that reads the anim tag and displaces `transformed` */
+const ANIM_VS = `
+  { float at = anim.x, ph = anim.y;
+    if (at > 0.5 && at < 1.5) { transformed.y += abs(sin(uTime*4.0+ph))*0.05; transformed.x += sin(uTime*2.0+ph)*0.03; }       // person idle
+    else if (at < 2.5) { transformed.x += sin(uTime*3.0 + transformed.y*3.0 + ph)*0.09; transformed.z += cos(uTime*2.6+ph)*0.05; } // flag flutter
+    else if (at < 3.5) { float t = fract(uTime*0.09 + ph); transformed.y += t*4.5; transformed.x += t*2.0; transformed.z += t*0.7; } // smoke rise
+    else if (at < 4.5) { float f = clamp((transformed.y-0.8)*0.4,0.0,1.0); transformed.x += sin(uTime*1.2+ph+transformed.y)*0.06*f; transformed.z += cos(uTime*1.0+ph)*0.04*f; } // sway
+    else if (at < 5.5) { transformed.y += sin(uTime*2.5+ph)*0.14; transformed.x += sin(uTime*0.8+ph)*0.22; transformed.z += cos(uTime*0.7+ph)*0.18; } } // drone hover`;
 function groundAO(mat) {
   mat.onBeforeCompile = sh => {
     sh.vertexShader = 'varying float vWY;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vWY = (modelMatrix * vec4(transformed,1.0)).y;');
-    sh.fragmentShader = 'varying float vWY;\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n diffuseColor.rgb *= mix(0.6, 1.0, clamp(vWY/1.15, 0.0, 1.0));');
+    sh.fragmentShader = 'varying float vWY;\n' + sh.fragmentShader.replace('#include <color_fragment>', AO_FRAG);
   };
   mat.customProgramCacheKey = () => 'groundAO';
+}
+function solidShader(mat) {
+  mat.onBeforeCompile = sh => {
+    sh.uniforms.uTime = { value: 0 };
+    sh.vertexShader = 'attribute vec3 anim;\nuniform float uTime;\nvarying float vWY;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n' + ANIM_VS + '\n vWY = (modelMatrix * vec4(transformed,1.0)).y;');
+    sh.fragmentShader = 'varying float vWY;\n' + sh.fragmentShader.replace('#include <color_fragment>', AO_FRAG);
+    mat.userData.shader = sh;
+  };
+  mat.customProgramCacheKey = () => 'solidAnim';
+}
+function glowShader(mat) {
+  mat.onBeforeCompile = sh => {
+    sh.uniforms.uTime = { value: 0 };
+    sh.vertexShader = 'attribute vec3 anim;\nuniform float uTime;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n { float at = anim.x, ph = anim.y; if (at > 4.5 && at < 5.5) { transformed.y += sin(uTime*2.5+ph)*0.14; transformed.x += sin(uTime*0.8+ph)*0.22; transformed.z += cos(uTime*0.7+ph)*0.18; } }');
+    sh.fragmentShader = 'uniform float uTime;\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n diffuseColor.rgb *= 0.82 + 0.18*sin(uTime*7.0 + gl_FragCoord.x*0.05 + gl_FragCoord.y*0.03);');
+    mat.userData.shader = sh;
+  };
+  mat.customProgramCacheKey = () => 'glowAnim';
 }
 
 /* per-material UV density (texture repeats every 1/uvk world units) */
@@ -186,10 +217,12 @@ class Builder {
   constructor() {
     this.b = new Map();
     this.m = new THREE.Matrix4(); this.stack = [];
+    this.animCur = [0, 0, 0];                                    // [type, phase, amp] tagged onto emitted verts
     this._a = new THREE.Vector3(); this._b2 = new THREE.Vector3(); this._c = new THREE.Vector3();
     this._n = new THREE.Vector3(); this._u = new THREE.Vector3(); this._v = new THREE.Vector3();
   }
-  bucket(k) { let t = this.b.get(k); if (!t) { t = { pos: [], nor: [], uv: [], col: [] }; this.b.set(k, t); } return t; }
+  bucket(k) { let t = this.b.get(k); if (!t) { t = { pos: [], nor: [], uv: [], col: [], anim: [] }; this.b.set(k, t); } return t; }
+  anim(type, phase, amp) { this.animCur = [type, phase, amp || 0]; return this; }   // set; call anim(0,0,0) to clear
   push(mat) { this.stack.push(this.m.clone()); this.m.multiply(mat); }
   pop() { this.m.copy(this.stack.pop()); }
   at(x, y, z, ry = 0, s = 1) {
@@ -202,11 +235,11 @@ class Builder {
     const t = this.bucket(k);
     this._a.set(ax, ay, az).applyMatrix4(this.m); this._b2.set(bx, by, bz).applyMatrix4(this.m); this._c.set(cx, cy, cz).applyMatrix4(this.m);
     this._u.subVectors(this._b2, this._a); this._v.subVectors(this._c, this._a); this._n.crossVectors(this._u, this._v).normalize();
-    const P = t.pos, N = t.nor, U = t.uv, L = t.col;
+    const P = t.pos, N = t.nor, U = t.uv, L = t.col, A = t.anim, m = this.animCur;
     P.push(this._a.x, this._a.y, this._a.z, this._b2.x, this._b2.y, this._b2.z, this._c.x, this._c.y, this._c.z);
     for (let i = 0; i < 3; i++) N.push(this._n.x, this._n.y, this._n.z);
     U.push(ua, va, ub, vb, uc, vc);
-    for (let i = 0; i < 3; i++) L.push(color[0], color[1], color[2]);
+    for (let i = 0; i < 3; i++) { L.push(color[0], color[1], color[2]); A.push(m[0], m[1], m[2]); }
   }
   /* untextured (props/people/landmarks): bucket solid or glow, uv unused */
   tri(ax, ay, az, bx, by, bz, cx, cy, cz, color, glow) { this._t(glow ? 'glow' : 'solid', ax, ay, az, bx, by, bz, cx, cy, cz, 0, 0, 0, 0, 0, 0, color); }
@@ -287,6 +320,7 @@ class Builder {
       geo.setAttribute('normal', new THREE.Float32BufferAttribute(t.nor, 3));
       geo.setAttribute('uv', new THREE.Float32BufferAttribute(t.uv, 2));
       geo.setAttribute('color', new THREE.Float32BufferAttribute(t.col, 3));
+      geo.setAttribute('anim', new THREE.Float32BufferAttribute(t.anim, 3));
       const m = new THREE.Mesh(geo, mats[k] || mats.solid);
       m.castShadow = k !== 'glow'; m.receiveShadow = k !== 'glow';
       g.add(m);
@@ -636,7 +670,7 @@ function prop(B, kind, rng, night) {
     case 'canopy': for (const [sx, sz] of [[-1.2, -0.8], [1.2, -0.8], [-1.2, 0.8], [1.2, 0.8]]) B.cyl(sx, 0, sz, 0.08, 2.5, 6, C('#8a8378'), false, 0.07); B.box(0, 2.5, 0, 2.9, 0.12, 2.0, C('#586a4a')); for (let i = -1; i <= 1; i++) { B.box(i * 0.85, 2.62, -0.4, 0.72, 0.04, 1.6, C('#1f3d6b')); } for (let i = 0; i < 6; i++) B.blob(-1.1 + (i % 3) * 1.1, 2.7, 0.4 + ((i / 3) | 0) * 0.5 - 0.6, 0.28, C(['#5f8f4b', '#6d9a54'][(i) % 2])); break;
     case 'bin': B.cyl(0, 0, 0, 0.22, 0.7, 8, C('#3a5a3a')); B.cyl(0, 0.7, 0, 0.24, 0.08, 8, C('#2a4a2a')); break;
     case 'holo-sign': B.box(0, 0, 0, 0.1, 2.2, 0.1, C('#39424c')); B.box(0, 2.4, 0, 1.0, 0.9, 0.05, C(NEONS[(rng() * NEONS.length) | 0]), true); break;
-    case 'drone': B.at((rng() - .5) * 4, 3 + rng() * 2, (rng() - .5) * 3); B.box(0, 0, 0, 0.4, 0.14, 0.4, C('#26324c')); for (const [dx, dz] of [[.3, .3], [-.3, .3], [.3, -.3], [-.3, -.3]]) { B.box(dx, 0.05, dz, 0.22, 0.03, 0.22, C('#39424c')); B.box(dx, 0.02, dz, 0.05, 0.05, 0.05, C('#43e0ff'), true); } B.pop(); break;
+    case 'drone': B.at((rng() - .5) * 4, 3 + rng() * 2, (rng() - .5) * 3); B.anim(5, rng() * 6.283, 0); B.box(0, 0, 0, 0.4, 0.14, 0.4, C('#26324c')); for (const [dx, dz] of [[.3, .3], [-.3, .3], [.3, -.3], [-.3, -.3]]) { B.box(dx, 0.05, dz, 0.22, 0.03, 0.22, C('#39424c')); B.box(dx, 0.02, dz, 0.05, 0.05, 0.05, C('#43e0ff'), true); } B.anim(0, 0, 0); B.pop(); break;
     default: break;
   }
 }
@@ -647,7 +681,9 @@ function bunting(B, x0, z0, x1, z1, y, cols) {
   for (let i = 0; i < n; i++) {
     const t = i / (n - 1), x = x0 + (x1 - x0) * t, z = z0 + (z1 - z0) * t, fy = y - Math.sin(t * Math.PI) * 0.9;
     B.box(x, fy, z, 0.02, 0.02, Math.hypot(x1 - x0, z1 - z0) / n, C('#3a2c1c'));
+    B.anim(2, i * 0.5, 0);                                       // each flag flutters
     B.tri(x - 0.13, fy, z, x + 0.13, fy, z, x, fy - 0.34, z, C(cols[i % cols.length]));
+    B.anim(0, 0, 0);
   }
 }
 /* café terrace: a couple of round tables with a parasol and chairs */
@@ -682,7 +718,9 @@ function produceTable(B, rng) {
 function tree(B, rng, neon) {
   B.cyl(0, 0, 0, 0.16, 1.1 + rng() * 0.4, 6, C(neon ? '#1a2436' : '#6b4f34'), false, 0.13);
   const gy = 1.3 + rng() * 0.3, green = neon ? C(['#43e0ff', '#4dff9e', '#b98cff'][(rng() * 3) | 0]) : shade(['#5f8f4b', '#6d9a54', '#57853f'][(rng() * 3) | 0], 0.95 + rng() * 0.1);
+  B.anim(4, rng() * 6.283, 0);                                   // crown sways in the wind
   B.blob(0, gy, 0, 0.7 + rng() * 0.2, green, neon); B.blob((rng() - .5) * .6, gy + 0.4, (rng() - .5) * .6, 0.5, green, neon); B.blob((rng() - .5) * .6, gy - 0.1, (rng() - .5) * .6, 0.55, green, neon);
+  B.anim(0, 0, 0);
 }
 function stall(B, rng) {
   for (const [sx, sz] of [[-0.7, -0.5], [0.7, -0.5], [-0.7, 0.5], [0.7, 0.5]]) B.box(sx, 0, sz, 0.09, 1.5, 0.09, C('#6b4f34'));
@@ -722,10 +760,12 @@ function bike(B) { for (const wx of [0.4, -0.4]) B.cyl(wx, 0, 0, 0.28, 0.06, 8, 
 /* --------------------------------------------------------------- townsfolk */
 const CLOTH = ['#3f4a5a', '#6b3a3a', '#4a5a3a', '#5a4a6b', '#2f3136', '#7a6a4a', '#8a4a3a', '#3a5a6a'];
 function person(B, rng) {
+  B.anim(1, rng() * 6.283, 0);                                   // idle bob + sway, unique phase
   B.box(0, 0, 0, 0.34, 0.5, 0.24, C(CLOTH[(rng() * CLOTH.length) | 0]));
   B.box(0, 0.5, 0, 0.4, 0.42, 0.26, C(CLOTH[(rng() * CLOTH.length) | 0]));
   B.box(0, 0.92, 0, 0.24, 0.24, 0.22, C('#e8bd96'));
   if (rng() < 0.3) B.box(0, 1.1, 0, 0.3, 0.12, 0.28, C('#4a3826'));
+  B.anim(0, 0, 0);
 }
 
 /* ---------------------------------------------------------------- the plan */
@@ -871,8 +911,8 @@ export function buildEra(era, mats) {
   const crowd = Math.min(era.crowd || 6, 20);
   for (let i = 0; i < crowd; i++) { const [kx, kz] = CROWD_KNOTS[i % CROWD_KNOTS.length]; B.at(kx + (rng() - 0.5) * 1.1, 0, kz + (rng() - 0.5) * 0.9, rng() * 6.28); person(B, rng); B.pop(); }
 
-  /* chimney smoke */
-  for (let i = 0; i < (era.smoke || 0); i++) B.blob(-5 + i * 3.5 + (rng() - .5), 6 + rng() * 1.5, BACK, 0.5 + rng() * 0.3, shade('#c9cdd2', 0.9 + rng() * 0.2));
+  /* chimney smoke — drifts up and away on a loop */
+  for (let i = 0; i < (era.smoke || 0); i++) { B.anim(3, rng() * 6.283, 0); B.blob(-5 + i * 3.5 + (rng() - .5), 6 + rng() * 1.5, BACK, 0.5 + rng() * 0.3, shade('#c9cdd2', 0.9 + rng() * 0.2)); B.anim(0, 0, 0); }
 
   return B.finish(mats);
 }

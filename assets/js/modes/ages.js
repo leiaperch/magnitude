@@ -263,6 +263,9 @@ export class Ages {
   render(time) {
     if (!this.ready || !this.past) return;
     const r = this.renderer;
+    const ss = this.mats.solid.userData.shader, gs = this.mats.glow.userData.shader;   // drive the vertex animation
+    if (ss) ss.uniforms.uTime.value = time;
+    if (gs) gs.uniforms.uTime.value = time;
     r.clear();
 
     /* Every cached era lives in the same scene, so hide all of them and show
