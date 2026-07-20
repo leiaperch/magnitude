@@ -797,7 +797,6 @@ function marketContent(B, era, rng, night) {
   B.at(-4.5, 0, 5.4); prop(B, 'hay', rng, night); B.pop();
   B.at(-4.4, 0, 4.4); prop(B, 'barrel', rng, night); B.pop();
   B.at(-1.8, 0, 6.5, Math.PI / 2); prop(B, 'loadcart', rng, night); B.pop();
-  B.at(-0.4, 0, 6.6, -Math.PI / 3); prop(B, 'horse', rng, night); B.pop();
   B.at(-3.8, 0, 2.2); prop(B, 'well', rng, night); B.pop();
   for (const [x, z] of [[4.6, 4.6], [4.4, 2.4], [3.2, 6.2]]) { B.at(x, 0, z); prop(B, 'tree', rng, night); B.pop(); }
 }
@@ -954,9 +953,9 @@ export function buildEra(era, mats) {
 function finishEra(B, era, rng, mats) {
   const y = era.year;
   if (y >= 1200 && y <= 1850 && (era.crowd || 0) >= 11) {
-    const cols = ['#c94a3a', '#e0b02a', '#3a6ab2', '#e8e4d8', '#3a7a4a'];
-    bunting(B, -5.5, 1.5, 5.5, 2.5, 4.6, cols);
-    bunting(B, -5.5, 4.5, 4.5, -1.0, 4.9, cols);
+    const cols = ['#c94a3a', '#e0b02a', '#3a6ab2', '#e8e4d8', '#3a7a4a'];   // strung terrace-to-terrace over the market corner
+    bunting(B, -1.6, -5.4, -5.4, 1.6, 5.0, cols);
+    bunting(B, 2.8, -5.4, -5.4, 4.4, 4.7, cols);
   }
   const crowd = Math.min(era.crowd || 6, 20);
   for (let i = 0; i < crowd; i++) { const [kx, kz] = CROWD_KNOTS[i % CROWD_KNOTS.length]; B.at(kx + (rng() - 0.5) * 1.1, 0, kz + (rng() - 0.5) * 0.9, rng() * 6.28); person(B, rng); B.pop(); }
