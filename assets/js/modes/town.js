@@ -345,8 +345,25 @@ function house(B, w, spec, rng, night, lot) {
     chimney(B, lot.chimney || 0, bodyH, rh);
   }
 
+  if (spec.living) livingWall(B, w, floorH, storeys, front, rng);
+  if (spec.neon) neonFront(B, w, floorH, storeys, bodyH, front, lot);
   if (lot.civic) clockTower(B, w, bodyH, front);
-  if (spec.sign && !lot.civic) hangingSign(B, w, floorH, front, lot);
+  if (spec.sign && !lot.civic && !spec.neon) hangingSign(B, w, floorH, front, lot);
+}
+/* neon strips and a glowing hologram board over the old masonry (2100) */
+function neonFront(B, w, floorH, storeys, bodyH, front, lot) {
+  const fz = front + 0.06, a = C(NEONS[lot.neon % NEONS.length]), b = C(NEONS[(lot.neon + 2) % NEONS.length]);
+  B.box(w / 2 - 0.12, floorH * 1.5, fz, 0.1, floorH * (storeys - 1.6), 0.05, a);            // vertical tube
+  B.box(0, bodyH - floorH * 0.45, fz, w * 0.72, 0.5, 0.05, b);                              // big sign board
+  for (let s = 1; s < storeys; s++) if ((lot.neon + s) % 2) B.box(-w / 2 + 0.12, floorH * s + floorH * 0.5, fz, 0.08, floorH * 0.7, 0.05, C(NEONS[(lot.neon + s) % NEONS.length]));
+  B.box(0, bodyH + 0.4, -0.2, 0.06, 0.9, 0.06, C('#2a2e33'), false);                        // rooftop antenna mast
+  B.box(0, bodyH + 1.3, -0.2, 0.12, 0.12, 0.12, C('#ff5db1'));                              // antenna light
+}
+/* a green living wall: planters and climbing vines across the facade (2150) */
+function livingWall(B, w, floorH, storeys, front, rng) {
+  const fz = front + 0.05, greens = ['#5f8f4b', '#6d9a54', '#4a7a3a', '#7aa03a'];
+  for (let s = 0; s < storeys; s++) for (let i = 0; i < 4; i++) B.blob(-w / 2 + 0.3 + i * (w - 0.6) / 3, floorH * (s + 1) - 0.12, fz, 0.2 + rng() * 0.06, C(greens[(s + i) % greens.length]));
+  for (const px of [-w / 2 + 0.22, w / 2 - 0.22]) for (let s = 0; s < storeys * 3; s++) B.blob(px, s * 0.5 + 0.4, fz - 0.01, 0.12, C(greens[s % greens.length]));
 }
 /* a civic clock/bell tower rising above the roofline of the hall */
 function clockTower(B, w, bodyH, front) {
@@ -573,10 +590,21 @@ function prop(B, kind, rng, night) {
     case 'bus-shelter': for (const sx of [-0.9, 0.9]) B.box(sx, 0, -0.3, 0.08, 2.0, 0.08, C('#3a3f46')); B.box(0, 2.0, -0.1, 2.0, 0.1, 0.7, C('#4a4f56')); B.box(-0.9, 0.4, -0.6, 0.06, 1.5, 0.7, night > .05 ? C('#8fb4c8') : C('#a9c4d0')); B.box(0.3, 0.35, 0, 1.1, 0.1, 0.35, C('#5a5f66')); B.box(0.3, 0.55, -0.15, 1.1, 0.35, 0.06, C('#5a5f66')); break;
     case 'bike-rack': for (let i = 0; i < 4; i++) { B.at(-0.9 + i * 0.6, 0, (i % 2) * 0.2, Math.PI / 2 + (rng() - .5) * 0.3); bike(B); B.pop(); } break;
     case 'charger': B.box(0, 0, 0, 0.3, 1.2, 0.2, C('#e8e4d8')); B.box(0, 0.8, 0.11, 0.22, 0.3, 0.04, C('#2bd6ff'), true); break;
+    case 'canopy': for (const [sx, sz] of [[-1.2, -0.8], [1.2, -0.8], [-1.2, 0.8], [1.2, 0.8]]) B.cyl(sx, 0, sz, 0.08, 2.5, 6, C('#8a8378'), false, 0.07); B.box(0, 2.5, 0, 2.9, 0.12, 2.0, C('#586a4a')); for (let i = -1; i <= 1; i++) { B.box(i * 0.85, 2.62, -0.4, 0.72, 0.04, 1.6, C('#1f3d6b')); } for (let i = 0; i < 6; i++) B.blob(-1.1 + (i % 3) * 1.1, 2.7, 0.4 + ((i / 3) | 0) * 0.5 - 0.6, 0.28, C(['#5f8f4b', '#6d9a54'][(i) % 2])); break;
     case 'bin': B.cyl(0, 0, 0, 0.22, 0.7, 8, C('#3a5a3a')); B.cyl(0, 0.7, 0, 0.24, 0.08, 8, C('#2a4a2a')); break;
     case 'holo-sign': B.box(0, 0, 0, 0.1, 2.2, 0.1, C('#39424c')); B.box(0, 2.4, 0, 1.0, 0.9, 0.05, C(NEONS[(rng() * NEONS.length) | 0]), true); break;
     case 'drone': B.at((rng() - .5) * 4, 3 + rng() * 2, (rng() - .5) * 3); B.box(0, 0, 0, 0.4, 0.14, 0.4, C('#26324c')); for (const [dx, dz] of [[.3, .3], [-.3, .3], [.3, -.3], [-.3, -.3]]) { B.box(dx, 0.05, dz, 0.22, 0.03, 0.22, C('#39424c')); B.box(dx, 0.02, dz, 0.05, 0.05, 0.05, C('#43e0ff'), true); } B.pop(); break;
     default: break;
+  }
+}
+/* a drooping string of triangular flags across the square — only the busy
+ * market days get it, so the quiet years (plague, war) read bare by contrast */
+function bunting(B, x0, z0, x1, z1, y, cols) {
+  const n = 14;
+  for (let i = 0; i < n; i++) {
+    const t = i / (n - 1), x = x0 + (x1 - x0) * t, z = z0 + (z1 - z0) * t, fy = y - Math.sin(t * Math.PI) * 0.9;
+    B.box(x, fy, z, 0.02, 0.02, Math.hypot(x1 - x0, z1 - z0) / n, C('#3a2c1c'));
+    B.tri(x - 0.13, fy, z, x + 0.13, fy, z, x, fy - 0.34, z, C(cols[i % cols.length]));
   }
 }
 /* café terrace: a couple of round tables with a parasol and chairs */
@@ -741,7 +769,7 @@ export function buildEra(era, mats) {
     else if (k.startsWith('lamp') || k === 'neon-post' || k === 'traffic-light' || k === 'phone-box' || k === 'holo-sign') { const [x, z] = LAMP_SPOTS[li % LAMP_SPOTS.length]; B.at(x, 0, z); prop(B, k, rng, night); B.pop(); li++; }
     else if (k === 'tree' || k === 'neon-tree') { const [x, z] = TREE_SPOTS[ti % TREE_SPOTS.length]; B.at(x, 0, z); prop(B, k, rng, night); B.pop(); ti++; }
     else if (k === 'bench' || k === 'planter') { const [x, z, r] = BENCH_SPOTS[bi % BENCH_SPOTS.length]; B.at(x, 0, z, r); prop(B, k, rng, night); B.pop(); bi++; }
-    else if (k === 'cafe') { const [x, z] = CAFE_SPOTS[ci % CAFE_SPOTS.length]; B.at(x, 0, z); prop(B, 'cafe', rng, night); B.pop(); ci++; }
+    else if (k === 'cafe' || k === 'canopy') { const [x, z] = CAFE_SPOTS[ci % CAFE_SPOTS.length]; B.at(x, 0, z); prop(B, k, rng, night); B.pop(); ci++; }
     else if (k === 'farmbed') { const [x, z] = FARM_SPOTS[fi % FARM_SPOTS.length]; B.at(x, 0, z, (fi % 2) * Math.PI / 2); prop(B, 'farmbed', rng, night); B.pop(); fi++; }
     else if (k === 'kiosk' || k === 'bus-shelter' || k === 'bike-rack' || k === 'charger' || k === 'bin') { const [x, z] = CIVIC_SPOTS[gi % CIVIC_SPOTS.length]; B.at(x, 0, z); prop(B, k, rng, night); B.pop(); gi++; }
     else if (k === 'tram' || k === 'car' || k === 'carriage' || k === 'cart' || k === 'loadcart' || k === 'bike' || k === 'scooter') { const [x, z] = VEH_LANE[vi % VEH_LANE.length]; B.at(x, 0, z); prop(B, k, rng, night); B.pop(); vi++; }
@@ -774,10 +802,26 @@ export function buildEra(era, mats) {
     B.at(2.8, 0, 5.4); prop(B, 'cafe', rng, night); B.pop();
     B.at(-4.3, 0, 3.9); prop(B, 'tree-box', rng, night); B.pop();
     for (const [x, z] of [[0.4, 6.2], [4.4, 4.2]]) { B.at(x, 0, z); prop(B, 'planter', rng, night); B.pop(); }
-  } else {                                                            // 2050 eco garden: dense raised beds and cafés
+  } else if (y <= 2050) {                                             // 2050 eco garden: dense raised beds and cafés
     for (const [x, z] of FARM_SPOTS) { B.at(x, 0, z, (x + z | 0) % 2 ? Math.PI / 2 : 0); prop(B, 'farmbed', rng, night); B.pop(); }
     for (const [x, z] of [[-3.6, 4.2], [3.4, 5.2]]) { B.at(x, 0, z); prop(B, 'cafe', rng, night); B.pop(); }
     B.at(-4.4, 0, 6.0); prop(B, 'charger', rng, night); B.pop();
+  } else if (y <= 2100) {                                             // 2100 cyberpunk: holo boards, neon, drones over wet asphalt
+    for (const [x, z] of [[-3.4, 4.4], [3.2, 5.2], [0.2, 6.0]]) { B.at(x, 0, z, (rng() - .5)); prop(B, 'holo-sign', rng, night); B.pop(); }
+    for (const [x, z] of [[-4.4, 5.6], [4.6, 4.2]]) { B.at(x, 0, z); prop(B, 'neon-tree', rng, night); B.pop(); }
+    for (let d = 0; d < 3; d++) prop(B, 'drone', rng, night);
+    B.at(-4.2, 0, 3.9); prop(B, 'neon-post', rng, night); B.pop();
+  } else {                                                            // 2150 solarpunk: living walls, canopies, water, dense green
+    for (const [x, z] of FARM_SPOTS) { B.at(x, 0, z, (x + z | 0) % 2 ? Math.PI / 2 : 0); prop(B, 'farmbed', rng, night); B.pop(); }
+    for (const [x, z] of [[-3.4, 4.2], [3.6, 5.4]]) { B.at(x, 0, z); prop(B, 'canopy', rng, night); B.pop(); }
+    for (const [x, z] of [[0.4, 6.2], [-4.4, 6.0], [4.6, 3.6]]) { B.at(x, 0, z); prop(B, 'tree-box', rng, night); B.pop(); }
+  }
+
+  /* festive bunting on the busy market days only (quiet years stay bare) */
+  if (y >= 1200 && y <= 1850 && (era.crowd || 0) >= 11) {
+    const cols = ['#c94a3a', '#e0b02a', '#3a6ab2', '#e8e4d8', '#3a7a4a'];
+    bunting(B, -5.5, 1.5, 5.5, 2.5, 4.6, cols);
+    bunting(B, -5.5, 4.5, 4.5, -1.0, 4.9, cols);
   }
 
   /* crowd: fixed knots, tiny seeded jitter within each */

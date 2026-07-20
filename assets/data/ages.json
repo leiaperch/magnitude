@@ -553,11 +553,13 @@
         "material": "stone",
         "storeys": 3,
         "roof": "tile",
-        "window": "shutter"
+        "window": "shutter",
+        "sign": true
       },
       "street": [
         "fountain",
         "cross",
+        "stall",
         "barrel",
         "crate",
         "dog",
@@ -991,6 +993,102 @@
         "charger"
       ],
       "crowd": 17,
+      "smoke": 0,
+      "night": 0
+    },
+    {
+      "year": 2100,
+      "en": {
+        "name": "Neon and rain",
+        "note": "The green square goes dark and electric. Holograms hang over the old brick, drones cross where pigeons did, and the wet asphalt burns with sign-light."
+      },
+      "fr": {
+        "name": "Neon et pluie",
+        "note": "La place verte devient sombre et electrique. Des hologrammes flottent au-dessus de la vieille brique, des drones passent ou volaient les pigeons, et l'asphalte mouille brule de la lumiere des enseignes."
+      },
+      "sky": [
+        "#0a0e26",
+        "#241a48"
+      ],
+      "hill": "#1a2140",
+      "ground": "asphalt",
+      "skyline": [
+        "cathedral-spire",
+        "megatower",
+        "skybridge"
+      ],
+      "house": {
+        "material": "render",
+        "storeys": 5,
+        "roof": "flat",
+        "window": "picture",
+        "sign": true,
+        "neon": true
+      },
+      "street": [
+        "holo-sign",
+        "neon-post",
+        "neon-tree",
+        "neon-tree",
+        "drone",
+        "drone",
+        "car",
+        "neon-post",
+        "holo-sign",
+        "scooter",
+        "bench",
+        "neon-tree"
+      ],
+      "crowd": 18,
+      "smoke": 0,
+      "night": 0.55
+    },
+    {
+      "year": 2150,
+      "en": {
+        "name": "The living city",
+        "note": "The neon is gone. Vines climb every wall, canopies of leaf and solar shade the beds, and the square is more garden than pavement."
+      },
+      "fr": {
+        "name": "La cite vivante",
+        "note": "Le neon a disparu. Des lianes grimpent chaque mur, des canopees de feuilles et de solaire ombragent les potagers, et la place est plus jardin que pave."
+      },
+      "sky": [
+        "#bcd8e2",
+        "#eef5ea"
+      ],
+      "hill": "#72a058",
+      "ground": "cobble",
+      "skyline": [
+        "cathedral-spire",
+        "townhall",
+        "station"
+      ],
+      "house": {
+        "material": "render",
+        "storeys": 4,
+        "roof": "green",
+        "window": "sash",
+        "sign": true,
+        "trees": true,
+        "solar": true,
+        "living": true
+      },
+      "street": [
+        "tree",
+        "farmbed",
+        "cafe",
+        "tree",
+        "canopy",
+        "farmbed",
+        "bench",
+        "tree",
+        "cafe",
+        "farmbed",
+        "tree",
+        "bike-rack"
+      ],
+      "crowd": 20,
       "smoke": 0,
       "night": 0
     }
