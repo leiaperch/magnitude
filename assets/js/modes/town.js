@@ -678,17 +678,19 @@ function prop(B, kind, rng, night) {
 }
 /* a drooping string of triangular flags across the square — only the busy
  * market days get it, so the quiet years (plague, war) read bare by contrast */
-/* one swag of bunting between two points; short droop proportional to the span,
- * cord and flags oriented along the run so it drapes cleanly, not diagonally */
+/* one continuous garland along a whole run: flags every ~0.34 with a cord
+ * between each, dipping in regular repeating scallops — no breaks, and cord and
+ * flags oriented along the run so it drapes straight, not diagonally */
 function bunting(B, x0, z0, x1, z1, y, cols) {
-  const dx = x1 - x0, dz = z1 - z0, span = Math.hypot(dx, dz), n = Math.max(3, Math.round(span / 0.42)), alongX = Math.abs(dx) >= Math.abs(dz), seg = span / n;
+  const dx = x1 - x0, dz = z1 - z0, len = Math.hypot(dx, dz), alongX = Math.abs(dx) >= Math.abs(dz);
+  const step = 0.34, n = Math.round(len / step), sag = 0.42, period = 2.5;
   let px = 0, pz = 0, py = 0;
   for (let i = 0; i <= n; i++) {
-    const t = i / n, x = x0 + dx * t, z = z0 + dz * t, fy = y - Math.sin(t * Math.PI) * span * 0.11;
-    if (i > 0) { const mx = (px + x) / 2, mz = (pz + z) / 2, my = (py + fy) / 2; if (alongX) B.box(mx, my, mz, seg, 0.025, 0.025, C('#4a3a26')); else B.box(mx, my, mz, 0.025, 0.025, seg, C('#4a3a26')); }
-    B.anim(2, i * 0.7, 0);
-    if (alongX) B.tri(x - 0.1, fy, z, x + 0.1, fy, z, x, fy - 0.26, z, C(cols[i % cols.length]));
-    else B.tri(x, fy, z - 0.1, x, fy, z + 0.1, x, fy - 0.26, z, C(cols[i % cols.length]));
+    const t = i / n, x = x0 + dx * t, z = z0 + dz * t, fy = y - sag * Math.abs(Math.sin(len * t / period * Math.PI));
+    if (i > 0) { const mx = (px + x) / 2, mz = (pz + z) / 2, my = (py + fy) / 2; if (alongX) B.box(mx, my, mz, step, 0.025, 0.025, C('#4a3a26')); else B.box(mx, my, mz, 0.025, 0.025, step, C('#4a3a26')); }
+    B.anim(2, i * 0.6, 0);
+    if (alongX) B.tri(x - 0.1, fy, z, x + 0.1, fy, z, x, fy - 0.24, z, C(cols[i % cols.length]));
+    else B.tri(x, fy, z - 0.1, x, fy, z + 0.1, x, fy - 0.24, z, C(cols[i % cols.length]));
     B.anim(0, 0, 0);
     px = x; pz = z; py = fy;
   }
@@ -958,9 +960,9 @@ export function buildEra(era, mats) {
 function finishEra(B, era, rng, mats) {
   const y = era.year;
   if (y >= 1200 && y <= 1850 && (era.crowd || 0) >= 11) {
-    const cols = ['#c94a3a', '#e0b02a', '#3a6ab2', '#e8e4d8', '#3a7a4a'];   // regular swags, parallel to each terrace, out over the market
-    for (let x = -5.0; x < 5.0; x += 2.4) bunting(B, x, -4.3, Math.min(x + 2.4, 5.0), -4.3, 4.6, cols);
-    for (let z = -2.4; z < 5.2; z += 2.4) bunting(B, -4.3, z, -4.3, Math.min(z + 2.4, 5.4), 4.6, cols);
+    const cols = ['#c94a3a', '#e0b02a', '#3a6ab2', '#e8e4d8', '#3a7a4a'];   // one continuous garland per facade, meeting at the corner
+    bunting(B, 5.0, -4.3, -4.3, -4.3, 4.6, cols);
+    bunting(B, -4.3, -4.3, -4.3, 5.4, 4.6, cols);
   }
   const crowd = Math.min(era.crowd || 6, 20);
   for (let i = 0; i < crowd; i++) { const [kx, kz] = CROWD_KNOTS[i % CROWD_KNOTS.length]; B.at(kx + (rng() - 0.5) * 1.1, 0, kz + (rng() - 0.5) * 0.9, rng() * 6.28); person(B, rng); B.pop(); }
