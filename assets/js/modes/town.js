@@ -345,7 +345,7 @@ function house(B, w, spec, rng, night, lot) {
   const depth = lot.depth || 3.0;
   const beam = C('#4a331f');
   const timber = mat === 'timber' || mat === 'wood';
-  const roof = spec.roof, shop = !!spec.sign;
+  const roof = spec.roof, shop = !!spec.sign && !(lot.year >= 1500 && lot.year <= 1750);   // the fountain-square eras are formal, not shops
   const tint = jit(rng);
   const gz = lot.gable && (roof === 'thatch' || roof === 'tile');
 
@@ -387,7 +387,7 @@ function house(B, w, spec, rng, night, lot) {
   if (spec.living) livingWall(B, w, floorH, storeys, front, rng);
   if (spec.neon) neonFront(B, w, floorH, storeys, bodyH, front, lot);
   if (lot.civic) clockTower(B, w, bodyH, front);
-  if (spec.sign && !lot.civic && !spec.neon) hangingSign(B, w, floorH, front, lot);
+  if (shop && !lot.civic && !spec.neon) hangingSign(B, w, floorH, front, lot);
 }
 /* neon strips and a glowing hologram board over the old masonry (2100) */
 function neonFront(B, w, floorH, storeys, bodyH, front, lot) {
