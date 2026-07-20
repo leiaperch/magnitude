@@ -178,11 +178,13 @@ const AO_FRAG = '#include <color_fragment>\n diffuseColor.rgb *= mix(0.6, 1.0, c
 /* the vertex GLSL that reads the anim tag and displaces `transformed` */
 const ANIM_VS = `
   { float at = anim.x, ph = anim.y;
-    if (at > 0.5 && at < 1.5) { transformed.y += abs(sin(uTime*4.0+ph))*0.05; transformed.x += sin(uTime*2.0+ph)*0.03; }       // person idle
-    else if (at < 2.5) { transformed.x += sin(uTime*3.0 + transformed.y*3.0 + ph)*0.09; transformed.z += cos(uTime*2.6+ph)*0.05; } // flag flutter
-    else if (at < 3.5) { float t = fract(uTime*0.09 + ph); transformed.y += t*4.5; transformed.x += t*2.0; transformed.z += t*0.7; } // smoke rise
-    else if (at < 4.5) { float f = clamp((transformed.y-0.8)*0.4,0.0,1.0); transformed.x += sin(uTime*1.2+ph+transformed.y)*0.06*f; transformed.z += cos(uTime*1.0+ph)*0.04*f; } // sway
-    else if (at < 5.5) { transformed.y += sin(uTime*2.5+ph)*0.14; transformed.x += sin(uTime*0.8+ph)*0.22; transformed.z += cos(uTime*0.7+ph)*0.18; } } // drone hover`;
+    if (at > 0.5) {                                                                                                             // static geometry (at==0) is never touched
+      if (at < 1.5) { transformed.y += abs(sin(uTime*4.0+ph))*0.05; transformed.x += sin(uTime*2.0+ph)*0.03; }                 // person idle
+      else if (at < 2.5) { transformed.x += sin(uTime*3.0 + transformed.y*3.0 + ph)*0.09; transformed.z += cos(uTime*2.6+ph)*0.05; } // flag flutter
+      else if (at < 3.5) { float t = fract(uTime*0.09 + ph); transformed.y += t*4.5; transformed.x += t*2.0; transformed.z += t*0.7; } // smoke rise
+      else if (at < 4.5) { float f = clamp((transformed.y-0.8)*0.4,0.0,1.0); transformed.x += sin(uTime*1.2+ph+transformed.y)*0.06*f; transformed.z += cos(uTime*1.0+ph)*0.04*f; } // sway
+      else { transformed.y += sin(uTime*2.5+ph)*0.14; transformed.x += sin(uTime*0.8+ph)*0.22; transformed.z += cos(uTime*0.7+ph)*0.18; } // drone hover
+    } }`;
 function groundAO(mat) {
   mat.onBeforeCompile = sh => {
     sh.vertexShader = 'varying float vWY;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vWY = (modelMatrix * vec4(transformed,1.0)).y;');
