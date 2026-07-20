@@ -784,6 +784,24 @@ function villageContent(B, era, rng, night) {
   for (const [x, z] of [[-4.6, 2.2], [4.4, 3.8]]) { B.at(x, 0, z); prop(B, 'tree', rng, night); B.pop(); }
 }
 
+/* the medieval market (1200 to 1450): two tidy rows of stalls down a clear
+ * aisle, the market cross as the focal point in front, every loose good pulled
+ * into one zone at the front-left, a cart and a well, trees on the open side */
+function marketContent(B, era, rng, night) {
+  const xs = [-3.2, -1.1, 1.0, 3.1];
+  for (const sx of xs) { B.at(sx, 0, -0.6, 0); prop(B, 'stall', rng, night); B.pop(); }
+  for (const sx of xs) { B.at(sx, 0, 1.7, Math.PI); prop(B, 'stall', rng, night); B.pop(); }
+  B.at(1.0, 0, 3.5); prop(B, 'cross', rng, night); B.pop();
+  for (const [x, z, r] of [[-3.9, 4.2, 0.2], [-3.5, 5.2, -0.2]]) { B.at(x, 0, z, r); prop(B, 'table', rng, night); B.pop(); }
+  B.at(-2.5, 0, 4.7); prop(B, 'crates', rng, night); B.pop();
+  B.at(-4.5, 0, 5.4); prop(B, 'hay', rng, night); B.pop();
+  B.at(-4.4, 0, 4.4); prop(B, 'barrel', rng, night); B.pop();
+  B.at(-1.8, 0, 6.5, Math.PI / 2); prop(B, 'loadcart', rng, night); B.pop();
+  B.at(-0.4, 0, 6.6, -Math.PI / 3); prop(B, 'horse', rng, night); B.pop();
+  B.at(-3.8, 0, 2.2); prop(B, 'well', rng, night); B.pop();
+  for (const [x, z] of [[4.6, 4.6], [4.4, 2.4], [3.2, 6.2]]) { B.at(x, 0, z); prop(B, 'tree', rng, night); B.pop(); }
+}
+
 /* --------------------------------------------------------------- townsfolk */
 const CLOTH = ['#3f4a5a', '#6b3a3a', '#4a5a3a', '#5a4a6b', '#2f3136', '#7a6a4a', '#8a4a3a', '#3a5a6a'];
 function person(B, rng) {
@@ -876,6 +894,7 @@ export function buildEra(era, mats) {
    * 1200 the era's prop list fills fixed stations, then a per-phase dressing. */
   const y = era.year;
   if (y <= 1150) { villageContent(B, era, rng, night); return finishEra(B, era, rng, mats); }
+  if (y <= 1450) { marketContent(B, era, rng, night); return finishEra(B, era, rng, mats); }
 
   const street = era.street || [];
   let si = 0, ti = 0, li = 0, bi = 0, vi = 0, ci = 0, fi = 0, gi = 0, misc = 0;
