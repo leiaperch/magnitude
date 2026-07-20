@@ -183,7 +183,8 @@ const ANIM_VS = `
       else if (at < 2.5) { transformed.x += sin(uTime*3.0 + transformed.y*3.0 + ph)*0.09; transformed.z += cos(uTime*2.6+ph)*0.05; } // flag flutter
       else if (at < 3.5) { float t = fract(uTime*0.09 + ph); transformed.y += t*4.5; transformed.x += t*2.0; transformed.z += t*0.7; } // smoke rise
       else if (at < 4.5) { float f = clamp((transformed.y-0.8)*0.4,0.0,1.0); transformed.x += sin(uTime*1.2+ph+transformed.y)*0.06*f; transformed.z += cos(uTime*1.0+ph)*0.04*f; } // sway
-      else { transformed.y += sin(uTime*2.5+ph)*0.14; transformed.x += sin(uTime*0.8+ph)*0.22; transformed.z += cos(uTime*0.7+ph)*0.18; } // drone hover
+      else if (at < 5.5) { transformed.y += sin(uTime*2.5+ph)*0.14; transformed.x += sin(uTime*0.8+ph)*0.22; transformed.z += cos(uTime*0.7+ph)*0.18; } // drone hover
+      else { transformed.y += sin(uTime*5.0 + transformed.x*3.5 + transformed.z*3.5 + ph)*0.045; } // fountain water ripple
     } }`;
 function groundAO(mat) {
   mat.onBeforeCompile = sh => {
@@ -641,7 +642,15 @@ function prop(B, kind, rng, night) {
     case 'tree': tree(B, rng, false); break;
     case 'neon-tree': tree(B, rng, true); break;
     case 'cross': B.boxT('stone', 0, 0, 0, 1.6, 0.3, 1.6, WHITE); B.boxT('stone', 0, 0.3, 0, 1.1, 0.3, 1.1, WHITE); B.cyl(0, 0.6, 0, 0.16, 2.0, 8, C('#cbc2ab')); B.box(0, 2.6, 0, 0.7, 0.5, 0.5, C('#c2b9a2')); break;
-    case 'fountain': B.cyl(0, 0, 0, 1.4, 0.5, 12, C('#b6ad96'), false, 1.25); B.cyl(0, 0.1, 0, 1.15, 0.25, 12, night > .1 ? C('#2a4a66') : C('#6fa8c8'), night > .1); B.cyl(0, 0.5, 0, 0.3, 1.0, 10, C('#c2b9a2')); B.cyl(0, 1.5, 0, 0.7, 0.2, 10, C('#b6ad96'), false, 0.6); B.cone(0, 1.7, 0, 0.2, 0.5, 8, C('#cbc2ab')); break;
+    case 'fountain': {
+      const wcol = night > .1 ? C('#2a4a66') : C('#6fb0cf');
+      B.cyl(0, 0, 0, 1.4, 0.5, 12, C('#b6ad96'), false, 1.25);                                   // basin rim
+      B.anim(6, 0.0, 0); B.cyl(0, 0.12, 0, 1.15, 0.22, 12, wcol, night > .1); B.anim(0, 0, 0);   // lower water, ripples
+      B.cyl(0, 0.5, 0, 0.3, 1.0, 10, C('#c2b9a2'));                                               // central column
+      B.cyl(0, 1.5, 0, 0.7, 0.2, 10, C('#b6ad96'), false, 0.6);                                   // upper basin
+      B.anim(6, 1.4, 0); B.cyl(0, 1.62, 0, 0.55, 0.13, 10, wcol, night > .1, 0.5); B.cyl(0, 1.7, 0, 0.05, 0.55, 6, C('#9fd0e4'), false, 0.03); B.anim(0, 0, 0);  // upper water + jet
+      break;
+    }
     case 'stall': stall(B, rng); break;
     case 'cart': cart(B, false, false); break;
     case 'loadcart': cart(B, true, false); break;
@@ -808,6 +817,21 @@ function marketContent(B, era, rng, night) {
   for (const [x, z] of [[4.6, 4.6], [4.4, 2.4], [3.2, 6.2]]) { B.at(x, 0, z); prop(B, 'tree', rng, night); B.pop(); }
 }
 
+/* the ornamental fountain square (1500 to 1750): a stone fountain at the heart
+ * with animated water, benches ringed to face it, trees in a formal quincunx,
+ * lamps and a carriage once the town lights and coaches its streets. No stalls,
+ * no bunting, no livestock — a promenade, not a market. */
+function fountainSquareContent(B, era, rng, night) {
+  const y = era.year;
+  B.at(0.5, 0, 2.6); prop(B, 'fountain', rng, night); B.pop();
+  B.at(0.5, 0, 5.4, Math.PI); prop(B, 'bench', rng, night); B.pop();
+  B.at(0.5, 0, -0.2, 0); prop(B, 'bench', rng, night); B.pop();
+  B.at(-2.6, 0, 2.6, Math.PI / 2); prop(B, 'bench', rng, night); B.pop();
+  B.at(3.6, 0, 2.6, -Math.PI / 2); prop(B, 'bench', rng, night); B.pop();
+  for (const [x, z] of [[-3.6, 5.2], [4.5, 5.2], [-3.6, 0.0], [4.5, 0.0]]) { B.at(x, 0, z); prop(B, 'tree', rng, night); B.pop(); }
+  if (y >= 1700) { for (const [x, z] of [[-1.6, 4.2], [2.6, 4.2], [5.6, 2.6], [-4.2, 5.6]]) { B.at(x, 0, z); prop(B, 'lamp-oil', rng, night); B.pop(); } B.at(-4.5, 0, 9.9); prop(B, 'carriage', rng, night); B.pop(); }
+}
+
 /* --------------------------------------------------------------- townsfolk */
 const CLOTH = ['#3f4a5a', '#6b3a3a', '#4a5a3a', '#5a4a6b', '#2f3136', '#7a6a4a', '#8a4a3a', '#3a5a6a'];
 function person(B, rng) {
@@ -901,6 +925,7 @@ export function buildEra(era, mats) {
   const y = era.year;
   if (y <= 1150) { villageContent(B, era, rng, night); return finishEra(B, era, rng, mats); }
   if (y <= 1450) { marketContent(B, era, rng, night); return finishEra(B, era, rng, mats); }
+  if (y <= 1750) { fountainSquareContent(B, era, rng, night); return finishEra(B, era, rng, mats); }
 
   const street = era.street || [];
   let si = 0, ti = 0, li = 0, bi = 0, vi = 0, ci = 0, fi = 0, gi = 0, misc = 0;
@@ -959,7 +984,7 @@ export function buildEra(era, mats) {
  * merge — shared by the village path and the from-1200 path */
 function finishEra(B, era, rng, mats) {
   const y = era.year;
-  if (y >= 1200 && y <= 1850 && (era.crowd || 0) >= 11) {
+  if (y >= 1200 && y <= 1450 && (era.crowd || 0) >= 11) {                   // only the medieval market flies bunting
     const cols = ['#c94a3a', '#e0b02a', '#3a6ab2', '#e8e4d8', '#3a7a4a'];   // one continuous garland per facade, meeting at the corner
     bunting(B, 5.0, -4.3, -4.3, -4.3, 4.6, cols);
     bunting(B, -4.3, -4.3, -4.3, 5.4, 4.6, cols);
