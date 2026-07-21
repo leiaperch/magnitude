@@ -779,7 +779,7 @@ function prop(B, kind, rng, night) {
     case 'farmbed': farmBed(B, rng); break;
     case 'kiosk': B.box(0, 0, 0, 1.2, 1.9, 1.0, C('#2f5a3a')); B.box(0, 0.5, 0.52, 0.9, 1.0, 0.05, C('#cfe0d0')); for (let i = 0; i < 3; i++) B.box(-0.3 + i * 0.3, 0.6, 0.56, 0.22, 0.7, 0.03, C(['#c94a3a', '#3a6ab2', '#d8b83a'][i])); B.box(0, 1.9, 0.2, 1.5, 0.1, 1.4, C('#24402c')); break;
     case 'bus-shelter': for (const sx of [-0.9, 0.9]) B.box(sx, 0, -0.3, 0.08, 2.0, 0.08, C('#3a3f46')); B.box(0, 2.0, -0.1, 2.0, 0.1, 0.7, C('#4a4f56')); B.box(-0.9, 0.4, -0.6, 0.06, 1.5, 0.7, night > .05 ? C('#8fb4c8') : C('#a9c4d0')); B.box(0.3, 0.35, 0, 1.1, 0.1, 0.35, C('#5a5f66')); B.box(0.3, 0.55, -0.15, 1.1, 0.35, 0.06, C('#5a5f66')); break;
-    case 'bike-rack': for (let i = 0; i < 4; i++) { B.at(-0.9 + i * 0.6, 0, (i % 2) * 0.2, Math.PI / 2 + (rng() - .5) * 0.3); bike(B); B.pop(); } break;
+    case 'bike-rack': B.box(0, 0.05, 0, 2.2, 0.1, 0.14, C('#8a8f96')); for (let i = 0; i < 4; i++) { B.box(-0.82 + i * 0.55, 0.4, -0.18, 0.05, 0.6, 0.05, C('#6a7078')); B.at(-0.82 + i * 0.55, 0, 0.12, Math.PI / 2); bike(B); B.pop(); } break;   // a tidy bike-share dock: a rail with bikes lined up the same way
     case 'charger': B.box(0, 0, 0, 0.3, 1.2, 0.2, C('#e8e4d8')); B.box(0, 0.8, 0.11, 0.22, 0.3, 0.04, C('#2bd6ff'), true); break;
     case 'canopy': for (const [sx, sz] of [[-1.2, -0.8], [1.2, -0.8], [-1.2, 0.8], [1.2, 0.8]]) B.cyl(sx, 0, sz, 0.08, 2.5, 6, C('#8a8378'), false, 0.07); B.box(0, 2.5, 0, 2.9, 0.12, 2.0, C('#586a4a')); for (let i = -1; i <= 1; i++) { B.box(i * 0.85, 2.62, -0.4, 0.72, 0.04, 1.6, C('#1f3d6b')); } for (let i = 0; i < 6; i++) B.blob(-1.1 + (i % 3) * 1.1, 2.7, 0.4 + ((i / 3) | 0) * 0.5 - 0.6, 0.28, C(['#5f8f4b', '#6d9a54'][(i) % 2])); break;
     case 'bin': B.cyl(0, 0, 0, 0.22, 0.7, 8, C('#3a5a3a')); B.cyl(0, 0.7, 0, 0.24, 0.08, 8, C('#2a4a2a')); break;
@@ -1106,16 +1106,16 @@ function civicContent(B, era, rng, night) {
  * a glass block on its footprint, so the square reads as modernity taking over. */
 function plazaContent(B, era, rng, night) {
   B.at(0.5, 0, 1.2); prop(B, 'sculpture', rng, night); B.pop();                                     // one clear focus, on open paving
-  B.at(3.5, 0, 0.6); prop(B, 'glass-pavilion', rng, night); B.pop();                                // the café sits on the right, under the glass tower
-  B.at(-1.4, 0, 5.4); prop(B, 'screen-pylon', rng, night); B.pop();                                 // two screens, on opposite sides
-  B.at(-4.0, 0, 1.4); prop(B, 'screen-pylon', rng, night); B.pop();
+  B.at(3.6, 0, -1.8); prop(B, 'glass-pavilion', rng, night); B.pop();                               // the café at the back of the square, under the glass tower
+  B.at(-3.8, 0, 2.4); prop(B, 'screen-pylon', rng, night); B.pop();                                 // two screens, well apart
+  B.at(2.6, 0, 3.8); prop(B, 'screen-pylon', rng, night); B.pop();
   for (let i = 0; i < 6; i++) { B.at(-4.2 + i * 1.7, 0, 7.4); prop(B, 'bollard', rng, night); B.pop(); }   // LED edge, car-free
   for (let i = 0; i < 3; i++) { B.at(7.2, 0, 0.4 + i * 2.4); prop(B, 'bollard', rng, night); B.pop(); }
-  B.at(-4.6, 0, 5.2); prop(B, 'bike-rack', rng, night); B.pop();
-  B.at(4.2, 0, 6.4); prop(B, 'kiosk', rng, night); B.pop();
-  for (const [x, z, r] of [[0.5, 5.4, Math.PI], [-2.8, 3.4, Math.PI / 2]]) { B.at(x, 0, z, r); prop(B, 'bench', rng, night); B.pop(); }
-  for (const [x, z] of [[-4.6, -3.0], [-4.9, 3.6], [5.2, 3.4]]) { B.at(x, 0, z); prop(B, 'tree-box', rng, night); B.pop(); }   // greenery at the corners, centre kept open
-  for (const [x, z] of [[-2.4, 2.6], [1.6, -0.6]]) { B.at(x, 0, z, rng() * 6.28); person(B, rng); B.pop(); }
+  B.at(2.4, 0, 6.2); prop(B, 'kiosk', rng, night); B.pop();                                         // kiosk and bikes kept out of the left corner
+  B.at(5.2, 0, 5.2); prop(B, 'bike-rack', rng, night); B.pop();
+  for (const [x, z, r] of [[0.5, 5.8, Math.PI], [-4.4, 4.2, Math.PI / 2]]) { B.at(x, 0, z, r); prop(B, 'bench', rng, night); B.pop(); }
+  for (const [x, z] of [[-4.7, -2.8], [5.4, 1.0], [-2.4, 6.4]]) { B.at(x, 0, z); prop(B, 'tree-box', rng, night); B.pop(); }   // greenery at the corners, centre kept open
+  for (const [x, z] of [[-2.6, 3.6], [1.4, -0.4]]) { B.at(x, 0, z, rng() * 6.28); person(B, rng); B.pop(); }
   B.at(0.5, 0, 10.0); prop(B, 'tram-modern', rng, night); B.pop();                                  // modern transit and a rare car, out on the road
   B.at(-4.5, 0, 9.9, 0.05); prop(B, 'car', rng, night); B.pop();
 }
