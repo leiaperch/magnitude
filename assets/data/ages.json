@@ -921,7 +921,6 @@
       "hill": "#68824a",
       "ground": "asphalt",
       "skyline": [
-        "cathedral-spire",
         "townhall",
         "station"
       ],
@@ -968,7 +967,6 @@
       "hill": "#6f8a4e",
       "ground": "asphalt",
       "skyline": [
-        "cathedral-spire",
         "townhall",
         "station"
       ],
@@ -1015,7 +1013,6 @@
       "hill": "#1a2140",
       "ground": "asphalt",
       "skyline": [
-        "cathedral-spire",
         "megatower",
         "skybridge"
       ],
@@ -1062,7 +1059,6 @@
       "hill": "#72a058",
       "ground": "cobble",
       "skyline": [
-        "cathedral-spire",
         "townhall",
         "station"
       ],

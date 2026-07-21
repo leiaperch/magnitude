@@ -664,6 +664,22 @@ function flyer(B, x0, y0, x1, y1, z, col) {
   for (let i = 0; i < steps; i++) { const t = i / steps, xa = x0 + (x1 - x0) * t, ya = y0 - (y0 - y1) * t * t; B.box(xa, ya, z, Math.abs(x1 - x0) / steps + 0.12, 0.16, 0.16, col); }
 }
 function pinnacle(B, x, y, z, r, col) { B.box(x, y, z, r * 1.6, r * 1.2, r * 1.6, col); B.cone(x, y + r * 1.2, z, r, r * 2.6, 4, col); }
+/* the modern glass-and-steel building that replaces the demolished cathedral on
+ * its footprint from 2000 on: a curtain-wall block taller than the terraces,
+ * with a set-back upper storey and a lit window grid. In 2000 the demolition
+ * rubble still lies at its foot. Front faces +z, toward the square. */
+function modernBlock(B, night, year) {
+  const H = 6.4, w = 4.4, d = 3.0, glass = C('#2b3a44'), frame = C('#9aa2aa');
+  B.box(0, 0, 0, w, H, d, glass);
+  for (const sx of [-w / 2, 0, w / 2]) B.box(sx, 0, d / 2, 0.16, H, 0.16, frame);   // curtain-wall mullions
+  glowGrid(B, 0, 0.3, d / 2 + 0.02, w - 0.5, 16, night);
+  B.box(0, H, 0, w + 0.2, 0.26, d + 0.2, frame);                                     // parapet
+  B.box(0, H, -0.35, w * 0.66, 1.7, d * 0.66, glass);                                // set-back upper storey
+  glowGrid(B, 0, H + 0.15, d * 0.33 + 0.02, w * 0.5, 4, night);
+  B.box(0, H + 1.7, -0.35, w * 0.7, 0.14, d * 0.7, frame);
+  B.box(0, 0, d / 2 + 0.6, w * 0.55, 0.12, 1.1, frame);                              // entrance canopy
+  if (year <= 2000) for (let r = 0; r < 6; r++) { const rx = (r / 5 - 0.5) * w * 0.8; B.box(rx, 0, d / 2 + 0.5 + (r % 2) * 0.5, 0.42, 0.3 + (r % 2) * 0.3, 0.42, shade(r % 2 ? '#8a8378' : '#7a7264', 0.9)); }   // demolition rubble
+}
 function scaffold(B, x, h, z) { for (let i = 0; i <= 3; i++) B.box(x, i * (h / 3), z + 0.85, 1.7, 0.08, 0.08, C('#9a854a')); for (const sx of [-0.8, 0.8]) B.box(x + sx, 0, z + 0.85, 0.08, h, 0.08, C('#9a854a')); }
 function windmillSails(B) { B.at(0, 4.6, 1.1); for (let k = 0; k < 4; k++) { B.push(new THREE.Matrix4().makeRotationZ(k * Math.PI / 2)); B.box(0, 1.4, 0, 0.18, 2.8, 0.1, C('#6b4f34')); B.box(0.35, 1.4, 0.02, 0.5, 2.4, 0.04, C('#d8d2c2')); B.pop(); } B.pop(); }
 function halfVault(B, cx, baseY, cz, r, h, d, color) { const seg = 8; for (let i = 0; i < seg; i++) { const a0 = Math.PI * i / seg, a1 = Math.PI * (i + 1) / seg; const y0 = baseY + Math.sin(a0) * h, x0 = cx - Math.cos(a0) * r, y1 = baseY + Math.sin(a1) * h, x1 = cx - Math.cos(a1) * r; B.quad([x0, y0, cz - d / 2], [x1, y1, cz - d / 2], [x1, y1, cz + d / 2], [x0, y0, cz + d / 2], color); } }
@@ -780,6 +796,29 @@ function prop(B, kind, rng, night) {
       for (let i = 0; i < 3; i++) B.box(-0.3 + i * 0.3, 0.62, 0.53, 0.22, 0.68, 0.03, C(['#b23a3a', '#3a5a9a', '#c8902a'][i]));
       B.box(0, 1.8, 0.15, 1.5, 0.08, 1.3, C('#1a3020')); B.pyramid(0, 1.88, 0.15, 1.4, 0.4, 1.2, C('#16281a')); break;
     }
+    case 'sculpture': {                                                                             // abstract steel-and-glass public artwork on a reflecting pool
+      const wcol = night > .1 ? C('#22323e') : C('#7fb4c8');
+      B.cyl(0, 0, 0, 1.7, 0.16, 16, C('#8a929a'), false, 1.7); B.anim(6, 0.2, 0); B.cyl(0, 0.05, 0, 1.55, 0.08, 16, wcol, night > .1); B.anim(0, 0, 0);
+      const steel = C('#b0b6bc'), glass = night > .1 ? C('#2a6a8a') : C('#8fd0e4');
+      B.box(0, 0.14, 0, 0.8, 0.4, 0.8, steel);
+      B.at(0, 0.5, 0); B.push(new THREE.Matrix4().makeRotationZ(0.18));
+      B.box(-0.24, 0, 0, 0.28, 3.4, 0.7, steel); B.box(0.12, 0, 0.02, 0.3, 3.1, 0.66, glass, night > .1); B.box(0.44, 0, 0, 0.24, 2.7, 0.6, steel);
+      B.pop(); B.pop(); break;
+    }
+    case 'glass-pavilion': {                                                                        // a sleek glass café pavilion with outdoor tables
+      const glass = night > .05 ? C('#3a5a6a') : C('#bfe0e8'), frame = C('#8a929a');
+      B.box(0, 0, 0, 2.4, 1.1, 1.8, glass);
+      for (const [sx, sz] of [[-1.2, -0.9], [1.2, -0.9], [-1.2, 0.9], [1.2, 0.9]]) B.box(sx, 0, sz, 0.08, 1.15, 0.08, frame);
+      B.box(0, 1.12, 0, 2.6, 0.12, 2.0, frame);
+      if (night > .05) B.box(0, 0.55, 0, 2.2, 0.9, 1.6, C(WARM), true);
+      for (const tx of [-0.7, 0.7]) { B.cyl(tx, 0, 1.35, 0.05, 0.7, 6, C('#7a8088'), false, 0.05); B.cyl(tx, 0.7, 1.35, 0.34, 0.05, 10, C('#d8dce0'), false, 0.34); } break;
+    }
+    case 'screen-pylon': {                                                                          // a digital advertising pylon with a lit screen
+      B.box(0, 0, 0, 0.24, 2.6, 0.18, C('#2a2e33')); B.box(0, 1.4, 0.11, 0.9, 1.2, 0.06, C('#101418'));
+      B.box(0, 1.4, 0.15, 0.8, 1.05, 0.03, C(rng() < 0.5 ? '#2ac6e0' : '#e02a8a'), true); break;
+    }
+    case 'tram-modern': tram(B, true, night); break;
+    case 'bollard': B.cyl(0, 0, 0, 0.09, 0.7, 8, C('#3a4046')); B.cyl(0, 0.7, 0, 0.1, 0.06, 8, C('#2ac6e0'), true); break;
     case 'cenotaph': {                                                                              // a war memorial: stepped stone plinth, tall pylon, cross of sacrifice, a wreath
       B.boxT('stone', 0, 0, 0, 1.9, 0.3, 1.9, WHITE); B.boxT('stone', 0, 0.3, 0, 1.45, 0.3, 1.45, WHITE); B.boxT('stone', 0, 0.6, 0, 1.05, 0.28, 1.05, WHITE);
       B.boxT('stone', 0, 0.88, 0, 0.72, 1.5, 0.72, WHITE); B.boxT('stone', 0, 2.38, 0, 0.62, 1.1, 0.62, shade(WHITE, 0.97)); B.boxT('stone', 0, 3.48, 0, 0.7, 0.14, 0.7, shade(WHITE, 0.95));
@@ -996,6 +1035,30 @@ function civicContent(B, era, rng, night) {
   for (const [x, z] of [[-1.8, 4.0], [2.6, 3.3]]) { B.at(x, 0, z); prop(B, 'planter', rng, night); B.pop(); }
 }
 
+/* the pedestrianised, contemporary square (2000): the classical fountain gives
+ * way to a steel-and-glass artwork on a reflecting pool, glass café pavilions,
+ * digital screen pylons, a line of LED bollards holding the car-free edge, a
+ * bike-share rack, a modern tram out on the road. The cathedral is gone by now,
+ * a glass block on its footprint, so the square reads as modernity taking over. */
+function plazaContent(B, era, rng, night) {
+  B.at(0.5, 0, 2.5); prop(B, 'sculpture', rng, night); B.pop();                                     // centrepiece
+  B.at(-3.0, 0, 4.0); prop(B, 'glass-pavilion', rng, night); B.pop();
+  B.at(3.4, 0, 4.6); prop(B, 'glass-pavilion', rng, night); B.pop();
+  B.at(-1.4, 0, 5.7); prop(B, 'screen-pylon', rng, night); B.pop();
+  B.at(4.7, 0, 1.4, -0.4); prop(B, 'screen-pylon', rng, night); B.pop();
+  for (let i = 0; i < 7; i++) { B.at(-4.5 + i * 1.6, 0, 7.4); prop(B, 'bollard', rng, night); B.pop(); }   // LED edge, car-free
+  for (let i = 0; i < 4; i++) { B.at(7.2, 0, -1 + i * 1.8); prop(B, 'bollard', rng, night); B.pop(); }
+  B.at(-4.6, 0, 5.6); prop(B, 'bike-rack', rng, night); B.pop();
+  B.at(-2.4, 0, 6.6, 0.2); prop(B, 'bus-shelter', rng, night); B.pop();
+  B.at(3.8, 0, 6.4); prop(B, 'kiosk', rng, night); B.pop();
+  B.at(5.4, 0, 5.0); prop(B, 'charger', rng, night); B.pop();
+  B.at(0.5, 0, 6.0, Math.PI); prop(B, 'bench', rng, night); B.pop();
+  for (const [x, z] of [[-3.8, 0.4], [4.6, 3.6], [-4.4, 2.2]]) { B.at(x, 0, z); prop(B, 'tree-box', rng, night); B.pop(); }
+  for (const [x, z] of [[-1.6, 4.2], [2.4, 3.2]]) { B.at(x, 0, z); prop(B, 'planter', rng, night); B.pop(); }
+  B.at(0.5, 0, 10.0); prop(B, 'tram-modern', rng, night); B.pop();                                  // modern transit and a rare car, out on the road
+  B.at(-4.5, 0, 9.9, 0.05); prop(B, 'car', rng, night); B.pop();
+}
+
 /* --------------------------------------------------------------- townsfolk */
 const CLOTH = ['#3f4a5a', '#6b3a3a', '#4a5a3a', '#5a4a6b', '#2f3136', '#7a6a4a', '#8a4a3a', '#3a5a6a'];
 function person(B, rng) {
@@ -1089,11 +1152,15 @@ export function buildEra(era, mats) {
 
   road(B, era);
   /* the church stands on the right-hand (back) terrace facing the square, in
-   * place of the houses there; any other skyline marks stay in the background */
+   * place of the houses there; any other skyline marks stay in the background.
+   * From 2000 the cathedral is gone, demolished, and a modern glass block takes
+   * its footprint instead, so the same lots are still cleared for it. */
   const marks = era.skyline || [];
   const churchKind = marks.find(k => k === 'church' || k.startsWith('cathedral'));
-  const CHX = 3.4, CHZ = -9.5;                        // church centre; its west front lands on the terrace frontage
-  backdrop(B, era, churchKind ? [CHX, CHZ] : null);   // the wider town behind the square
+  const churchGone = !churchKind && era.year >= 2000;
+  const rightBlock = churchKind || (churchGone ? 'modern' : null);
+  const CHX = 3.4, CHZ = -9.5;                        // right-hand landmark centre; its front lands on the terrace frontage
+  backdrop(B, era, rightBlock ? [CHX, CHZ] : null);   // the wider town behind the square
 
   const bgSlots = [[-13, -12], [-17, -8], [-8, -17]];
   let bs = 0;
@@ -1119,11 +1186,12 @@ export function buildEra(era, mats) {
     }
   };
   let bx = -8.4;
-  place(BACK_LOTS, (w) => { const cx = bx + w / 2; bx += w + 0.06; B.at(cx, 0, BACK); return churchKind && cx > CHX - 3.7 && cx < CHX + 3.7; }, -1);
+  place(BACK_LOTS, (w) => { const cx = bx + w / 2; bx += w + 0.06; B.at(cx, 0, BACK); return rightBlock && cx > CHX - 3.7 && cx < CHX + 3.7; }, -1);
   let lz = -4.2;
   place(LEFT_LOTS, (w) => { const cz = lz + w / 2; if (leftIdx++ === bombLeft) bombPos = cz; B.at(LEFTX, 0, cz, Math.PI / 2); lz += w + 0.06; return false; }, bombLeft);
 
   if (churchKind) { B.at(CHX, 0, CHZ, 0, 1.0); landmark(B, churchKind, night); B.pop(); }   // the church, facade to the square
+  else if (churchGone) { B.at(CHX, 0, CHZ + 0.4, 0, 1.0); modernBlock(B, night, era.year); B.pop(); }   // a modern glass block on the razed cathedral's footprint
   if (bombPos !== null) { B.at(LEFTX - 1.3, 0, bombPos, -0.2); landmark(B, 'crane', night); B.pop(); }   // the reconstruction crane behind the ruin, jib reaching out over the gap
 
   /* the square's contents. The village (to 1150) is a curated rural scene; from
@@ -1134,6 +1202,7 @@ export function buildEra(era, mats) {
   if (y <= 1750) { fountainSquareContent(B, era, rng, night); return finishEra(B, era, rng, mats); }
   if (y <= 1900) { industrialContent(B, era, rng, night); return finishEra(B, era, rng, mats); }
   if (y <= 1950) { civicContent(B, era, rng, night); return finishEra(B, era, rng, mats); }
+  if (y <= 2000) { plazaContent(B, era, rng, night); return finishEra(B, era, rng, mats); }
 
   const street = era.street || [];
   let si = 0, ti = 0, li = 0, bi = 0, vi = 0, ci = 0, fi = 0, gi = 0, misc = 0;
