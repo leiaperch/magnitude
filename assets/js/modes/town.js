@@ -438,7 +438,7 @@ function pentice(B, w, front, y) {
   for (const px of [-w / 2 + 0.1, w / 2 - 0.1]) B.box(px, y - 0.5, front + proj - 0.1, 0.08, 0.5, 0.08, C('#4a3826'));  // props
 }
 function awning(B, w, front, y, style) {
-  const pal = [['#b23a3a', '#e8e4d8'], ['#3a6ab2', '#e8e4d8'], ['#3a7a4a', '#e8e4d8'], ['#c8a23a', '#e8e4d8']][style % 4];
+  const pal = [['#8f4a3e', '#cabfa4'], ['#4a5c68', '#cabfa4'], ['#4f6a4c', '#c7bda2'], ['#9a7c3c', '#cabfa4']][style % 4];   // muted Victorian stripes, warm off-white, not a bright fairground red/blue
   const proj = 0.75, n = 8, sw = w / n;
   for (let i = 0; i < n; i++) { const x = -w / 2 + sw * (i + 0.5); B.quad([x - sw / 2, y, front], [x + sw / 2, y, front], [x + sw / 2, y - 0.28, front + proj], [x - sw / 2, y - 0.28, front + proj], C(pal[i % 2])); }
   for (let i = 0; i < n; i++) { const x = -w / 2 + sw * (i + 0.5); B.quad([x - sw / 2, y - 0.28, front + proj], [x + sw / 2, y - 0.28, front + proj], [x + sw / 2, y - 0.44, front + proj], [x - sw / 2, y - 0.44, front + proj], C(pal[i % 2])); } // valance
