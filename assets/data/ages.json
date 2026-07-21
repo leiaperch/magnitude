@@ -728,7 +728,7 @@
       "hill": "#68824a",
       "ground": "setts",
       "skyline": [
-        "cathedral",
+        "cathedral-spire",
         "chimney",
         "windmill"
       ],
@@ -755,8 +755,9 @@
         "barrel",
         "crate"
       ],
-      "crowd": 14,
-      "smoke": 3,
+      "crowd": 16,
+      "smoke": 4,
+      "haze": 0.5,
       "night": 0
     },
     {
@@ -806,6 +807,7 @@
       ],
       "crowd": 18,
       "smoke": 4,
+      "haze": 0.85,
       "night": 0
     },
     {
@@ -852,6 +854,7 @@
       ],
       "crowd": 18,
       "smoke": 3,
+      "haze": 0.55,
       "night": 0
     },
     {

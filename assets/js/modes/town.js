@@ -729,6 +729,57 @@ function prop(B, kind, rng, night) {
     case 'bin': B.cyl(0, 0, 0, 0.22, 0.7, 8, C('#3a5a3a')); B.cyl(0, 0.7, 0, 0.24, 0.08, 8, C('#2a4a2a')); break;
     case 'holo-sign': B.box(0, 0, 0, 0.1, 2.2, 0.1, C('#39424c')); B.box(0, 2.4, 0, 1.0, 0.9, 0.05, C(NEONS[(rng() * NEONS.length) | 0]), true); break;
     case 'drone': B.at((rng() - .5) * 4, 3 + rng() * 2, (rng() - .5) * 3); B.anim(5, rng() * 6.283, 0); B.box(0, 0, 0, 0.4, 0.14, 0.4, C('#26324c')); for (const [dx, dz] of [[.3, .3], [-.3, .3], [.3, -.3], [-.3, -.3]]) { B.box(dx, 0.05, dz, 0.22, 0.03, 0.22, C('#39424c')); B.box(dx, 0.02, dz, 0.05, 0.05, 0.05, C('#43e0ff'), true); } B.anim(0, 0, 0); B.pop(); break;
+    case 'statue': {                                                                                // civic monument: a bronze figure on a tall stone pedestal
+      B.boxT('stone', 0, 0, 0, 1.5, 0.4, 1.5, WHITE); B.boxT('stone', 0, 0.4, 0, 1.0, 1.5, 1.0, WHITE);
+      B.box(0, 1.05, 0.51, 0.6, 0.4, 0.05, C('#4a4236'));                                           // inscription plate
+      B.boxT('stone', 0, 1.9, 0, 1.25, 0.16, 1.25, shade(WHITE, 0.95));
+      const bz = C('#5f7d6a');                                                                      // verdigris bronze
+      B.box(0, 2.06, 0, 0.36, 0.7, 0.3, bz); B.box(0, 2.66, 0, 0.44, 0.62, 0.32, bz);
+      B.box(0.02, 2.88, 0.24, 0.16, 0.5, 0.16, bz); B.box(0.32, 3.0, 0.05, 0.42, 0.14, 0.14, bz);   // one arm at the side, one raised
+      B.blob(0, 3.42, 0, 0.17, bz); break;
+    }
+    case 'bandstand': {                                                                             // cast-iron Victorian bandstand with a copper ogee roof
+      const iron = C('#233a30'), cop = C('#4a6a58');
+      B.cyl(0, 0, 0, 1.75, 0.35, 8, C('#b6ad96')); B.cyl(0, 0.35, 0, 1.55, 0.12, 8, C('#8a8168'), false, 1.55);
+      for (let i = 0; i < 8; i++) { const a = i / 8 * 6.2832, px = Math.cos(a) * 1.45, pz = Math.sin(a) * 1.45; B.cyl(px, 0.47, pz, 0.06, 1.85, 6, iron); B.box(px, 0.6, pz, 0.16, 0.5, 0.16, iron); }
+      B.cone(0, 2.32, 0, 2.05, 1.0, 8, cop); B.cone(0, 3.05, 0, 1.1, 0.7, 8, cop);
+      B.cyl(0, 3.6, 0, 0.06, 0.4, 6, C('#c8a23a')); B.blob(0, 4.05, 0, 0.14, C('#c8a23a')); break;
+    }
+    case 'ad-column': {                                                                             // a Morris advertising column plastered with playbills
+      B.cyl(0, 0, 0, 0.16, 0.3, 10, C('#20342a')); B.cyl(0, 0.3, 0, 0.5, 2.1, 14, C('#2f5a3a'));
+      const posters = ['#b23a3a', '#c8902a', '#3a5a9a', '#d8c23a', '#7a3a6a'];
+      for (let k = 0; k < 5; k++) { B.at(0, 0, 0, k / 5 * 6.2832); B.box(0, 0.7, 0.5, 0.5, 1.3, 0.02, C(posters[k])); B.pop(); }
+      B.cone(0, 2.4, 0, 0.6, 0.5, 14, C('#1e4028')); B.blob(0, 2.95, 0, 0.1, C('#1e4028')); break;
+    }
+    case 'drink-fountain': {                                                                        // a small cast-iron drinking fountain
+      const iron = C('#2a3a34'), wcol = night > .1 ? C('#2a4a66') : C('#6fb0cf');
+      B.cyl(0, 0, 0, 0.34, 0.2, 8, C('#8a8168')); B.cyl(0, 0.2, 0, 0.2, 0.9, 8, iron); B.cyl(0, 1.1, 0, 0.4, 0.18, 10, iron, false, 0.34);
+      B.anim(6, 0.3, 0); B.cyl(0, 1.18, 0, 0.3, 0.05, 10, wcol, night > .1); B.anim(0, 0, 0);
+      B.cyl(0, 1.28, 0, 0.1, 0.5, 6, iron); B.blob(0, 1.85, 0, 0.13, iron); break;
+    }
+    case 'trough': {                                                                                // a stone horse trough
+      const wcol = night > .1 ? C('#2a4a66') : C('#6fb0cf');
+      B.boxT('stone', 0, 0, 0, 1.9, 0.5, 0.72, WHITE); B.box(0, 0.5, 0, 1.7, 0.04, 0.54, C('#7a7264'));
+      B.anim(6, 0.7, 0); B.box(0, 0.44, 0, 1.66, 0.1, 0.5, wcol, night > .1); B.anim(0, 0, 0); break;
+    }
+    case 'flower-cart': {                                                                           // a flower-seller's barrow
+      B.boxT('wood', 0, 0.4, 0, 1.2, 0.24, 0.72, WHITE); for (const wx of [0.45, -0.45]) B.cyl(wx, 0, 0.42, 0.28, 0.1, 8, C('#4a3826'));
+      B.box(0.72, 0.32, 0, 0.7, 0.06, 0.1, C('#6b4f34'));
+      const fl = ['#c94a5a', '#e0902a', '#d8c23a', '#b06ac0', '#e8e4d8', '#c96a3a', '#4a8a5a'];
+      for (let i = 0; i < 10; i++) B.blob(-0.5 + (i % 5) * 0.25, 0.62 + ((i / 5) | 0) * 0.06, -0.18 + ((i / 5) | 0) * 0.34, 0.13, C(fl[i % fl.length])); break;
+    }
+    case 'chestnut-cart': {                                                                         // a roast-chestnut vendor, coals glowing in the brazier
+      B.boxT('wood', 0, 0.42, 0, 1.0, 0.26, 0.66, WHITE); for (const wx of [0.4, -0.4]) B.cyl(wx, 0, 0.38, 0.26, 0.1, 8, C('#4a3826'));
+      B.cyl(0, 0.68, 0, 0.3, 0.32, 8, C('#2a2622')); B.cyl(0, 1.0, 0, 0.3, 0.03, 8, C('#3a3630'), false, 0.28);
+      B.blob(0, 1.0, 0, 0.24, C('#ff7a2a'), true); B.blob(0.05, 1.12, -0.03, 0.12, C('#ffcf6a'), true);
+      B.cyl(0.24, 1.0, 0.18, 0.05, 0.7, 6, C('#20242a'));
+      B.anim(3, 1.7, 0); B.blob(0.24, 1.9, 0.18, 0.18, shade('#c9cdd2', 1.0)); B.anim(0, 0, 0); break;
+    }
+    case 'newsstand': {                                                                             // a Victorian newspaper kiosk with a peaked roof
+      B.box(0, 0, 0, 1.2, 1.8, 0.95, C('#22402c')); B.box(0, 0.55, 0.49, 0.92, 0.95, 0.05, C('#d8d2c2'));
+      for (let i = 0; i < 3; i++) B.box(-0.3 + i * 0.3, 0.62, 0.53, 0.22, 0.68, 0.03, C(['#b23a3a', '#3a5a9a', '#c8902a'][i]));
+      B.box(0, 1.8, 0.15, 1.5, 0.08, 1.3, C('#1a3020')); B.pyramid(0, 1.88, 0.15, 1.4, 0.4, 1.2, C('#16281a')); break;
+    }
     default: break;
   }
 }
@@ -879,6 +930,35 @@ function fountainSquareContent(B, era, rng, night) {
   if (y >= 1700) { for (const [x, z] of [[-1.6, 4.2], [2.6, 4.2], [5.6, 2.6], [-4.2, 5.6]]) { B.at(x, 0, z); prop(B, 'lamp-oil', rng, night); B.pop(); } B.at(-4.5, 0, 9.9); prop(B, 'carriage', rng, night); B.pop(); }
 }
 
+/* the industrial / Victorian square (1800 to 1900): a civic statue at the heart
+ * instead of a fountain, a cast-iron bandstand with its own little audience, a
+ * Morris column, street vendors (flowers, roast chestnuts, newspapers), a
+ * drinking fountain and a horse trough, gas then electric lamps, a tram from
+ * mid-century and cabs out on the road. Busy on purpose, and wrapped in the low
+ * industrial haze the fog lays over these years. */
+function industrialContent(B, era, rng, night) {
+  const y = era.year, lampK = y >= 1900 ? 'lamp-electric' : 'lamp-gas';
+  B.at(0.5, 0, 2.3); prop(B, 'statue', rng, night); B.pop();                                        // centrepiece
+  B.at(-3.0, 0, 3.9); prop(B, 'bandstand', rng, night); B.pop();
+  for (let i = 0; i < 5; i++) { const a = i / 5 * 6.2832; B.at(-3.0 + Math.cos(a) * 2.3, 0, 3.9 + Math.sin(a) * 2.1, rng() * 6.28); person(B, rng); B.pop(); }   // the crowd come to listen
+  B.at(3.9, 0, 1.3); prop(B, 'ad-column', rng, night); B.pop();
+  B.at(3.5, 0, 4.9); prop(B, 'drink-fountain', rng, night); B.pop();
+  B.at(-4.7, 0, 6.7, Math.PI / 2); prop(B, 'trough', rng, night); B.pop();
+  B.at(-1.3, 0, 5.7, -0.3); prop(B, 'flower-cart', rng, night); B.pop();
+  B.at(2.1, 0, 5.5, 0.4); prop(B, 'chestnut-cart', rng, night); B.pop();
+  for (const [x, z] of [[-2.0, 6.1], [2.9, 6.1]]) { B.at(x, 0, z, rng() * 6.28); person(B, rng); B.pop(); }   // a customer at each vendor
+  B.at(-4.5, 0, 4.0); prop(B, 'newsstand', rng, night); B.pop();
+  B.at(0.5, 0, 6.0, Math.PI); prop(B, 'bench', rng, night); B.pop();
+  B.at(5.4, 0, 3.0, -Math.PI / 2); prop(B, 'bench', rng, night); B.pop();
+  for (const [x, z] of [[4.7, 0.4], [4.6, 5.9], [-4.6, 0.4]]) { B.at(x, 0, z); prop(B, 'tree', rng, night); B.pop(); }
+  for (const [x, z] of [[-1.6, 4.4], [2.6, 3.6], [5.3, 5.4], [-4.4, 2.0]]) { B.at(x, 0, z); prop(B, lampK, rng, night); B.pop(); }
+  if (y >= 1850) { B.at(0.5, 0, 10.0); prop(B, 'tram', rng, night); B.pop(); }
+  else { B.at(0.5, 0, 9.9, 0.1); prop(B, 'carriage', rng, night); B.pop(); }
+  B.at(-4.5, 0, 9.9); prop(B, 'carriage', rng, night); B.pop();
+  B.at(5.5, 0, 9.9, Math.PI); prop(B, 'cart', rng, night); B.pop();
+  B.at(-2.4, 0, 7.3, -Math.PI / 3); prop(B, 'dog', rng, night); B.pop();
+}
+
 /* --------------------------------------------------------------- townsfolk */
 const CLOTH = ['#3f4a5a', '#6b3a3a', '#4a5a3a', '#5a4a6b', '#2f3136', '#7a6a4a', '#8a4a3a', '#3a5a6a'];
 function person(B, rng) {
@@ -1008,6 +1088,7 @@ export function buildEra(era, mats) {
   if (y <= 1150) { villageContent(B, era, rng, night); return finishEra(B, era, rng, mats); }
   if (y <= 1450) { marketContent(B, era, rng, night); return finishEra(B, era, rng, mats); }
   if (y <= 1750) { fountainSquareContent(B, era, rng, night); return finishEra(B, era, rng, mats); }
+  if (y <= 1900) { industrialContent(B, era, rng, night); return finishEra(B, era, rng, mats); }
 
   const street = era.street || [];
   let si = 0, ti = 0, li = 0, bi = 0, vi = 0, ci = 0, fi = 0, gi = 0, misc = 0;

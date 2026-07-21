@@ -248,6 +248,12 @@ export class Ages {
     this.u = u;
     this.setSky(this.eras[i], this.eras[i + 1], u);
     this.setLight(this.eras[i], this.eras[i + 1], u);
+    /* industrial haze: the smoggy centuries pull the fog forward and thicker so
+     * the brume sits visibly over the back terraces and the church, tinted by
+     * the era's own brown-grey sky (set as the fog colour in setSky) */
+    const haze = (this.eras[i].haze || 0) * (1 - u) + (this.eras[i + 1].haze || 0) * u;
+    this.fog.near = 132 - haze * 17;
+    this.fog.far = 215 - haze * 50;
     this.groundTint(this.eras[u < 0.5 ? i : i + 1]);
 
     /* left of the seam is always the older town, right of it the later one */
