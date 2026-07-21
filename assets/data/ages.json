@@ -964,19 +964,20 @@
         "#e8efe8"
       ],
       "hill": "#6f8a4e",
-      "ground": "asphalt",
+      "ground": "cobble",
       "skyline": [
         "townhall",
         "station"
       ],
       "house": {
-        "material": "brick",
+        "material": "concrete",
         "storeys": 4,
         "roof": "green",
-        "window": "sash",
-        "sign": true,
-        "trees": true,
-        "solar": true
+        "window": "picture",
+        "modern": true,
+        "solar": true,
+        "green": true,
+        "sign": true
       },
       "street": [
         "car",

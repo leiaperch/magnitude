@@ -477,7 +477,13 @@ function facade(B, w, h, front, y, s, storeys, spec, mat, beam, rng, night, year
     if (lit) B.box(0, bandY + bandH / 2, front + 0.055, gw, bandH, 0.02, C(WARM), true);
     const cols = Math.max(3, Math.round(w / 0.8));
     for (let m = 0; m <= cols; m++) B.box(-gw / 2 + gw * m / cols, bandY, front + 0.07, 0.05, bandH, 0.05, C('#ccd0d4'));   // mullions
-    if (s >= 1 && (s + (w > 2.5 ? 0 : 1)) % 2 === 0) railing(B, 0, bandY - 0.16, front, w * 0.66);   // an occasional balcony
+    const balc = s >= 1 && (s + (w > 2.5 ? 0 : 1)) % 2 === 0;
+    if (balc) railing(B, 0, bandY - 0.16, front, w * 0.66);                                         // an occasional balcony
+    if (spec.green) {                                                                               // the 2050 retrofit: planted balconies and a vertical garden up a pier
+      const greens = ['#5f8f4b', '#6d9a54', '#57853f'];
+      if (balc) for (let g = 0; g < 3; g++) B.blob(-w * 0.26 + g * w * 0.26, bandY - 0.02, front + 0.5, 0.16, C(greens[g % 3]));
+      for (let g = 0; g < 2; g++) B.blob(-gw / 2 - 0.05, y + h * (0.32 + g * 0.4), front + 0.06, 0.14, C(greens[(s + g) % 3]));
+    }
     return;
   }
 
@@ -691,7 +697,7 @@ function pinnacle(B, x, y, z, r, col) { B.box(x, y, z, r * 1.6, r * 1.2, r * 1.6
  * curtain wall (the real reflective glass material, so it mirrors the sky and
  * reads unmistakably as glazing), with clear storey slabs, mullions, a glazed
  * ground-floor lobby and a rooftop plant room. Front faces +z, toward the square. */
-function modernBlock(B, night) {
+function modernBlock(B, night, green) {
   const H = 6.4, w = 4.4, d = 3.0, e = 0.04;
   const frame = C('#c4c8ce'), body = C('#7a848e'), glassTint = night > 0.05 ? C('#243642') : C('#a6cfe0');
   B.box(0, 0, 0, w, H, d, body);                                                       // solid mass, pale steel, never hollow
@@ -705,7 +711,11 @@ function modernBlock(B, night) {
   for (let m = -1; m <= 1; m++) { B.box(m * w / 3, 0, d / 2 + 0.06, 0.09, H, 0.08, frame); B.box(w / 2 + 0.06, 0, m * d / 3, 0.08, H, 0.09, frame); }             // mullions
   for (const [cx, cz] of [[-w / 2, d / 2], [w / 2, d / 2], [w / 2, -d / 2]]) B.box(cx, 0, cz, 0.16, H + 0.06, 0.16, frame);   // corner columns
   B.box(0, H, 0, w + 0.24, 0.34, d + 0.24, frame);                                     // parapet cap
-  B.box(0.4, H + 0.34, -0.3, w * 0.48, 1.1, d * 0.5, body);                            // rooftop plant room
+  if (green) {                                                                          // 2050 retrofit: a rooftop garden with solar, and a vertical garden up the front
+    for (let i = -1; i <= 1; i++) { B.box(i * w * 0.3, H + 0.34, -d * 0.24, w * 0.24, 0.05, d * 0.4, C('#0e1b34')); B.box(i * w * 0.3, H + 0.39, -d * 0.24, w * 0.22, 0.02, d * 0.36, C('#24406e')); }   // roof solar
+    for (let i = 0; i < 3; i++) { const px = -w * 0.3 + i * w * 0.3; B.box(px, H + 0.34, d * 0.28, w * 0.24, 0.18, d * 0.34, C('#5a4636')); B.blob(px, H + 0.66, d * 0.28, 0.26, C('#5f8f4b')); }   // roof planters
+    for (let g = 0; g < 8; g++) B.blob(-w / 2 + 0.25, 0.5 + g * (H - 1) / 8, d / 2 + 0.09, 0.2, C(['#5f8f4b', '#6d9a54', '#57853f'][g % 3]));   // vertical garden strip
+  } else B.box(0.4, H + 0.34, -0.3, w * 0.48, 1.1, d * 0.5, body);                     // otherwise a plain rooftop plant room
   if (night > 0.05) glowGrid(B, 0, 0.3, d / 2 + 0.05, w - 0.5, 15, night);             // lit floors at night
   B.box(0, 0, d / 2 + 0.08, w * 0.52, fh * 0.85, 0.05, night > 0.05 ? C(WARM) : C('#d4e8f0'), night > 0.05);   // bright glazed ground-floor lobby
 }
@@ -852,6 +862,18 @@ function prop(B, kind, rng, night) {
       B.box(0, 1.4, 0.15, 0.8, 1.05, 0.03, C(rng() < 0.5 ? '#2ac6e0' : '#e02a8a'), true); break;
     }
     case 'tram-modern': tram(B, true, night); break;
+    case 'ring-tree': {                                                                             // a landmark tree with an octagonal timber bench around its base
+      for (let i = 0; i < 8; i++) { const a = i / 8 * 6.2832; B.at(Math.cos(a) * 1.35, 0, Math.sin(a) * 1.35, -a); B.box(0, 0.32, 0, 0.62, 0.1, 0.3, C('#7a5c3a')); B.box(0, 0, 0.05, 0.5, 0.32, 0.08, C('#5a4030')); B.pop(); }
+      B.cyl(0, 0, 0, 0.26, 1.7, 8, C('#6b4f34'), false, 0.2); B.anim(4, rng() * 6.283, 0);
+      B.blob(0, 2.5, 0, 1.25, C('#5f8f4b')); B.blob(-0.75, 3.0, 0.35, 0.85, C('#6d9a54')); B.blob(0.75, 2.8, -0.35, 0.85, C('#57853f')); B.blob(0.2, 3.5, 0, 0.72, C('#6d9a54')); B.anim(0, 0, 0); break;
+    }
+    case 'solar-pergola': {                                                                         // a shade structure of solar panels on slim posts, with a bench under it
+      const post = C('#8a8f96');
+      for (const [sx, sz] of [[-1.35, -0.85], [1.35, -0.85], [-1.35, 0.85], [1.35, 0.85]]) B.cyl(sx, 0, sz, 0.08, 2.3, 6, post, false, 0.08);
+      B.box(0, 2.3, 0, 3.1, 0.1, 2.1, C('#2a3550'));
+      for (let i = -1; i <= 1; i++) B.box(i * 0.95, 2.42, 0, 0.82, 0.04, 1.8, C('#24406e'));
+      B.box(0, 0.35, 0, 1.6, 0.1, 0.4, C('#7a5c3a')); B.box(0, 0.55, -0.15, 1.6, 0.4, 0.08, C('#7a5c3a')); for (const sx of [-0.7, 0.7]) B.box(sx, 0, 0, 0.1, 0.35, 0.36, C('#5a4030')); break;
+    }
     case 'bollard': B.cyl(0, 0, 0, 0.09, 0.7, 8, C('#3a4046')); B.cyl(0, 0.7, 0, 0.1, 0.06, 8, C('#2ac6e0'), true); break;
     case 'cenotaph': {                                                                              // a war memorial: stepped stone plinth, tall pylon, cross of sacrifice, a wreath
       B.boxT('stone', 0, 0, 0, 1.9, 0.3, 1.9, WHITE); B.boxT('stone', 0, 0.3, 0, 1.45, 0.3, 1.45, WHITE); B.boxT('stone', 0, 0.6, 0, 1.05, 0.28, 1.05, WHITE);
@@ -1121,6 +1143,26 @@ function plazaContent(B, era, rng, night) {
   B.at(10.0, 0, 3.8, Math.PI / 2); prop(B, 'car', rng, night); B.pop();                              // the car over on the right-hand road, away from the tram
 }
 
+/* the garden city (2050): the concrete-and-glass town of 2000 retrofitted green.
+ * A landmark tree with a ring bench holds the centre, raised vegetable beds are
+ * scattered across the quadrants, a solar pergola shades seating on the left, a
+ * café terrace sits by the tower on the right, and charging and e-bikes serve the
+ * mostly car-free edges. Spread wide and kept open. */
+function gardenCityContent(B, era, rng, night) {
+  B.at(0.5, 0, 1.0); prop(B, 'ring-tree', rng, night); B.pop();                                     // landmark tree at the heart
+  B.at(-3.4, 0, -2.6, 0); prop(B, 'farmbed', rng, night); B.pop();                                  // vegetable beds, one per quadrant
+  B.at(2.8, 0, -2.6, Math.PI / 2); prop(B, 'farmbed', rng, night); B.pop();
+  B.at(-2.4, 0, 5.4, 0); prop(B, 'farmbed', rng, night); B.pop();
+  B.at(-4.0, 0, 2.0, Math.PI / 2); prop(B, 'solar-pergola', rng, night); B.pop();                   // pergola on the left
+  B.at(3.9, 0, 2.2); prop(B, 'cafe', rng, night); B.pop();                                          // café terrace by the tower
+  B.at(-4.4, 0, 5.8); prop(B, 'bike-rack', rng, night); B.pop();                                    // e-bikes and charging at opposite edges
+  B.at(4.6, 0, 5.6); prop(B, 'charger', rng, night); B.pop();
+  for (const [x, z, r] of [[0.5, 6.0, Math.PI], [-4.4, -0.4, Math.PI / 2], [4.6, -0.2, -Math.PI / 2]]) { B.at(x, 0, z, r); prop(B, 'bench', rng, night); B.pop(); }
+  for (const [x, z] of [[-4.8, -3.4], [4.8, -3.2], [-4.9, 3.8], [4.8, 4.4], [1.6, 6.2]]) { B.at(x, 0, z); prop(B, 'tree', rng, night); B.pop(); }
+  for (const [x, z] of [[-2.0, -0.4], [2.0, 0.6], [-1.2, 3.4], [3.0, 4.4]]) { B.at(x, 0, z, rng() * 6.28); person(B, rng); B.pop(); }
+  B.at(10.0, 0, 4.0, Math.PI / 2); prop(B, 'car', rng, night); B.pop();                             // a rare EV on the right-hand road
+}
+
 /* --------------------------------------------------------------- townsfolk */
 const CLOTH = ['#3f4a5a', '#6b3a3a', '#4a5a3a', '#5a4a6b', '#2f3136', '#7a6a4a', '#8a4a3a', '#3a5a6a'];
 function person(B, rng) {
@@ -1247,7 +1289,7 @@ export function buildEra(era, mats) {
   place(LEFT_LOTS, (w) => { B.at(LEFTX, 0, lz + w / 2, Math.PI / 2); lz += w + 0.06; return false; });
 
   if (churchKind) { B.at(CHX, 0, CHZ, 0, 1.0); landmark(B, churchKind, night); B.pop(); }   // the church, facade to the square
-  else if (churchGone) { B.at(CHX, 0, CHZ + 0.4, 0, 1.0); modernBlock(B, night); B.pop(); }   // a modern glass building on the razed cathedral's footprint
+  else if (churchGone) { B.at(CHX, 0, CHZ + 0.4, 0, 1.0); modernBlock(B, night, !!spec.green); B.pop(); }   // a modern glass building on the razed cathedral's footprint, greened in the garden-city era
 
   /* the square's contents. The village (to 1150) is a curated rural scene; from
    * 1200 the era's prop list fills fixed stations, then a per-phase dressing. */
@@ -1258,6 +1300,7 @@ export function buildEra(era, mats) {
   if (y <= 1900) { industrialContent(B, era, rng, night); return finishEra(B, era, rng, mats); }
   if (y <= 1950) { civicContent(B, era, rng, night); return finishEra(B, era, rng, mats); }
   if (y <= 2000) { plazaContent(B, era, rng, night); return finishEra(B, era, rng, mats); }
+  if (y <= 2050) { gardenCityContent(B, era, rng, night); return finishEra(B, era, rng, mats); }
 
   const street = era.street || [];
   let si = 0, ti = 0, li = 0, bi = 0, vi = 0, ci = 0, fi = 0, gi = 0, misc = 0;
