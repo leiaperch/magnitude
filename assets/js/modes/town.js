@@ -919,15 +919,6 @@ function car(B, rng, night) {
 }
 function bike(B) { for (const wx of [0.4, -0.4]) B.cyl(wx, 0, 0, 0.28, 0.06, 8, C('#20242a')); B.box(0, 0.5, 0, 0.7, 0.08, 0.08, C('#8a2a2a')); B.box(-0.4, 0.5, 0, 0.08, 0.5, 0.08, C('#8a2a2a')); B.box(0.4, 0.6, 0, 0.08, 0.5, 0.08, C('#8a2a2a')); }
 
-/* a bombed-out lot: a timber hoarding along the street, rubble heaps and a
- * standing stub of broken brick wall behind it. The reconstruction crane is
- * placed separately, rising over the gap. */
-function rubbleSite(B, w, rng) {
-  for (let i = -2; i <= 2; i++) B.box(i * (w / 5), 0, 1.5, w / 5 + 0.02, 1.3, 0.08, shade('#7a5c3a', i % 2 ? 1.05 : 0.9));   // hoarding boards
-  B.box(0, 1.32, 1.5, w, 0.1, 0.12, C('#5a4030'));                                                                          // top rail
-  for (let r = 0; r < 7; r++) B.box((rng() - .5) * w, 0, (rng() - .5) * 2.2, 0.35 + rng() * 0.4, 0.3 + rng() * 0.5, 0.4 + rng() * 0.3, shade(rng() < 0.5 ? '#8a4a34' : '#8a8378', 0.85 + rng() * 0.25));   // rubble
-  B.boxT('brick', -w / 2 + 0.35, 0, -0.7, 0.42, 1.5 + rng(), 0.42, shade(WHITE, 0.9));                                      // a jagged surviving wall
-}
 /* a fenced kitchen garden on a lot the town has not built on yet */
 function garden(B, w, rng) {
   const fz = 1.5;
@@ -992,28 +983,38 @@ function fountainSquareContent(B, era, rng, night) {
  * mid-century and cabs out on the road. Busy on purpose, and wrapped in the low
  * industrial haze the fog lays over these years. */
 function industrialContent(B, era, rng, night) {
-  const y = era.year, lampK = y >= 1900 ? 'lamp-electric' : 'lamp-gas';
-  B.at(0.5, 0, 1.2); prop(B, 'statue', rng, night); B.pop();                                        // centrepiece, central in the plaza's depth
-  B.at(-3.0, 0, -1.6); prop(B, 'bandstand', rng, night); B.pop();                                   // anchors the open back-left, opposite the church
-  for (let i = 0; i < 5; i++) { const a = i / 5 * 6.2832; B.at(-3.0 + Math.cos(a) * 2.0, 0, -1.6 + Math.sin(a) * 2.0, rng() * 6.28); person(B, rng); B.pop(); }   // its audience
-  B.at(4.2, 0, 1.6); prop(B, 'ad-column', rng, night); B.pop();
-  B.at(-4.4, 0, 1.2); prop(B, 'drink-fountain', rng, night); B.pop();
-  B.at(-4.6, 0, 6.4, Math.PI / 2); prop(B, 'trough', rng, night); B.pop();
-  B.at(-1.4, 0, 4.6, -0.3); prop(B, 'flower-cart', rng, night); B.pop();
-  B.at(2.2, 0, 4.4, 0.4); prop(B, 'chestnut-cart', rng, night); B.pop();
-  for (const [x, z] of [[-2.2, 5.4], [3.0, 5.2]]) { B.at(x, 0, z, rng() * 6.28); person(B, rng); B.pop(); }   // a customer at each vendor
-  B.at(-4.6, 0, 3.8); prop(B, 'newsstand', rng, night); B.pop();
-  B.at(0.5, 0, -2.6, 0); prop(B, 'bench', rng, night); B.pop();                                     // seating spread front to back
-  B.at(3.2, 0, 4.6, -Math.PI / 2); prop(B, 'bench', rng, night); B.pop();
-  B.at(-1.8, 0, 6.6, Math.PI); prop(B, 'bench', rng, night); B.pop();
-  for (const [x, z] of [[-4.6, -3.2], [-4.9, 3.2], [4.8, 4.6], [4.6, -0.4]]) { B.at(x, 0, z); prop(B, 'tree', rng, night); B.pop(); }   // trees to the back corner and sides
-  for (const [x, z] of [[-2.4, -3.0], [2.6, -1.0], [-0.6, 3.0], [5.0, 2.6], [-3.6, 5.6], [1.2, 6.4]]) { B.at(x, 0, z); prop(B, lampK, rng, night); B.pop(); }   // lamps stitched through the whole depth
-  for (const [x, z] of [[-1.4, 0.4], [1.8, -0.6], [-3.0, 2.4]]) { B.at(x, 0, z, rng() * 6.28); person(B, rng); B.pop(); }   // strollers deeper in, to balance the front crowd
-  if (y >= 1850) { B.at(0.5, 0, 10.0); prop(B, 'tram', rng, night); B.pop(); }
-  else { B.at(0.5, 0, 9.9, 0.1); prop(B, 'carriage', rng, night); B.pop(); }
+  const y = era.year;
+  if (y <= 1800) return georgianContent(B, era, rng, night);                                        // 1800 is still a quiet Georgian square
+  /* 1850 / 1900, high Victorian to Edwardian: the bandstand is the clear focus,
+   * a monument and a single vendor to the sides, kept deliberately uncluttered */
+  const lampK = y >= 1900 ? 'lamp-electric' : 'lamp-gas';
+  B.at(0.5, 0, 0.8); prop(B, 'bandstand', rng, night); B.pop();                                     // centrepiece
+  for (let i = 0; i < 6; i++) { const a = i / 6 * 6.2832; B.at(0.5 + Math.cos(a) * 2.2, 0, 0.8 + Math.sin(a) * 2.2, rng() * 6.28); person(B, rng); B.pop(); }   // its audience
+  B.at(-4.2, 0, 4.4); prop(B, 'statue', rng, night); B.pop();                                       // a monument, off to one side
+  B.at(4.3, 0, 2.4); prop(B, y >= 1900 ? 'newsstand' : 'ad-column', rng, night); B.pop();           // a Morris column, a newsstand by 1900
+  B.at(2.8, 0, 5.2, 0.4); prop(B, 'chestnut-cart', rng, night); B.pop();                            // a single vendor
+  B.at(1.9, 0, 6.0, rng() * 6.28); person(B, rng); B.pop();
+  for (const [x, z, r] of [[0.5, 5.2, Math.PI], [-3.4, 0.8, Math.PI / 2], [4.4, 5.2, Math.PI]]) { B.at(x, 0, z, r); prop(B, 'bench', rng, night); B.pop(); }
+  for (const [x, z] of [[-4.7, -3.0], [4.7, -2.6], [-4.9, 4.4], [4.6, 0.2]]) { B.at(x, 0, z); prop(B, 'tree', rng, night); B.pop(); }
+  for (const [x, z] of [[-2.6, -2.2], [3.0, -1.4], [-3.8, 5.6], [1.4, 6.4]]) { B.at(x, 0, z); prop(B, lampK, rng, night); B.pop(); }
+  B.at(0.5, 0, 10.0); prop(B, 'tram', rng, night); B.pop();
   B.at(-4.5, 0, 9.9); prop(B, 'carriage', rng, night); B.pop();
   B.at(5.5, 0, 9.9, Math.PI); prop(B, 'cart', rng, night); B.pop();
-  B.at(-1.6, 0, 7.0, -Math.PI / 3); prop(B, 'dog', rng, night); B.pop();
+  B.at(-1.4, 0, 6.9, -Math.PI / 3); prop(B, 'dog', rng, night); B.pop();
+}
+/* 1800, the first chimney: still a late-Georgian civic square, formal and sparse.
+ * A single statue at the heart, benches ringing it, oil lamps and trees at the
+ * corners, a coach and a cart on the road. No bandstand or gaslight yet, so it
+ * reads clearly apart from the busy, smoky 1850. */
+function georgianContent(B, era, rng, night) {
+  B.at(0.5, 0, 1.5); prop(B, 'statue', rng, night); B.pop();                                        // the square's single focus
+  for (const [x, z, r] of [[0.5, -2.2, 0], [0.5, 5.2, Math.PI], [-3.2, 1.5, Math.PI / 2], [4.2, 1.5, -Math.PI / 2]]) { B.at(x, 0, z, r); prop(B, 'bench', rng, night); B.pop(); }
+  for (const [x, z] of [[-3.6, -2.6], [3.6, -2.6], [-4.2, 5.0], [4.6, 5.0]]) { B.at(x, 0, z); prop(B, 'lamp-oil', rng, night); B.pop(); }
+  for (const [x, z] of [[-4.7, -3.2], [4.7, -3.0], [-4.9, 4.2], [4.7, 4.4]]) { B.at(x, 0, z); prop(B, 'tree', rng, night); B.pop(); }
+  B.at(-4.5, 0, 9.9); prop(B, 'carriage', rng, night); B.pop();
+  B.at(0.6, 0, 10.0, Math.PI); prop(B, 'loadcart', rng, night); B.pop();
+  B.at(5.5, 0, 9.9, Math.PI); prop(B, 'cart', rng, night); B.pop();
+  B.at(-1.6, 0, 6.6, -Math.PI / 3); prop(B, 'dog', rng, night); B.pop();
 }
 
 /* the post-war civic square (1950): a war memorial at the heart in place of the
@@ -1045,23 +1046,17 @@ function civicContent(B, era, rng, night) {
  * bike-share rack, a modern tram out on the road. The cathedral is gone by now,
  * a glass block on its footprint, so the square reads as modernity taking over. */
 function plazaContent(B, era, rng, night) {
-  B.at(0.5, 0, 1.0); prop(B, 'sculpture', rng, night); B.pop();                                     // centrepiece, central in the plaza's depth
-  B.at(-3.4, 0, -1.6); prop(B, 'glass-pavilion', rng, night); B.pop();                              // a pavilion anchors the open back-left
-  B.at(3.2, 0, 4.4); prop(B, 'glass-pavilion', rng, night); B.pop();
-  B.at(-1.4, 0, 5.6); prop(B, 'screen-pylon', rng, night); B.pop();
-  B.at(4.6, 0, 0.6, -0.4); prop(B, 'screen-pylon', rng, night); B.pop();
-  B.at(-4.2, 0, 2.6); prop(B, 'screen-pylon', rng, night); B.pop();
-  for (let i = 0; i < 7; i++) { B.at(-4.5 + i * 1.6, 0, 7.4); prop(B, 'bollard', rng, night); B.pop(); }   // LED edge, car-free
-  for (let i = 0; i < 4; i++) { B.at(7.2, 0, -1 + i * 1.8); prop(B, 'bollard', rng, night); B.pop(); }
-  B.at(-4.6, 0, 5.6); prop(B, 'bike-rack', rng, night); B.pop();
-  B.at(-2.4, 0, 6.6, 0.2); prop(B, 'bus-shelter', rng, night); B.pop();
-  B.at(3.8, 0, 6.6); prop(B, 'kiosk', rng, night); B.pop();
-  B.at(5.4, 0, 3.0); prop(B, 'charger', rng, night); B.pop();
-  B.at(0.5, 0, -2.6, 0); prop(B, 'bench', rng, night); B.pop();
-  B.at(2.6, 0, 2.0, -Math.PI / 2); prop(B, 'bench', rng, night); B.pop();
-  for (const [x, z] of [[-4.4, -3.0], [-4.9, 3.4], [4.7, 3.0], [4.6, -0.6]]) { B.at(x, 0, z); prop(B, 'tree-box', rng, night); B.pop(); }   // trees to the back corners and sides
-  for (const [x, z] of [[-1.6, 3.2], [1.8, -0.4], [-2.8, 1.8]]) { B.at(x, 0, z); prop(B, 'planter', rng, night); B.pop(); }
-  for (const [x, z] of [[-2.0, -1.8], [1.2, 1.0], [-0.8, 4.2]]) { B.at(x, 0, z, rng() * 6.28); person(B, rng); B.pop(); }   // strollers spread deep
+  B.at(0.5, 0, 1.2); prop(B, 'sculpture', rng, night); B.pop();                                     // one clear focus, on open paving
+  B.at(-3.6, 0, -1.4); prop(B, 'glass-pavilion', rng, night); B.pop();                              // a single café pavilion anchors the back-left
+  B.at(-1.2, 0, 5.4); prop(B, 'screen-pylon', rng, night); B.pop();                                 // two screens, on opposite sides
+  B.at(4.4, 0, 1.4, -0.4); prop(B, 'screen-pylon', rng, night); B.pop();
+  for (let i = 0; i < 6; i++) { B.at(-4.2 + i * 1.7, 0, 7.4); prop(B, 'bollard', rng, night); B.pop(); }   // LED edge, car-free
+  for (let i = 0; i < 3; i++) { B.at(7.2, 0, 0.4 + i * 2.4); prop(B, 'bollard', rng, night); B.pop(); }
+  B.at(-4.6, 0, 5.2); prop(B, 'bike-rack', rng, night); B.pop();
+  B.at(3.9, 0, 6.4); prop(B, 'kiosk', rng, night); B.pop();
+  for (const [x, z, r] of [[0.5, 5.4, Math.PI], [2.8, 3.2, -Math.PI / 2]]) { B.at(x, 0, z, r); prop(B, 'bench', rng, night); B.pop(); }
+  for (const [x, z] of [[-4.6, -3.0], [4.7, 4.4], [4.6, -1.0]]) { B.at(x, 0, z); prop(B, 'tree-box', rng, night); B.pop(); }   // greenery at the corners, centre kept open
+  for (const [x, z] of [[-2.4, 2.6], [1.6, -0.6]]) { B.at(x, 0, z, rng() * 6.28); person(B, rng); B.pop(); }
   B.at(0.5, 0, 10.0); prop(B, 'tram-modern', rng, night); B.pop();                                  // modern transit and a rare car, out on the road
   B.at(-4.5, 0, 9.9, 0.05); prop(B, 'car', rng, night); B.pop();
 }
@@ -1173,33 +1168,26 @@ export function buildEra(era, mats) {
   let bs = 0;
   marks.forEach((k) => { if (k === churchKind) return; const [x, z] = bgSlots[bs % bgSlots.length]; B.at(x, 0, z, 0.14 * (bs - 1), 0.95); bs++; landmark(B, k, night); B.pop(); });
 
-  /* the two terraces, lot by fixed lot; the back run skips the church footprint.
-   * In the bombed era one lot of the LEFT terrace, which faces the square, is left
-   * an open hoarded rubble site so the ruin actually reads in frame (a hidden gap
-   * in the back row would be occluded, the same problem the church had). */
-  let sign = 0, neon = 0, bombPos = null;
-  const bombLeft = spec.gap ? 3 : -1;
-  let leftIdx = 0;
-  const place = (lots, atFn, bombIdx) => {
-    let li = 0;
+  /* the two terraces, lot by fixed lot; the back run skips the right-hand
+   * landmark's footprint (church, or the modern block that replaces it) */
+  let sign = 0, neon = 0;
+  const place = (lots, atFn) => {
     for (const [w, gb, ds, dm, cm, role, since] of lots) {
       const si = sign++;
       const lot = { gable: !!gb, ds, dormer: dm, chimney: cm, depth: 3.0, sign: si % 4, awn: (si * 5 + 2) % 4, neon: neon++, role: role || '', civic: role === 'civic' && era.year >= 1450, year: era.year };
-      if (atFn(w)) { B.pop(); li++; continue; }                                 // this lot is the church's footprint
-      if (li === bombIdx) rubbleSite(B, w, rng);
-      else if (since && era.year < since) garden(B, w, rng);
+      if (atFn(w)) { B.pop(); continue; }                                       // this lot is the landmark's footprint
+      if (since && era.year < since) garden(B, w, rng);
       else house(B, w, spec, rng, night, lot);
-      B.pop(); li++;
+      B.pop();
     }
   };
   let bx = -8.4;
-  place(BACK_LOTS, (w) => { const cx = bx + w / 2; bx += w + 0.06; B.at(cx, 0, BACK); return rightBlock && cx > CHX - 3.7 && cx < CHX + 3.7; }, -1);
+  place(BACK_LOTS, (w) => { const cx = bx + w / 2; bx += w + 0.06; B.at(cx, 0, BACK); return rightBlock && cx > CHX - 3.7 && cx < CHX + 3.7; });
   let lz = -4.2;
-  place(LEFT_LOTS, (w) => { const cz = lz + w / 2; if (leftIdx++ === bombLeft) bombPos = cz; B.at(LEFTX, 0, cz, Math.PI / 2); lz += w + 0.06; return false; }, bombLeft);
+  place(LEFT_LOTS, (w) => { B.at(LEFTX, 0, lz + w / 2, Math.PI / 2); lz += w + 0.06; return false; });
 
   if (churchKind) { B.at(CHX, 0, CHZ, 0, 1.0); landmark(B, churchKind, night); B.pop(); }   // the church, facade to the square
   else if (churchGone) { B.at(CHX, 0, CHZ + 0.4, 0, 1.0); modernBlock(B, night, era.year); B.pop(); }   // a modern glass block on the razed cathedral's footprint
-  if (bombPos !== null) { B.at(LEFTX - 1.3, 0, bombPos, -0.2); landmark(B, 'crane', night); B.pop(); }   // the reconstruction crane behind the ruin, jib reaching out over the gap
 
   /* the square's contents. The village (to 1150) is a curated rural scene; from
    * 1200 the era's prop list fills fixed stations, then a per-phase dressing. */

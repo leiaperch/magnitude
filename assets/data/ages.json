@@ -755,9 +755,9 @@
         "barrel",
         "crate"
       ],
-      "crowd": 16,
-      "smoke": 4,
-      "haze": 0.5,
+      "crowd": 8,
+      "smoke": 2,
+      "haze": 0.3,
       "night": 0
     },
     {
@@ -805,7 +805,7 @@
         "barrel",
         "dog"
       ],
-      "crowd": 18,
+      "crowd": 13,
       "smoke": 4,
       "haze": 0.85,
       "night": 0
@@ -852,7 +852,7 @@
         "planter",
         "tree"
       ],
-      "crowd": 18,
+      "crowd": 12,
       "smoke": 3,
       "haze": 0.55,
       "night": 0
@@ -883,8 +883,7 @@
         "roof": "mansard",
         "window": "sash",
         "shutter": true,
-        "sign": true,
-        "gap": true
+        "sign": true
       },
       "street": [
         "fountain",
@@ -946,7 +945,7 @@
         "bus-shelter",
         "planter"
       ],
-      "crowd": 14,
+      "crowd": 9,
       "smoke": 0,
       "night": 0
     },
