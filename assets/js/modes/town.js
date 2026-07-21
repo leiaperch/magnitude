@@ -647,7 +647,11 @@ function cathedral(B, variant, night) {
   roseWindow(B, 0, nH * 0.62, zf + 0.62, 0.8, lit);
   B.box(0, 0, zf + 0.62, 1.0, 1.9, 0.14, C('#3a2c1e'));
   B.gableT('stone', 0, 1.9, zf + 0.55, 1.3, 0.5, 0.4, S);
-  if (build) B.box(nW / 2 + 2.6, 0, zf, 0.42, twH + 1, 0.42, C('#8a7a44'));
+  if (build) {                                                                  // a timber crane lifting a dressed stone up to the works
+    const mx = nW / 2 + 1.9, mh = twH * 0.82, tim = C('#6b4f34');
+    B.box(mx, 0, zf, 0.26, mh, 0.26, tim); B.box(mx - 1.2, mh, zf, 2.6, 0.18, 0.18, tim);
+    B.box(mx - 2.3, mh - 0.9, zf, 0.08, 1.0, 0.08, C('#4a3826')); B.box(mx - 2.3, mh - 1.2, zf, 0.36, 0.24, 0.36, shade(WHITE, 0.9));
+  }
 }
 function pointedWindow(B, x, y, z, w, h, faceSign, lit) {
   const xx = x + faceSign * 0.02, gcol = lit ? C(WARM) : C('#7a95b0');
@@ -687,7 +691,19 @@ function modernBlock(B, night) {
   if (night > 0.05) glowGrid(B, 0, 0.3, d / 2 + 0.05, w - 0.5, 15, night);             // lit floors at night
   B.box(0, 0, d / 2 + 0.08, w * 0.52, fh * 0.85, 0.05, night > 0.05 ? C(WARM) : C('#d4e8f0'), night > 0.05);   // bright glazed ground-floor lobby
 }
-function scaffold(B, x, h, z) { for (let i = 0; i <= 3; i++) B.box(x, i * (h / 3), z + 0.85, 1.7, 0.08, 0.08, C('#9a854a')); for (const sx of [-0.8, 0.8]) B.box(x + sx, 0, z + 0.85, 0.08, h, 0.08, C('#9a854a')); }
+/* a timber scaffold cage hugging the two camera-facing faces of a tower under
+ * construction: standards (verticals), ledgers (horizontals) and a couple of
+ * working platforms, in muted timber so it reads as scaffolding, not a frame */
+function scaffold(B, x, h, z) {
+  const pole = C('#6b4f34'), plank = C('#a5885a'), fz = z + 0.9, rx = x + 0.9, lift = h / 4;
+  for (const px of [x - 0.78, x, x + 0.78]) B.box(px, 0, fz, 0.06, h, 0.06, pole);          // front standards
+  for (const pz of [z - 0.78, z, z + 0.78]) B.box(rx, 0, pz, 0.06, h, 0.06, pole);          // right standards
+  for (let l = 1; l <= 4; l++) {
+    const y = l * lift - 0.4;
+    B.box(x, y, fz, 1.66, 0.05, 0.05, pole); B.box(rx, y, z, 0.05, 0.05, 1.66, pole);       // ledgers
+    if (l % 2 === 0) { B.box(x, y + 0.05, fz - 0.2, 1.66, 0.04, 0.36, plank); B.box(rx - 0.2, y + 0.05, z, 0.36, 0.04, 1.66, plank); }   // working platforms
+  }
+}
 function windmillSails(B) { B.at(0, 4.6, 1.1); for (let k = 0; k < 4; k++) { B.push(new THREE.Matrix4().makeRotationZ(k * Math.PI / 2)); B.box(0, 1.4, 0, 0.18, 2.8, 0.1, C('#6b4f34')); B.box(0.35, 1.4, 0.02, 0.5, 2.4, 0.04, C('#d8d2c2')); B.pop(); } B.pop(); }
 function halfVault(B, cx, baseY, cz, r, h, d, color) { const seg = 8; for (let i = 0; i < seg; i++) { const a0 = Math.PI * i / seg, a1 = Math.PI * (i + 1) / seg; const y0 = baseY + Math.sin(a0) * h, x0 = cx - Math.cos(a0) * r, y1 = baseY + Math.sin(a1) * h, x1 = cx - Math.cos(a1) * r; B.quad([x0, y0, cz - d / 2], [x1, y1, cz - d / 2], [x1, y1, cz + d / 2], [x0, y0, cz + d / 2], color); } }
 function megatower(B, night) {
