@@ -780,6 +780,13 @@ function prop(B, kind, rng, night) {
       for (let i = 0; i < 3; i++) B.box(-0.3 + i * 0.3, 0.62, 0.53, 0.22, 0.68, 0.03, C(['#b23a3a', '#3a5a9a', '#c8902a'][i]));
       B.box(0, 1.8, 0.15, 1.5, 0.08, 1.3, C('#1a3020')); B.pyramid(0, 1.88, 0.15, 1.4, 0.4, 1.2, C('#16281a')); break;
     }
+    case 'cenotaph': {                                                                              // a war memorial: stepped stone plinth, tall pylon, cross of sacrifice, a wreath
+      B.boxT('stone', 0, 0, 0, 1.9, 0.3, 1.9, WHITE); B.boxT('stone', 0, 0.3, 0, 1.45, 0.3, 1.45, WHITE); B.boxT('stone', 0, 0.6, 0, 1.05, 0.28, 1.05, WHITE);
+      B.boxT('stone', 0, 0.88, 0, 0.72, 1.5, 0.72, WHITE); B.boxT('stone', 0, 2.38, 0, 0.62, 1.1, 0.62, shade(WHITE, 0.97)); B.boxT('stone', 0, 3.48, 0, 0.7, 0.14, 0.7, shade(WHITE, 0.95));
+      const st = C('#cbc2ab'); B.box(0, 3.62, 0, 0.14, 0.8, 0.14, st); B.box(0, 3.98, 0, 0.5, 0.14, 0.14, st);   // cross of sacrifice
+      B.box(0, 1.05, 0.53, 0.5, 0.36, 0.04, C('#3a4236'));                                          // bronze dedication plaque
+      for (let i = 0; i < 8; i++) { const a = i / 8 * 6.2832; B.blob(Math.cos(a) * 0.22, 1.55 + Math.sin(a) * 0.22, 0.56, 0.07, C(i % 3 ? '#3a6a3a' : '#b22a2a')); } break;   // remembrance wreath
+    }
     default: break;
   }
 }
@@ -873,6 +880,15 @@ function car(B, rng, night) {
 }
 function bike(B) { for (const wx of [0.4, -0.4]) B.cyl(wx, 0, 0, 0.28, 0.06, 8, C('#20242a')); B.box(0, 0.5, 0, 0.7, 0.08, 0.08, C('#8a2a2a')); B.box(-0.4, 0.5, 0, 0.08, 0.5, 0.08, C('#8a2a2a')); B.box(0.4, 0.6, 0, 0.08, 0.5, 0.08, C('#8a2a2a')); }
 
+/* a bombed-out lot: a timber hoarding along the street, rubble heaps and a
+ * standing stub of broken brick wall behind it. The reconstruction crane is
+ * placed separately, rising over the gap. */
+function rubbleSite(B, w, rng) {
+  for (let i = -2; i <= 2; i++) B.box(i * (w / 5), 0, 1.5, w / 5 + 0.02, 1.3, 0.08, shade('#7a5c3a', i % 2 ? 1.05 : 0.9));   // hoarding boards
+  B.box(0, 1.32, 1.5, w, 0.1, 0.12, C('#5a4030'));                                                                          // top rail
+  for (let r = 0; r < 7; r++) B.box((rng() - .5) * w, 0, (rng() - .5) * 2.2, 0.35 + rng() * 0.4, 0.3 + rng() * 0.5, 0.4 + rng() * 0.3, shade(rng() < 0.5 ? '#8a4a34' : '#8a8378', 0.85 + rng() * 0.25));   // rubble
+  B.boxT('brick', -w / 2 + 0.35, 0, -0.7, 0.42, 1.5 + rng(), 0.42, shade(WHITE, 0.9));                                      // a jagged surviving wall
+}
 /* a fenced kitchen garden on a lot the town has not built on yet */
 function garden(B, w, rng) {
   const fz = 1.5;
@@ -957,6 +973,27 @@ function industrialContent(B, era, rng, night) {
   B.at(-4.5, 0, 9.9); prop(B, 'carriage', rng, night); B.pop();
   B.at(5.5, 0, 9.9, Math.PI); prop(B, 'cart', rng, night); B.pop();
   B.at(-2.4, 0, 7.3, -Math.PI / 3); prop(B, 'dog', rng, night); B.pop();
+}
+
+/* the post-war civic square (1950): a war memorial at the heart in place of the
+ * statue, the motor age arriving with cars parked and moving, the first traffic
+ * controls, a red phone box, a bus shelter and a newsstand, benches and pavement
+ * trees. Sober and thinned out after the war; the bomb gap stays open in the
+ * terrace behind, with the reconstruction crane rising over it. */
+function civicContent(B, era, rng, night) {
+  B.at(0.5, 0, 2.6); prop(B, 'cenotaph', rng, night); B.pop();                                      // centrepiece
+  B.at(-4.5, 0, 9.5, 0.05); prop(B, 'car', rng, night); B.pop();                                    // the motor age: kerbside and moving
+  B.at(2.5, 0, 10.2, Math.PI); prop(B, 'car', rng, night); B.pop();
+  B.at(9.6, 0, 1.6, Math.PI / 2); prop(B, 'car', rng, night); B.pop();
+  B.at(9.6, 0, 5.2, Math.PI / 2); prop(B, 'car', rng, night); B.pop();
+  B.at(6.8, 0, 7.4); prop(B, 'traffic-light', rng, night); B.pop();
+  B.at(-4.6, 0, 4.2); prop(B, 'phone-box', rng, night); B.pop();
+  B.at(-2.4, 0, 5.8, 0.2); prop(B, 'bus-shelter', rng, night); B.pop();
+  B.at(3.6, 0, 5.4); prop(B, 'kiosk', rng, night); B.pop();
+  B.at(0.5, 0, 5.9, Math.PI); prop(B, 'bench', rng, night); B.pop();
+  B.at(-4.4, 0, 1.6, Math.PI / 2); prop(B, 'bench', rng, night); B.pop();
+  for (const [x, z] of [[-3.6, 0.2], [4.6, 0.4], [4.4, 3.9]]) { B.at(x, 0, z); prop(B, 'tree', rng, night); B.pop(); }
+  for (const [x, z] of [[-1.8, 4.0], [2.6, 3.3]]) { B.at(x, 0, z); prop(B, 'planter', rng, night); B.pop(); }
 }
 
 /* --------------------------------------------------------------- townsfolk */
@@ -1062,25 +1099,32 @@ export function buildEra(era, mats) {
   let bs = 0;
   marks.forEach((k) => { if (k === churchKind) return; const [x, z] = bgSlots[bs % bgSlots.length]; B.at(x, 0, z, 0.14 * (bs - 1), 0.95); bs++; landmark(B, k, night); B.pop(); });
 
-  /* the two terraces, lot by fixed lot; the back run skips the church footprint */
-  let sign = 0, neon = 0;
-  const place = (lots, atFn) => {
+  /* the two terraces, lot by fixed lot; the back run skips the church footprint.
+   * In the bombed era one lot of the LEFT terrace, which faces the square, is left
+   * an open hoarded rubble site so the ruin actually reads in frame (a hidden gap
+   * in the back row would be occluded, the same problem the church had). */
+  let sign = 0, neon = 0, bombPos = null;
+  const bombLeft = spec.gap ? 3 : -1;
+  let leftIdx = 0;
+  const place = (lots, atFn, bombIdx) => {
+    let li = 0;
     for (const [w, gb, ds, dm, cm, role, since] of lots) {
       const si = sign++;
       const lot = { gable: !!gb, ds, dormer: dm, chimney: cm, depth: 3.0, sign: si % 4, awn: (si * 5 + 2) % 4, neon: neon++, role: role || '', civic: role === 'civic' && era.year >= 1450, year: era.year };
-      if (atFn(w)) { B.pop(); continue; }                                         // this lot is the church's footprint
-      if (since && era.year < since) garden(B, w, rng);
-      else if (spec.gap && rng() < 0.13) { for (let r = 0; r < 4; r++) B.box((rng() - .5) * w, 0, (rng() - .5) * 2, 0.4 + rng() * 0.3, 0.3 + rng() * 0.4, 0.4, shade('#8a8378', 0.9 + rng() * 0.2)); }
+      if (atFn(w)) { B.pop(); li++; continue; }                                 // this lot is the church's footprint
+      if (li === bombIdx) rubbleSite(B, w, rng);
+      else if (since && era.year < since) garden(B, w, rng);
       else house(B, w, spec, rng, night, lot);
-      B.pop();
+      B.pop(); li++;
     }
   };
   let bx = -8.4;
-  place(BACK_LOTS, (w) => { const cx = bx + w / 2; bx += w + 0.06; B.at(cx, 0, BACK); return churchKind && cx > CHX - 3.7 && cx < CHX + 3.7; });
+  place(BACK_LOTS, (w) => { const cx = bx + w / 2; bx += w + 0.06; B.at(cx, 0, BACK); return churchKind && cx > CHX - 3.7 && cx < CHX + 3.7; }, -1);
   let lz = -4.2;
-  place(LEFT_LOTS, (w) => { B.at(LEFTX, 0, lz + w / 2, Math.PI / 2); lz += w + 0.06; return false; });
+  place(LEFT_LOTS, (w) => { const cz = lz + w / 2; if (leftIdx++ === bombLeft) bombPos = cz; B.at(LEFTX, 0, cz, Math.PI / 2); lz += w + 0.06; return false; }, bombLeft);
 
   if (churchKind) { B.at(CHX, 0, CHZ, 0, 1.0); landmark(B, churchKind, night); B.pop(); }   // the church, facade to the square
+  if (bombPos !== null) { B.at(LEFTX - 1.3, 0, bombPos, -0.2); landmark(B, 'crane', night); B.pop(); }   // the reconstruction crane behind the ruin, jib reaching out over the gap
 
   /* the square's contents. The village (to 1150) is a curated rural scene; from
    * 1200 the era's prop list fills fixed stations, then a per-phase dressing. */
@@ -1089,6 +1133,7 @@ export function buildEra(era, mats) {
   if (y <= 1450) { marketContent(B, era, rng, night); return finishEra(B, era, rng, mats); }
   if (y <= 1750) { fountainSquareContent(B, era, rng, night); return finishEra(B, era, rng, mats); }
   if (y <= 1900) { industrialContent(B, era, rng, night); return finishEra(B, era, rng, mats); }
+  if (y <= 1950) { civicContent(B, era, rng, night); return finishEra(B, era, rng, mats); }
 
   const street = era.street || [];
   let si = 0, ti = 0, li = 0, bi = 0, vi = 0, ci = 0, fi = 0, gi = 0, misc = 0;

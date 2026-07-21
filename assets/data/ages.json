@@ -874,8 +874,7 @@
       "hill": "#68824a",
       "ground": "asphalt",
       "skyline": [
-        "cathedral",
-        "crane",
+        "cathedral-spire",
         "chimney"
       ],
       "house": {
