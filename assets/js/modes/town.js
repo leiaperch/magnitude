@@ -1107,7 +1107,7 @@ function civicContent(B, era, rng, night) {
  * a glass block on its footprint, so the square reads as modernity taking over. */
 function plazaContent(B, era, rng, night) {
   B.at(0.5, 0, 1.2); prop(B, 'sculpture', rng, night); B.pop();                                     // one clear focus, on open paving
-  B.at(3.6, 0, -1.8); prop(B, 'glass-pavilion', rng, night); B.pop();                               // the café at the back of the square, under the glass tower
+  B.at(3.6, 0, -3.4); prop(B, 'glass-pavilion', rng, night); B.pop();                               // the café pushed to the back of the square, right under the glass tower
   B.at(-3.8, 0, 2.4); prop(B, 'screen-pylon', rng, night); B.pop();                                 // two screens, well apart
   B.at(2.6, 0, 3.8); prop(B, 'screen-pylon', rng, night); B.pop();
   for (let i = 0; i < 6; i++) { B.at(-4.2 + i * 1.7, 0, 7.4); prop(B, 'bollard', rng, night); B.pop(); }   // LED edge, car-free
@@ -1118,7 +1118,7 @@ function plazaContent(B, era, rng, night) {
   for (const [x, z] of [[-4.7, -2.8], [5.4, 1.0], [-2.4, 6.4]]) { B.at(x, 0, z); prop(B, 'tree-box', rng, night); B.pop(); }   // greenery at the corners, centre kept open
   for (const [x, z] of [[-2.6, 3.6], [1.4, -0.4]]) { B.at(x, 0, z, rng() * 6.28); person(B, rng); B.pop(); }
   B.at(0.5, 0, 10.0); prop(B, 'tram-modern', rng, night); B.pop();                                  // modern transit and a rare car, out on the road
-  B.at(-4.5, 0, 9.9, 0.05); prop(B, 'car', rng, night); B.pop();
+  B.at(10.0, 0, 3.8, Math.PI / 2); prop(B, 'car', rng, night); B.pop();                              // the car over on the right-hand road, away from the tram
 }
 
 /* --------------------------------------------------------------- townsfolk */
