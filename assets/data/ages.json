@@ -1017,10 +1017,11 @@
         "skybridge"
       ],
       "house": {
-        "material": "render",
+        "material": "concrete",
         "storeys": 5,
         "roof": "flat",
         "window": "picture",
+        "modern": true,
         "sign": true,
         "neon": true
       },

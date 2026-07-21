@@ -346,7 +346,7 @@ function house(B, w, spec, rng, night, lot) {
   const beam = C('#4a331f');
   const timber = mat === 'timber' || mat === 'wood';
   const roof = spec.roof, shop = !!spec.sign && !(lot.year >= 1500 && lot.year <= 1750);   // the fountain-square eras are formal, not shops
-  const tint = jit(rng);
+  const tint = spec.neon ? shade('#33384a', 0.8 + rng() * 0.3) : jit(rng);   // the neon night dims the buildings so the signs can burn against them
   const gz = lot.gable && (roof === 'thatch' || roof === 'tile');
 
   let y = 0, growMax = 0;
@@ -370,8 +370,9 @@ function house(B, w, spec, rng, night, lot) {
   else if (roof === 'flat') {
     B.boxT('concrete', 0, bodyH, 0, w + 0.05, 0.12, depth + 0.05, tint);
     if (spec.modern) {
-      B.boxT('concrete', 0, bodyH, front - 0.05, w + 0.05, 0.4, 0.12, [0.86, 0.86, 0.84]); B.boxT('concrete', 0, bodyH, -depth / 2 + 0.05, w + 0.05, 0.4, 0.12, [0.86, 0.86, 0.84]);   // concrete parapet
-      B.boxT('concrete', 0.35, bodyH + 0.12, -0.3, w * 0.42, 0.85, depth * 0.42, [0.82, 0.82, 0.8]); B.box(-w * 0.28, bodyH + 0.12, 0.2, 0.55, 0.55, 0.55, C('#8a9096'));   // rooftop plant room + lift housing
+      const pc = spec.neon ? [0.2, 0.22, 0.28] : [0.86, 0.86, 0.84], hc = spec.neon ? C('#2a2f3c') : C('#8a9096');
+      B.boxT('concrete', 0, bodyH, front - 0.05, w + 0.05, 0.4, 0.12, pc); B.boxT('concrete', 0, bodyH, -depth / 2 + 0.05, w + 0.05, 0.4, 0.12, pc);   // concrete parapet
+      B.boxT('concrete', 0.35, bodyH + 0.12, -0.3, w * 0.42, 0.85, depth * 0.42, pc); B.box(-w * 0.28, bodyH + 0.12, 0.2, 0.55, 0.55, 0.55, hc);   // rooftop plant room + lift housing
     } else B.box(0, bodyH, front - 0.05, w + 0.05, 0.4, 0.12, shade('#a8a49a', 0.9));            // front parapet
   }
   else if (roof === 'mansard') mansardRoof(B, w, depth, bodyH, front, rw, rd, tint, mat, night, rng);
@@ -471,9 +472,10 @@ function facade(B, w, h, front, y, s, storeys, spec, mat, beam, rng, night, year
 
   if (spec.modern) {                                                                              // a contemporary curtain-wall storey: a horizontal glazing ribbon between concrete spandrels, mullions, an occasional balcony
     const gw = w - 0.4, bandY = y + h * 0.26, bandH = h * 0.5;
-    B.boxT('concrete', 0, y, front + 0.03, w, h * 0.2, 0.06, [0.92, 0.92, 0.9]);                 // concrete spandrel / floor band below
-    B.boxT('concrete', 0, y + h - h * 0.22, front + 0.03, w, h * 0.24, 0.06, [0.86, 0.86, 0.84]);   // concrete slab band above
-    B.qUV('glass', [-gw / 2, bandY, front + 0.05], [gw / 2, bandY, front + 0.05], [gw / 2, bandY + bandH, front + 0.05], [-gw / 2, bandY + bandH, front + 0.05], [0, 0], [1, 0], [1, 1], [0, 1], lit ? C(WARM) : C('#a8cfe0'));
+    const dark = spec.neon, sp0 = dark ? [0.24, 0.26, 0.33] : [0.92, 0.92, 0.9], sp1 = dark ? [0.19, 0.21, 0.27] : [0.86, 0.86, 0.84];
+    B.boxT('concrete', 0, y, front + 0.03, w, h * 0.2, 0.06, sp0);                               // concrete spandrel / floor band below
+    B.boxT('concrete', 0, y + h - h * 0.22, front + 0.03, w, h * 0.24, 0.06, sp1);               // concrete slab band above
+    B.qUV('glass', [-gw / 2, bandY, front + 0.05], [gw / 2, bandY, front + 0.05], [gw / 2, bandY + bandH, front + 0.05], [-gw / 2, bandY + bandH, front + 0.05], [0, 0], [1, 0], [1, 1], [0, 1], lit ? C(WARM) : C(dark ? '#17212f' : '#a8cfe0'));
     if (lit) B.box(0, bandY + bandH / 2, front + 0.055, gw, bandH, 0.02, C(WARM), true);
     const cols = Math.max(3, Math.round(w / 0.8));
     for (let m = 0; m <= cols; m++) B.box(-gw / 2 + gw * m / cols, bandY, front + 0.07, 0.05, bandH, 0.05, C('#ccd0d4'));   // mullions
@@ -874,6 +876,18 @@ function prop(B, kind, rng, night) {
       for (let i = -1; i <= 1; i++) B.box(i * 0.95, 2.42, 0, 0.82, 0.04, 1.8, C('#24406e'));
       B.box(0, 0.35, 0, 1.6, 0.1, 0.4, C('#7a5c3a')); B.box(0, 0.55, -0.15, 1.6, 0.4, 0.08, C('#7a5c3a')); for (const sx of [-0.7, 0.7]) B.box(sx, 0, 0, 0.1, 0.35, 0.36, C('#5a4030')); break;
     }
+    case 'hologram': {                                                                              // a giant holographic projection: a dark projector plinth and a stacked, glowing scanline figure
+      B.cyl(0, 0, 0, 0.95, 0.35, 12, C('#161b28')); B.cyl(0, 0.35, 0, 0.75, 0.1, 12, C('#243150'));
+      for (let e2 = 0; e2 < 4; e2++) { const a = e2 / 4 * 6.2832; B.box(Math.cos(a) * 0.6, 0.45, Math.sin(a) * 0.6, 0.12, 0.1, 0.12, C('#2bd6ff'), true); }
+      for (let i = 0; i < 6; i++) B.box(0, 0.75 + i * 0.62, 0, 1.2 - i * 0.13, 0.42, 0.16, C('#2bd6ff'), true);   // glowing slices with scanline gaps
+      B.blob(0, 4.5, 0, 0.42, C('#ff5db1'), true); break;
+    }
+    case 'noodle-stall': {                                                                          // a neon-lit street food stall glowing against the wet dark
+      B.box(0, 0, 0, 1.7, 1.9, 1.0, C('#161a24')); B.box(0, 1.9, 0.15, 2.0, 0.14, 1.4, C('#1e2430'));
+      B.box(0, 1.42, 0.52, 1.4, 0.5, 0.05, C('#ff5db1'), true); B.box(0, 0.7, 0.53, 1.3, 0.55, 0.05, C('#ffcf6a'), true);
+      for (let i = 0; i < 3; i++) B.box(-0.55 + i * 0.55, 1.5, 0.56, 0.05, 0.6, 0.03, C(['#2bd6ff', '#4dff9e', '#b98cff'][i]), true);
+      B.box(0, 2.5, 0.2, 0.08, 1.0, 0.08, C('#2a3550')); B.box(0, 3.0, 0.2, 0.5, 0.5, 0.05, C('#2bd6ff'), true); break;
+    }
     case 'bollard': B.cyl(0, 0, 0, 0.09, 0.7, 8, C('#3a4046')); B.cyl(0, 0.7, 0, 0.1, 0.06, 8, C('#2ac6e0'), true); break;
     case 'cenotaph': {                                                                              // a war memorial: stepped stone plinth, tall pylon, cross of sacrifice, a wreath
       B.boxT('stone', 0, 0, 0, 1.9, 0.3, 1.9, WHITE); B.boxT('stone', 0, 0.3, 0, 1.45, 0.3, 1.45, WHITE); B.boxT('stone', 0, 0.6, 0, 1.05, 0.28, 1.05, WHITE);
@@ -1163,6 +1177,25 @@ function gardenCityContent(B, era, rng, night) {
   B.at(10.0, 0, 4.0, Math.PI / 2); prop(B, 'car', rng, night); B.pop();                             // a rare EV on the right-hand road
 }
 
+/* the cyberpunk night (2100): the garden city gone dark and electric. A giant
+ * hologram is the landmark, holo-signs and neon trees and posts spread across the
+ * square, drones cross overhead, a neon noodle stall glows in one corner, and dim
+ * neon puddles reflect it all off the wet asphalt. Kept spread so the neon reads. */
+function cyberpunkContent(B, era, rng, night) {
+  B.at(0.5, 0, 1.0); prop(B, 'hologram', rng, night); B.pop();                                      // the landmark hologram
+  B.at(-3.4, 0, 0.4); prop(B, 'holo-sign', rng, night); B.pop();                                    // floating ad boards, opposite sides
+  B.at(3.6, 0, -0.6); prop(B, 'holo-sign', rng, night); B.pop();
+  for (const [x, z] of [[-4.8, -3.0], [4.8, -2.8], [-4.9, 3.8], [4.8, 4.2]]) { B.at(x, 0, z); prop(B, 'neon-tree', rng, night); B.pop(); }
+  for (const [x, z] of [[-3.0, -2.2], [3.0, -1.6], [-2.0, 4.2], [2.6, 5.2]]) { B.at(x, 0, z); prop(B, 'neon-post', rng, night); B.pop(); }
+  for (let d = 0; d < 3; d++) prop(B, 'drone', rng, night);                                         // drones bob overhead
+  B.at(-3.6, 0, 3.6); prop(B, 'noodle-stall', rng, night); B.pop();
+  for (const [x, z, r] of [[0.5, 6.0, Math.PI], [4.6, 1.6, -Math.PI / 2]]) { B.at(x, 0, z, r); prop(B, 'bench', rng, night); B.pop(); }
+  const puddle = [[-2.4, 3.0, [0.1, 0.34, 0.42]], [2.4, 1.8, [0.4, 0.12, 0.3]], [-0.8, 5.4, [0.12, 0.35, 0.24]], [3.4, 4.4, [0.1, 0.34, 0.42]]];
+  for (const [x, z, c] of puddle) B.box(x, 0.025, z, 1.4, 0.02, 0.9, c, true);                      // dim neon reflections on the wet ground
+  B.at(0.5, 0, 10.0, 0.06); prop(B, 'scooter', rng, night); B.pop();                                // a scooter and a car on the wet roads
+  B.at(10.0, 0, 4.0, Math.PI / 2); prop(B, 'car', rng, night); B.pop();
+}
+
 /* --------------------------------------------------------------- townsfolk */
 const CLOTH = ['#3f4a5a', '#6b3a3a', '#4a5a3a', '#5a4a6b', '#2f3136', '#7a6a4a', '#8a4a3a', '#3a5a6a'];
 function person(B, rng) {
@@ -1238,9 +1271,9 @@ function backdrop(B, era, churchZone) {
   const house = (x, z) => {
     const r = H(x, z), r2 = H(x * 1.7 + 3, z * 0.9 - 2);
     const w = 1.9 + r * 1.3, h = 1.4 + r2 * (night > 0.3 ? 5.5 : 1.7), d = 1.9 + r2 * 1.1;   // a calm, low distant town by day (rises and lights up at night)
-    const tint = [0.86 + r * 0.14, 0.86 + r * 0.14, 0.86 + r * 0.14];
+    const tint = night > 0.3 ? [0.24 + r * 0.06, 0.25 + r * 0.06, 0.32 + r * 0.06] : [0.86 + r * 0.14, 0.86 + r * 0.14, 0.86 + r * 0.14];   // dark at night so the far city reads as a lit skyline, not pale blocks
     B.boxT(wallK, x, 0, z, w, h, d, tint);
-    if (flat) { B.box(x, h, z, w + 0.1, 0.18, d + 0.1, [0.68, 0.68, 0.68]); if (roofS === 'green') B.blob(x + (r - .5), h + 0.4, z, 0.34, C('#5f8f4b')); if (roofS === 'solar') B.box(x, h + 0.16, z, w * 0.7, 0.05, d * 0.6, C('#1f3d6b')); }
+    if (flat) { B.box(x, h, z, w + 0.1, 0.18, d + 0.1, night > 0.3 ? [0.2, 0.21, 0.27] : [0.68, 0.68, 0.68]); if (roofS === 'green') B.blob(x + (r - .5), h + 0.4, z, 0.34, C('#5f8f4b')); if (roofS === 'solar') B.box(x, h + 0.16, z, w * 0.7, 0.05, d * 0.6, C('#1f3d6b')); }
     else B.gableT(roofK, x, h, z, w + 0.4, 0.6 + r2 * 0.5, d + 0.4, tint);
     if (r2 > 0.55) B.box(x + (r - 0.5) * w * 0.5, h + 0.5, z, 0.2, 0.6, 0.2, C(mat === 'brick' || mat === 'render' ? '#8a4a34' : '#7a5c3a'));
     if (night > 0.3) for (let f = 0; f < 3; f++) if (H(x + f * 3, z) > 0.45) B.box(x - w / 2 + 0.02, 0.6 + f * 0.7, z + (H(x, z + f) - .5) * d, 0.05, 0.3, 0.32, C('#ffdca0'), true);
@@ -1301,6 +1334,7 @@ export function buildEra(era, mats) {
   if (y <= 1950) { civicContent(B, era, rng, night); return finishEra(B, era, rng, mats); }
   if (y <= 2000) { plazaContent(B, era, rng, night); return finishEra(B, era, rng, mats); }
   if (y <= 2050) { gardenCityContent(B, era, rng, night); return finishEra(B, era, rng, mats); }
+  if (y <= 2100) { cyberpunkContent(B, era, rng, night); return finishEra(B, era, rng, mats); }
 
   const street = era.street || [];
   let si = 0, ti = 0, li = 0, bi = 0, vi = 0, ci = 0, fi = 0, gi = 0, misc = 0;
