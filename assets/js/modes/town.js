@@ -943,17 +943,17 @@ function road(B, era) {
 /* the wider town: a mass of simple rooftops receding into the haze behind the
  * two terraces, styled from the era's own material and roof, so the square never
  * floats — it sits in a city. Deterministic (position hash), and lit at night. */
-function backdrop(B, era) {
+function backdrop(B, era, churchZone) {
   const spec = era.house, mat = spec.material, roofS = spec.roof, night = era.night || 0;
   const wallK = mat === 'timber' ? 'plaster' : mat;
   const flat = roofS === 'flat' || roofS === 'green' || roofS === 'solar';
   const roofK = roofS === 'thatch' ? 'thatch' : (roofS === 'slate' || roofS === 'mansard') ? 'slate' : 'tile';
   const H = (a, b) => { const n = Math.sin(a * 12.9898 + b * 78.233) * 43758.5453; return n - Math.floor(n); };
-  const slots = [[-5.5, -11.5], [2.5, -12.5], [8.5, -10.5]];
-  const near = (x, z) => slots.some(([sx, sz]) => Math.abs(x - sx) < 5.2 && Math.abs(z - sz) < 5.0) || (x > -9 && z > -9);   // keep clear of the landmarks and the square itself
+  const slots = [[-13, -12], [-17, -8], [-8, -17]];
+  const near = (x, z) => slots.some(([sx, sz]) => Math.abs(x - sx) < 5.2 && Math.abs(z - sz) < 5.0) || (x > -8.6 && z > -8.6) || (churchZone && Math.abs(x - churchZone[0]) < 4.6 && Math.abs(z - churchZone[1]) < 5.2);   // keep clear of the landmarks, the square, and the church behind the terrace
   const house = (x, z) => {
     const r = H(x, z), r2 = H(x * 1.7 + 3, z * 0.9 - 2);
-    const w = 1.7 + r * 1.5, h = 1.5 + r2 * (night > 0.3 ? 5.5 : 2.1), d = 1.7 + r2 * 1.3;   // low distant town by day (rises only at night)
+    const w = 1.9 + r * 1.3, h = 1.4 + r2 * (night > 0.3 ? 5.5 : 1.7), d = 1.9 + r2 * 1.1;   // a calm, low distant town by day (rises and lights up at night)
     const tint = [0.86 + r * 0.14, 0.86 + r * 0.14, 0.86 + r * 0.14];
     B.boxT(wallK, x, 0, z, w, h, d, tint);
     if (flat) { B.box(x, h, z, w + 0.1, 0.18, d + 0.1, [0.68, 0.68, 0.68]); if (roofS === 'green') B.blob(x + (r - .5), h + 0.4, z, 0.34, C('#5f8f4b')); if (roofS === 'solar') B.box(x, h + 0.16, z, w * 0.7, 0.05, d * 0.6, C('#1f3d6b')); }
@@ -961,8 +961,8 @@ function backdrop(B, era) {
     if (r2 > 0.55) B.box(x + (r - 0.5) * w * 0.5, h + 0.5, z, 0.2, 0.6, 0.2, C(mat === 'brick' || mat === 'render' ? '#8a4a34' : '#7a5c3a'));
     if (night > 0.3) for (let f = 0; f < 3; f++) if (H(x + f * 3, z) > 0.45) B.box(x - w / 2 + 0.02, 0.6 + f * 0.7, z + (H(x, z + f) - .5) * d, 0.05, 0.3, 0.32, C('#ffdca0'), true);
   };
-  for (let row = 0; row < 5; row++) for (let x = -17; x <= 17; x += 2.3) { const z = -9.6 - row * 2.7 + (H(x, row) - 0.5); if (!near(x, z)) house(x + (H(x + 9, row) - 0.5), z); }
-  for (let row = 0; row < 4; row++) for (let z = -8; z <= 11; z += 2.3) { const x = -9.6 - row * 2.7 + (H(z, row + 5) - 0.5); if (!near(x, z)) house(x, z + (H(z + 3, row) - 0.5)); }
+  for (let row = 0; row < 3; row++) for (let x = -15; x <= 15; x += 3.4) { const z = -9.8 - row * 3.3 + (H(x, row) - 0.5) * 0.6; if (!near(x, z)) house(x + (H(x + 9, row) - 0.5) * 0.6, z); }
+  for (let row = 0; row < 2; row++) for (let z = -7; z <= 10; z += 3.4) { const x = -9.8 - row * 3.3 + (H(z, row + 5) - 0.5) * 0.6; if (!near(x, z)) house(x, z + (H(z + 3, row) - 0.5) * 0.6); }
 }
 
 export function buildEra(era, mats) {
@@ -971,28 +971,36 @@ export function buildEra(era, mats) {
   const night = era.night || 0, spec = era.house;
 
   road(B, era);
-  backdrop(B, era);                                  // the wider town behind the square
+  /* the church stands on the right-hand (back) terrace facing the square, in
+   * place of the houses there; any other skyline marks stay in the background */
+  const marks = era.skyline || [];
+  const churchKind = marks.find(k => k === 'church' || k.startsWith('cathedral'));
+  const CHX = 3.4, CHZ = -9.5;                        // church centre; its west front lands on the terrace frontage
+  backdrop(B, era, churchKind ? [CHX, CHZ] : null);   // the wider town behind the square
 
-  /* skyline landmarks, just behind the terraces so they rise clearly above the
-   * roofline (and above the backdrop) instead of being cut off far away */
-  const marks = era.skyline || [], slots = [[-5.5, -11.5], [2.5, -12.8], [8.5, -10.5]];
-  marks.forEach((k, i) => { const [x, z] = slots[i % slots.length]; B.at(x, 0, z, 0.16 * (i - 1), 1.35); landmark(B, k, night); B.pop(); });   // scaled up to dominate the skyline
+  const bgSlots = [[-13, -12], [-17, -8], [-8, -17]];
+  let bs = 0;
+  marks.forEach((k) => { if (k === churchKind) return; const [x, z] = bgSlots[bs % bgSlots.length]; B.at(x, 0, z, 0.14 * (bs - 1), 0.95); bs++; landmark(B, k, night); B.pop(); });
 
-  /* the two terraces, lot by fixed lot */
+  /* the two terraces, lot by fixed lot; the back run skips the church footprint */
   let sign = 0, neon = 0;
   const place = (lots, atFn) => {
     for (const [w, gb, ds, dm, cm, role, since] of lots) {
       const si = sign++;
       const lot = { gable: !!gb, ds, dormer: dm, chimney: cm, depth: 3.0, sign: si % 4, awn: (si * 5 + 2) % 4, neon: neon++, role: role || '', civic: role === 'civic' && era.year >= 1450, year: era.year };
-      if (since && era.year < since) { atFn(w, 0, false); garden(B, w, rng); B.pop(); }        // lot not built yet
-      else if (spec.gap && rng() < 0.13) { atFn(w, 0.02, true); for (let r = 0; r < 4; r++) B.box((rng() - .5) * w, 0, (rng() - .5) * 2, 0.4 + rng() * 0.3, 0.3 + rng() * 0.4, 0.4, shade('#8a8378', 0.9 + rng() * 0.2)); B.pop(); }
-      else { atFn(w, 0, false); house(B, w, spec, rng, night, lot); B.pop(); }
+      if (atFn(w)) { B.pop(); continue; }                                         // this lot is the church's footprint
+      if (since && era.year < since) garden(B, w, rng);
+      else if (spec.gap && rng() < 0.13) { for (let r = 0; r < 4; r++) B.box((rng() - .5) * w, 0, (rng() - .5) * 2, 0.4 + rng() * 0.3, 0.3 + rng() * 0.4, 0.4, shade('#8a8378', 0.9 + rng() * 0.2)); }
+      else house(B, w, spec, rng, night, lot);
+      B.pop();
     }
   };
   let bx = -8.4;
-  place(BACK_LOTS, (w, y) => { B.at(bx + w / 2, y, BACK); bx += w + 0.06; });
+  place(BACK_LOTS, (w) => { const cx = bx + w / 2; bx += w + 0.06; B.at(cx, 0, BACK); return churchKind && cx > CHX - 3.7 && cx < CHX + 3.7; });
   let lz = -4.2;
-  place(LEFT_LOTS, (w, y) => { B.at(LEFTX, y, lz + w / 2, Math.PI / 2); lz += w + 0.06; });
+  place(LEFT_LOTS, (w) => { B.at(LEFTX, 0, lz + w / 2, Math.PI / 2); lz += w + 0.06; return false; });
+
+  if (churchKind) { B.at(CHX, 0, CHZ, 0, 1.0); landmark(B, churchKind, night); B.pop(); }   // the church, facade to the square
 
   /* the square's contents. The village (to 1150) is a curated rural scene; from
    * 1200 the era's prop list fills fixed stations, then a per-phase dressing. */
