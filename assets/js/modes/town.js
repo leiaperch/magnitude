@@ -812,7 +812,14 @@ function prop(B, kind, rng, night) {
     case 'cafe': cafeSet(B, rng); break;
     case 'farmbed': farmBed(B, rng); break;
     case 'kiosk': B.box(0, 0, 0, 1.2, 1.9, 1.0, C('#2f5a3a')); B.box(0, 0.5, 0.52, 0.9, 1.0, 0.05, C('#cfe0d0')); for (let i = 0; i < 3; i++) B.box(-0.3 + i * 0.3, 0.6, 0.56, 0.22, 0.7, 0.03, C(['#c94a3a', '#3a6ab2', '#d8b83a'][i])); B.box(0, 1.9, 0.2, 1.5, 0.1, 1.4, C('#24402c')); break;
-    case 'bus-shelter': for (const sx of [-0.9, 0.9]) B.box(sx, 0, -0.3, 0.08, 2.0, 0.08, C('#3a3f46')); B.box(0, 2.0, -0.1, 2.0, 0.1, 0.7, C('#4a4f56')); B.box(-0.9, 0.4, -0.6, 0.06, 1.5, 0.7, night > .05 ? C('#8fb4c8') : C('#a9c4d0')); B.box(0.3, 0.35, 0, 1.1, 0.1, 0.35, C('#5a5f66')); B.box(0.3, 0.55, -0.15, 1.1, 0.35, 0.06, C('#5a5f66')); break;
+    case 'bus-shelter': {                                                                            // a proper glazed shelter: framed glass back and side, a flat roof, a bench, open to the street (+z)
+      const post = C('#3a3f46'), glass = night > .05 ? C('#8fb4c8') : C('#a9c4d0');
+      for (const [px, pz] of [[-1.1, -0.55], [1.1, -0.55], [-1.1, 0.55], [1.1, 0.55]]) B.box(px, 0, pz, 0.08, 2.1, 0.08, post);   // corner posts
+      B.box(0, 0.55, -0.58, 2.06, 1.5, 0.05, glass);                                                 // glass back wall
+      B.box(1.12, 0.55, 0, 0.05, 1.5, 1.0, glass);                                                   // glass side panel
+      B.box(0, 2.14, 0, 2.4, 0.12, 1.35, C('#4a4f56')); B.box(0, 2.26, -0.1, 2.0, 0.06, 1.0, post);  // flat roof + trim
+      B.box(0, 0.42, -0.32, 1.8, 0.1, 0.34, C('#5a5f66')); B.box(0, 0.62, -0.5, 1.8, 0.36, 0.06, C('#5a5f66')); break;   // bench along the back
+    }
     case 'bike-rack': B.box(0, 0.05, 0, 2.2, 0.1, 0.14, C('#8a8f96')); for (let i = 0; i < 4; i++) { B.box(-0.82 + i * 0.55, 0.4, -0.18, 0.05, 0.6, 0.05, C('#6a7078')); B.at(-0.82 + i * 0.55, 0, 0.12, Math.PI / 2); bike(B); B.pop(); } break;   // a tidy bike-share dock: a rail with bikes lined up the same way
     case 'charger': B.box(0, 0, 0, 0.3, 1.2, 0.2, C('#e8e4d8')); B.box(0, 0.8, 0.11, 0.22, 0.3, 0.04, C('#2bd6ff'), true); break;
     case 'canopy': for (const [sx, sz] of [[-1.2, -0.8], [1.2, -0.8], [-1.2, 0.8], [1.2, 0.8]]) B.cyl(sx, 0, sz, 0.08, 2.5, 6, C('#8a8378'), false, 0.07); B.box(0, 2.5, 0, 2.9, 0.12, 2.0, C('#586a4a')); for (let i = -1; i <= 1; i++) { B.box(i * 0.85, 2.62, -0.4, 0.72, 0.04, 1.6, C('#1f3d6b')); } for (let i = 0; i < 6; i++) B.blob(-1.1 + (i % 3) * 1.1, 2.7, 0.4 + ((i / 3) | 0) * 0.5 - 0.6, 0.28, C(['#5f8f4b', '#6d9a54'][(i) % 2])); break;
@@ -925,7 +932,7 @@ function prop(B, kind, rng, night) {
     }
     case 'wreck-car': {                                                                             // a rusted car swallowed by moss and weeds
       const rust = C('#6a5040'); B.box(0, 0.24, 0, 2.0, 0.44, 0.9, rust); B.box(0.05, 0.64, 0, 1.1, 0.38, 0.82, shade('#6a5040', 1.12));
-      for (const [wx, wz] of [[0.7, 0.46], [0.7, -0.46], [-0.7, 0.46], [-0.7, -0.46]]) B.cyl(wx, 0, wz, 0.22, 0.14, 8, C('#2a2622'));
+      for (const [wx, wz] of [[0.7, 0.46], [0.7, -0.46], [-0.7, 0.46], [-0.7, -0.46]]) wheel(B, wx, wz, 0.24, '#2a2622');
       for (let i = 0; i < 6; i++) B.blob(-0.8 + i * 0.32, 0.9 + (i % 2) * 0.12, (i % 2 ? 0.3 : -0.3), 0.18, C(['#5f8f3a', '#4a7a30', '#3f6a26'][i % 3])); break;
     }
     case 'weeds': for (let i = 0; i < 5; i++) B.blob((rng() - 0.5) * 1.3, 0.12 + rng() * 0.1, (rng() - 0.5) * 1.3, 0.14 + rng() * 0.08, C(['#5f8f3a', '#4a7a30', '#6f9a3a'][(rng() * 3) | 0])); break;
@@ -996,17 +1003,26 @@ function tree(B, rng, neon) {
   B.anim(0, 0, 0);
 }
 function stall(B, rng) {
-  for (const [sx, sz] of [[-0.7, -0.5], [0.7, -0.5], [-0.7, 0.5], [0.7, 0.5]]) B.box(sx, 0, sz, 0.09, 1.5, 0.09, C('#6b4f34'));
-  B.boxT('wood', 0, 0.75, 0.5, 1.6, 0.12, 0.55, WHITE);
-  const two = rng() < 0.5 ? ['#b23a3a', '#e8e4d8'] : ['#3a6ab2', '#e8e4d8'];
-  for (let i = -2; i <= 1; i++) B.gable(i * 0.42 + 0.21, 1.5, 0, 0.44, 0.35, 1.5, C(two[(i + 2) % 2]));
-  for (let i = 0; i < 3; i++) B.box(-0.5 + i * 0.5, 0.87, 0.5, 0.16, 0.16, 0.16, C(['#c94a3a', '#e0902a', '#4a7a2a'][i]));
+  for (const [sx, sz] of [[-0.72, -0.5], [0.72, -0.5], [-0.72, 0.5], [0.72, 0.5]]) B.box(sx, 0, sz, 0.08, 1.45, 0.08, C('#6b4f34'));   // 4 posts
+  B.boxT('wood', 0, 0.72, 0.5, 1.5, 0.12, 0.52, WHITE);                                              // counter at the front
+  for (let i = 0; i < 4; i++) B.box(-0.54 + i * 0.36, 0.84, 0.5, 0.2, 0.18, 0.2, C(['#c94a3a', '#e0902a', '#4a7a2a', '#d8c23a'][i]));   // goods on the counter
+  const two = rng() < 0.5 ? ['#b23a3a', '#e8e4d8'] : ['#3a6ab2', '#e8e4d8'], n = 5, w = 1.5;         // striped canvas awning, sloping down to the customer side
+  for (let i = 0; i < n; i++) { const x0 = -w / 2 + i * (w / n), x1 = -w / 2 + (i + 1) * (w / n); B.quad([x0, 1.45, -0.55], [x1, 1.45, -0.55], [x1, 1.16, 0.78], [x0, 1.16, 0.78], C(two[i % 2])); }
+  for (let i = 0; i < n; i++) { const x0 = -w / 2 + i * (w / n), x1 = -w / 2 + (i + 1) * (w / n); B.tri(x0, 1.16, 0.78, x1, 1.16, 0.78, (x0 + x1) / 2, 1.0, 0.8, C(two[i % 2])); }   // scalloped valance
+}
+/* an upright wheel: a disc standing in the X-Y plane with its axle along Z, so
+ * it reads as a wheel on the ground rather than a plate lying flat. */
+function wheel(B, x, z, r, hex) {
+  B.at(x, r, z); B.push(new THREE.Matrix4().makeRotationX(Math.PI / 2));
+  B.cyl(0, -0.07, 0, r, 0.14, 10, C(hex || '#33251a'));                          // rim
+  B.cyl(0, -0.085, 0, r * 0.28, 0.17, 6, C('#5a4a34'));                          // hub
+  B.pop(); B.pop();
 }
 function cart(B, loaded) {
-  B.boxT('wood', 0, 0.4, 0, 1.4, 0.25, 0.8, WHITE);
-  for (const [wx, wz] of [[0.5, 0.45], [0.5, -0.45], [-0.5, 0.45], [-0.5, -0.45]]) B.cyl(wx, 0, wz, 0.3, 0.12, 8, C('#4a3826'));
-  B.box(0.9, 0.3, 0, 0.9, 0.08, 0.12, C('#6b4f34'));
-  if (loaded) for (let i = 0; i < 3; i++) B.boxT('wood', -0.4 + i * 0.4, 0.55, 0, 0.34, 0.34, 0.6, WHITE);
+  B.boxT('wood', 0, 0.42, 0, 1.4, 0.25, 0.8, WHITE);
+  for (const [wx, wz] of [[0.5, 0.42], [0.5, -0.42], [-0.5, 0.42], [-0.5, -0.42]]) wheel(B, wx, wz, 0.32);
+  B.box(0.9, 0.4, 0, 0.9, 0.08, 0.12, C('#6b4f34'));
+  if (loaded) for (let i = 0; i < 3; i++) B.boxT('wood', -0.4 + i * 0.4, 0.58, 0, 0.34, 0.34, 0.6, WHITE);
 }
 /* a proper horse-drawn coach: a horse in the traces, shafts, tall back wheels
  * and small front ones, a panelled cabin with a roof and door windows, a driver's
@@ -1014,7 +1030,7 @@ function cart(B, loaded) {
 function carriage(B) {
   B.at(1.75, 0, 0); animal(B, '#5a4030', 1.05); B.pop();                         // the horse, ahead in the traces
   for (const sz of [-0.22, 0.22]) B.box(1.15, 0.52, sz, 1.3, 0.05, 0.05, C('#4a3826'));   // shafts
-  for (const wz of [0.46, -0.46]) { B.cyl(-0.55, 0, wz, 0.42, 0.1, 10, C('#33251a')); B.cyl(0.62, 0, wz, 0.28, 0.1, 10, C('#33251a')); }   // tall back, small front wheels
+  for (const wz of [0.48, -0.48]) { wheel(B, -0.55, wz, 0.42); wheel(B, 0.62, wz, 0.28); }   // tall back, small front wheels
   B.boxT('wood', 0, 0.5, 0, 1.3, 0.4, 0.86, WHITE);                              // lower body
   B.box(-0.05, 0.9, 0, 1.05, 0.66, 0.8, C('#3a2f4a'));                           // cabin
   for (const sz of [0.41, -0.41]) B.box(-0.05, 1.02, sz, 0.5, 0.4, 0.04, C('#8fb4c8'));   // door windows
@@ -1033,7 +1049,7 @@ function tram(B, modern, night) {
   for (let s = -4; s <= 4; s += 1.2) B.box(s, 0.015, 0, 0.16, 0.05, 1.3, C('#4a4438'));          // sleepers
   B.box(0, 0.4, 0, 3.2, 1.4, 1.1, C(modern ? '#c23a3a' : '#3a6a4a')); B.box(0, 0.1, 0, 3.0, 0.3, 1.15, C('#2a2e33'));
   for (let i = -2; i <= 2; i++) B.box(i * 0.6, 1.0, 0.56, 0.42, 0.5, 0.04, night > .05 ? C(WARM) : C('#bcd0d8'), night > .05);
-  for (const wx of [1.1, -1.1]) { B.cyl(wx, 0, 0.4, 0.22, 0.1, 8, C('#20242a')); B.cyl(wx, 0, -0.4, 0.22, 0.1, 8, C('#20242a')); }
+  for (const wx of [1.1, -1.1]) { wheel(B, wx, 0.42, 0.24, '#20242a'); wheel(B, wx, -0.42, 0.24, '#20242a'); }
   const wy = 3.1;
   B.box(0, wy, 0, 9, 0.035, 0.035, C('#2a2e33'));                                                // overhead contact wire
   B.box(-3.4, 0, -1.5, 0.12, wy + 0.2, 0.12, C('#4a4f56')); B.box(-3.4, wy, -0.75, 0.09, 0.07, 1.6, C('#4a4f56'));   // catenary pole + bracket arm
@@ -1063,10 +1079,10 @@ function glassCafe(B, night) {
 function car(B, rng, night) {
   const hex = ['#3a6ab2', '#b23a3a', '#e8e4d8', '#39424c', '#3a8a6a'][(rng() * 5) | 0];
   B.box(0, 0.28, 0, 2.0, 0.5, 0.9, C(hex)); B.box(0.05, 0.72, 0, 1.1, 0.42, 0.82, shade(hex, 1.05)); B.box(0.05, 0.78, 0, 1.05, 0.3, 0.86, night > .05 ? C('#1a2230') : C('#8fb4c8'));
-  for (const [wx, wz] of [[0.7, 0.46], [0.7, -0.46], [-0.7, 0.46], [-0.7, -0.46]]) B.cyl(wx, 0, wz, 0.24, 0.14, 8, C('#20242a'));
+  for (const [wx, wz] of [[0.7, 0.46], [0.7, -0.46], [-0.7, 0.46], [-0.7, -0.46]]) wheel(B, wx, wz, 0.24, '#20242a');
   for (const sx of [0.3, -0.3]) B.box(1.02, 0.3, sx, 0.06, 0.14, 0.14, night > .05 ? C('#fff2c0') : C('#d8d2c2'), night > .05);
 }
-function bike(B) { for (const wx of [0.4, -0.4]) B.cyl(wx, 0, 0, 0.28, 0.06, 8, C('#20242a')); B.box(0, 0.5, 0, 0.7, 0.08, 0.08, C('#8a2a2a')); B.box(-0.4, 0.5, 0, 0.08, 0.5, 0.08, C('#8a2a2a')); B.box(0.4, 0.6, 0, 0.08, 0.5, 0.08, C('#8a2a2a')); }
+function bike(B) { for (const wx of [0.4, -0.4]) wheel(B, wx, 0, 0.28, '#20242a'); B.box(0, 0.5, 0, 0.7, 0.08, 0.08, C('#8a2a2a')); B.box(-0.4, 0.5, 0, 0.08, 0.5, 0.08, C('#8a2a2a')); B.box(0.4, 0.6, 0, 0.08, 0.5, 0.08, C('#8a2a2a')); }
 
 /* a fenced kitchen garden on a lot the town has not built on yet */
 function garden(B, w, rng) {
@@ -1106,7 +1122,7 @@ function marketContent(B, era, rng, night) {
   B.at(-4.5, 0, 5.4); prop(B, 'hay', rng, night); B.pop();
   B.at(-4.4, 0, 4.4); prop(B, 'barrel', rng, night); B.pop();
   B.at(-1.8, 0, 6.5, Math.PI / 2); prop(B, 'loadcart', rng, night); B.pop();
-  B.at(-3.8, 0, 2.2); prop(B, 'well', rng, night); B.pop();
+  B.at(-4.6, 0, 3.1); prop(B, 'well', rng, night); B.pop();                                         // the well, clear of the stall rows
   for (const [x, z] of [[4.6, 4.6], [4.4, 2.4], [3.2, 6.2]]) { B.at(x, 0, z); prop(B, 'tree', rng, night); B.pop(); }
 }
 
@@ -1138,17 +1154,17 @@ function industrialContent(B, era, rng, night) {
    * a monument and a single vendor to the sides, kept deliberately uncluttered */
   const lampK = y >= 1900 ? 'lamp-electric' : 'lamp-gas';
   B.at(0.5, 0, 0.8); prop(B, 'bandstand', rng, night); B.pop();                                     // centrepiece
-  for (let i = 0; i < 6; i++) { const a = i / 6 * 6.2832; B.at(0.5 + Math.cos(a) * 2.2, 0, 0.8 + Math.sin(a) * 2.2, rng() * 6.28); person(B, rng); B.pop(); }   // its audience
-  B.at(-4.2, 0, 4.4); prop(B, 'statue', rng, night); B.pop();                                       // a monument, off to one side
+  for (let i = 0; i < 6; i++) { const a = i / 6 * 6.2832; B.at(0.5 + Math.cos(a) * 2.9, 0, 0.8 + Math.sin(a) * 2.9, rng() * 6.28); person(B, rng); B.pop(); }   // its audience, ringed clear of the bandstand
+  B.at(-3.2, 0, 4.4); prop(B, 'statue', rng, night); B.pop();                                       // a monument, off to one side (clear of the corner tree)
   B.at(4.3, 0, 2.4); prop(B, y >= 1900 ? 'newsstand' : 'ad-column', rng, night); B.pop();           // a Morris column, a newsstand by 1900
   B.at(2.8, 0, 5.2, 0.4); prop(B, 'chestnut-cart', rng, night); B.pop();                            // a single vendor
   B.at(1.9, 0, 6.0, rng() * 6.28); person(B, rng); B.pop();
-  for (const [x, z, r] of [[0.5, 5.2, Math.PI], [-3.4, 0.8, Math.PI / 2], [4.4, 5.2, Math.PI]]) { B.at(x, 0, z, r); prop(B, 'bench', rng, night); B.pop(); }
-  for (const [x, z] of [[-4.7, -3.0], [4.7, -2.6], [-4.9, 4.4], [4.6, 0.2]]) { B.at(x, 0, z); prop(B, 'tree', rng, night); B.pop(); }
-  for (const [x, z] of [[-2.6, -2.2], [3.0, -1.4], [-3.8, 5.6], [1.4, 6.4]]) { B.at(x, 0, z); prop(B, lampK, rng, night); B.pop(); }
+  for (const [x, z, r] of [[0.5, 5.2, Math.PI], [-4.2, 1.4, Math.PI / 2], [4.4, 5.2, Math.PI]]) { B.at(x, 0, z, r); prop(B, 'bench', rng, night); B.pop(); }
+  for (const [x, z] of [[-4.7, -3.0], [4.7, -2.6], [-4.9, 4.6], [4.6, 0.2]]) { B.at(x, 0, z); prop(B, 'tree', rng, night); B.pop(); }
+  for (const [x, z] of [[-2.6, -2.2], [3.0, -1.4], [-4.0, 5.8], [1.4, 6.4]]) { B.at(x, 0, z); prop(B, lampK, rng, night); B.pop(); }
   B.at(0.5, 0, 10.0); prop(B, 'tram', rng, night); B.pop();
-  B.at(-4.5, 0, 9.9); prop(B, 'carriage', rng, night); B.pop();
-  B.at(5.5, 0, 9.9, Math.PI); prop(B, 'cart', rng, night); B.pop();
+  B.at(-3.0, 0, 9.9); prop(B, 'carriage', rng, night); B.pop();
+  B.at(6.0, 0, 9.9, Math.PI); prop(B, 'cart', rng, night); B.pop();
   B.at(-1.4, 0, 6.9, -Math.PI / 3); prop(B, 'dog', rng, night); B.pop();
 }
 /* 1800, the first chimney: still a late-Georgian civic square, formal and sparse.
@@ -1160,9 +1176,9 @@ function georgianContent(B, era, rng, night) {
   for (const [x, z, r] of [[0.5, -2.2, 0], [0.5, 5.2, Math.PI], [-3.2, 1.5, Math.PI / 2], [4.2, 1.5, -Math.PI / 2]]) { B.at(x, 0, z, r); prop(B, 'bench', rng, night); B.pop(); }
   for (const [x, z] of [[-3.6, -2.6], [3.6, -2.6], [-4.2, 5.0], [4.6, 5.0]]) { B.at(x, 0, z); prop(B, 'lamp-oil', rng, night); B.pop(); }
   for (const [x, z] of [[-4.7, -3.2], [4.7, -3.0], [-4.9, 4.2], [4.7, 4.4]]) { B.at(x, 0, z); prop(B, 'tree', rng, night); B.pop(); }
-  B.at(-4.5, 0, 9.9); prop(B, 'carriage', rng, night); B.pop();
-  B.at(0.6, 0, 10.0, Math.PI); prop(B, 'loadcart', rng, night); B.pop();
-  B.at(5.5, 0, 9.9, Math.PI); prop(B, 'cart', rng, night); B.pop();
+  B.at(-3.0, 0, 9.9); prop(B, 'carriage', rng, night); B.pop();                                     // out on the road, clear of the terrace
+  B.at(2.6, 0, 10.0, Math.PI); prop(B, 'loadcart', rng, night); B.pop();
+  B.at(6.0, 0, 9.9, Math.PI); prop(B, 'cart', rng, night); B.pop();
   B.at(-1.6, 0, 6.6, -Math.PI / 3); prop(B, 'dog', rng, night); B.pop();
 }
 
@@ -1173,10 +1189,10 @@ function georgianContent(B, era, rng, night) {
  * terrace behind, with the reconstruction crane rising over it. */
 function civicContent(B, era, rng, night) {
   B.at(0.5, 0, 1.0); prop(B, 'cenotaph', rng, night); B.pop();                                      // centrepiece, central in the plaza's depth
-  B.at(-4.5, 0, 9.5, 0.05); prop(B, 'car', rng, night); B.pop();                                    // the motor age: kerbside and moving
+  B.at(-3.2, 0, 9.5, 0.05); prop(B, 'car', rng, night); B.pop();                                    // the motor age: on the roads, clear of the terraces
   B.at(2.5, 0, 10.2, Math.PI); prop(B, 'car', rng, night); B.pop();
-  B.at(9.6, 0, 1.6, Math.PI / 2); prop(B, 'car', rng, night); B.pop();
-  B.at(9.6, 0, 5.2, Math.PI / 2); prop(B, 'car', rng, night); B.pop();
+  B.at(10.1, 0, 3.2, Math.PI / 2); prop(B, 'car', rng, night); B.pop();
+  B.at(10.1, 0, 6.8, Math.PI / 2); prop(B, 'car', rng, night); B.pop();
   B.at(6.8, 0, 7.4); prop(B, 'traffic-light', rng, night); B.pop();
   B.at(-4.6, 0, 5.0); prop(B, 'phone-box', rng, night); B.pop();
   B.at(-2.6, 0, 6.4, 0.2); prop(B, 'bus-shelter', rng, night); B.pop();
@@ -1473,6 +1489,6 @@ function finishEra(B, era, rng, mats) {
   }
   const crowd = Math.min(era.crowd || 6, 20);
   for (let i = 0; i < crowd; i++) { const [kx, kz] = CROWD_KNOTS[i % CROWD_KNOTS.length]; B.at(kx + (rng() - 0.5) * 1.1, 0, kz + (rng() - 0.5) * 0.9, rng() * 6.28); person(B, rng); B.pop(); }
-  for (let i = 0; i < (era.smoke || 0); i++) { B.anim(3, rng() * 6.283, 0); B.blob(-5 + i * 3.5 + (rng() - .5), 6 + rng() * 1.5, BACK, 0.5 + rng() * 0.3, shade('#c9cdd2', 0.9 + rng() * 0.2)); B.anim(0, 0, 0); }
+  for (let i = 0; i < (era.smoke || 0); i++) { const px = -6 + i * 3.0 + (rng() - .5); B.anim(3, rng() * 6.283, 0); for (let p = 0; p < 3; p++) B.blob(px + (rng() - .5) * 0.4, 5.5 + p * 0.9 + rng(), BACK - 0.5, 0.24 + rng() * 0.12, shade('#c9cdd2', 0.9 + rng() * 0.2)); B.anim(0, 0, 0); }   // thin rising wisps, not big puffs
   return B.finish(mats);
 }

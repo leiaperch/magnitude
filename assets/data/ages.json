@@ -832,7 +832,7 @@
         "station"
       ],
       "house": {
-        "material": "render",
+        "material": "stone",
         "storeys": 4,
         "roof": "slate",
         "window": "sash",
