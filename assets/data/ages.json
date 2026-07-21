@@ -1046,49 +1046,44 @@
     {
       "year": 2150,
       "en": {
-        "name": "The living city",
-        "note": "The neon is gone. Vines climb every wall, canopies of leaf and solar shade the beds, and the square is more garden than pavement."
+        "name": "The reclaimed city",
+        "note": "The city is abandoned and the wild has taken it back. A colossal tree has heaved up through the cracked square, and dead tech lies rusting under the vines."
       },
       "fr": {
-        "name": "La cite vivante",
-        "note": "Le neon a disparu. Des lianes grimpent chaque mur, des canopees de feuilles et de solaire ombragent les potagers, et la place est plus jardin que pave."
+        "name": "La cite reprise",
+        "note": "La ville est abandonnee et la nature l'a reprise. Un arbre colossal a creve le pave de la place, et la techno morte rouille sous les lianes."
       },
       "sky": [
-        "#bcd8e2",
-        "#eef5ea"
+        "#9aa8a0",
+        "#c6cebc"
       ],
-      "hill": "#72a058",
-      "ground": "cobble",
+      "hill": "#5a6a48",
+      "ground": "overgrown",
       "skyline": [
         "townhall",
         "station"
       ],
       "house": {
-        "material": "render",
+        "material": "concrete",
         "storeys": 4,
-        "roof": "green",
-        "window": "sash",
-        "sign": true,
-        "trees": true,
-        "solar": true,
-        "living": true
+        "roof": "flat",
+        "window": "picture",
+        "modern": true,
+        "living": true,
+        "ruin": true
       },
       "street": [
         "tree",
         "farmbed",
-        "cafe",
         "tree",
-        "canopy",
-        "farmbed",
         "bench",
         "tree",
-        "cafe",
         "farmbed",
-        "tree",
-        "bike-rack"
+        "tree"
       ],
-      "crowd": 20,
+      "crowd": 5,
       "smoke": 0,
+      "haze": 0.4,
       "night": 0
     }
   ]

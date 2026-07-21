@@ -156,7 +156,7 @@ export class Ages {
    * and finally dark asphalt */
   groundTint(era) {
     const g = era.ground;
-    const c = g === 'asphalt' ? 0x54524e : g === 'setts' ? 0xa39c8e : g === 'cobble' ? 0xaca595 : 0xb2a385;
+    const c = g === 'overgrown' ? 0x6f7a52 : g === 'asphalt' ? 0x54524e : g === 'setts' ? 0xa39c8e : g === 'cobble' ? 0xaca595 : 0xb2a385;
     this.groundMat.color.setHex(c);
   }
 

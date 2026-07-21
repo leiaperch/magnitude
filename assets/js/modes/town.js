@@ -346,7 +346,7 @@ function house(B, w, spec, rng, night, lot) {
   const beam = C('#4a331f');
   const timber = mat === 'timber' || mat === 'wood';
   const roof = spec.roof, shop = !!spec.sign && !(lot.year >= 1500 && lot.year <= 1750);   // the fountain-square eras are formal, not shops
-  const tint = spec.neon ? shade('#33384a', 0.8 + rng() * 0.3) : jit(rng);   // the neon night dims the buildings so the signs can burn against them
+  const tint = spec.ruin ? shade('#767c64', 0.82 + rng() * 0.28) : spec.neon ? shade('#33384a', 0.8 + rng() * 0.3) : jit(rng);   // ruins go weathered and mossy; the neon night dims the buildings so the signs can burn
   const gz = lot.gable && (roof === 'thatch' || roof === 'tile');
 
   let y = 0, growMax = 0;
@@ -370,9 +370,9 @@ function house(B, w, spec, rng, night, lot) {
   else if (roof === 'flat') {
     B.boxT('concrete', 0, bodyH, 0, w + 0.05, 0.12, depth + 0.05, tint);
     if (spec.modern) {
-      const pc = spec.neon ? [0.2, 0.22, 0.28] : [0.86, 0.86, 0.84], hc = spec.neon ? C('#2a2f3c') : C('#8a9096');
-      B.boxT('concrete', 0, bodyH, front - 0.05, w + 0.05, 0.4, 0.12, pc); B.boxT('concrete', 0, bodyH, -depth / 2 + 0.05, w + 0.05, 0.4, 0.12, pc);   // concrete parapet
-      B.boxT('concrete', 0.35, bodyH + 0.12, -0.3, w * 0.42, 0.85, depth * 0.42, pc); B.box(-w * 0.28, bodyH + 0.12, 0.2, 0.55, 0.55, 0.55, hc);   // rooftop plant room + lift housing
+      const pc = spec.ruin ? [0.44, 0.48, 0.38] : spec.neon ? [0.2, 0.22, 0.28] : [0.86, 0.86, 0.84];
+      B.boxT('concrete', 0, bodyH, front - 0.05, w + 0.05, 0.4, 0.12, pc); B.boxT('concrete', 0, bodyH, -depth / 2 + 0.05, w + 0.05, 0.4, 0.12, pc);   // concrete parapet (weathered on the ruin)
+      if (!spec.ruin) { B.boxT('concrete', 0.35, bodyH + 0.12, -0.3, w * 0.42, 0.85, depth * 0.42, pc); B.box(-w * 0.28, bodyH + 0.12, 0.2, 0.55, 0.55, 0.55, spec.neon ? C('#2a2f3c') : C('#8a9096')); }   // rooftop plant room + lift housing (gone on the ruin, a wild tree takes their place)
     } else B.box(0, bodyH, front - 0.05, w + 0.05, 0.4, 0.12, shade('#a8a49a', 0.9));            // front parapet
   }
   else if (roof === 'mansard') mansardRoof(B, w, depth, bodyH, front, rw, rd, tint, mat, night, rng);
@@ -393,8 +393,20 @@ function house(B, w, spec, rng, night, lot) {
 
   if (spec.living) livingWall(B, w, floorH, storeys, front, rng);
   if (spec.neon) neonFront(B, w, floorH, storeys, bodyH, front, lot);
+  if (spec.ruin) ruinDress(B, w, floorH, storeys, bodyH, front, depth, rng);
   if (lot.civic) clockTower(B, w, bodyH, front);
   if (shop && !lot.civic && !spec.neon) hangingSign(B, w, floorH, front, lot);
+}
+/* the reclaimed ruin (2150): heavy overgrowth cascading down the concrete, a
+ * wild tree burst out of the crumbling roof, dead broken neon and a couple of
+ * black empty window sockets. Nature has taken the dead tech city. */
+function ruinDress(B, w, floorH, storeys, bodyH, front, depth, rng) {
+  const fz = front + 0.07, greens = ['#4a7a30', '#5f8f3a', '#3f6a26', '#6f9a3a'];
+  for (let i = 0; i < 16; i++) B.blob(-w / 2 + rng() * w, rng() * bodyH, fz + rng() * 0.12, 0.16 + rng() * 0.16, C(greens[i % greens.length]));   // overgrowth down the wall
+  B.at((rng() - 0.5) * w * 0.4, bodyH + 0.05, (rng() - 0.5) * depth * 0.3); B.cyl(0, 0, 0, 0.2, 1.2, 6, C('#5a4a30'), false, 0.16); B.anim(4, rng() * 6.283, 0); B.blob(0, 1.9, 0, 1.0, C('#4a7a30')); B.blob(-0.5, 2.3, 0.2, 0.72, C('#5f8f3a')); B.blob(0.5, 2.1, -0.2, 0.72, C('#3f6a26')); B.anim(0, 0, 0); B.pop();   // a tree out of the roof
+  B.box(w / 2 - 0.14, floorH * 1.6, fz, 0.09, floorH * (storeys - 2), 0.05, C('#2a2426'));                       // dead vertical neon tube
+  B.box(0, bodyH - floorH * 0.5, fz, w * 0.5, 0.42, 0.05, C('#221d20'));                                         // dead sign board
+  for (let i = 0; i < 3; i++) B.box(-w / 2 + 0.5 + rng() * (w - 1), floorH * (1 + ((rng() * (storeys - 1)) | 0)) + 0.1, fz - 0.02, 0.5, 0.5, 0.04, C('#101208'));   // black empty window sockets
 }
 /* neon strips and a glowing hologram board over the old masonry (2100) */
 function neonFront(B, w, floorH, storeys, bodyH, front, lot) {
@@ -472,11 +484,12 @@ function facade(B, w, h, front, y, s, storeys, spec, mat, beam, rng, night, year
 
   if (spec.modern) {                                                                              // a contemporary curtain-wall storey: a horizontal glazing ribbon between concrete spandrels, mullions, an occasional balcony
     const gw = w - 0.4, bandY = y + h * 0.26, bandH = h * 0.5;
-    const dark = spec.neon, sp0 = dark ? [0.24, 0.26, 0.33] : [0.92, 0.92, 0.9], sp1 = dark ? [0.19, 0.21, 0.27] : [0.86, 0.86, 0.84];
+    const dark = spec.neon, ruin = spec.ruin, litW = ruin ? false : lit;
+    const sp0 = ruin ? [0.46, 0.5, 0.4] : dark ? [0.24, 0.26, 0.33] : [0.92, 0.92, 0.9], sp1 = ruin ? [0.36, 0.4, 0.32] : dark ? [0.19, 0.21, 0.27] : [0.86, 0.86, 0.84];
     B.boxT('concrete', 0, y, front + 0.03, w, h * 0.2, 0.06, sp0);                               // concrete spandrel / floor band below
     B.boxT('concrete', 0, y + h - h * 0.22, front + 0.03, w, h * 0.24, 0.06, sp1);               // concrete slab band above
-    B.qUV('glass', [-gw / 2, bandY, front + 0.05], [gw / 2, bandY, front + 0.05], [gw / 2, bandY + bandH, front + 0.05], [-gw / 2, bandY + bandH, front + 0.05], [0, 0], [1, 0], [1, 1], [0, 1], lit ? C(WARM) : C(dark ? '#17212f' : '#a8cfe0'));
-    if (lit) B.box(0, bandY + bandH / 2, front + 0.055, gw, bandH, 0.02, C(WARM), true);
+    B.qUV('glass', [-gw / 2, bandY, front + 0.05], [gw / 2, bandY, front + 0.05], [gw / 2, bandY + bandH, front + 0.05], [-gw / 2, bandY + bandH, front + 0.05], [0, 0], [1, 0], [1, 1], [0, 1], litW ? C(WARM) : C(ruin ? '#2a352c' : dark ? '#17212f' : '#a8cfe0'));
+    if (litW) B.box(0, bandY + bandH / 2, front + 0.055, gw, bandH, 0.02, C(WARM), true);
     const cols = Math.max(3, Math.round(w / 0.8));
     for (let m = 0; m <= cols; m++) B.box(-gw / 2 + gw * m / cols, bandY, front + 0.07, 0.05, bandH, 0.05, C('#ccd0d4'));   // mullions
     const balc = s >= 1 && (s + (w > 2.5 ? 0 : 1)) % 2 === 0;
@@ -699,9 +712,9 @@ function pinnacle(B, x, y, z, r, col) { B.box(x, y, z, r * 1.6, r * 1.2, r * 1.6
  * curtain wall (the real reflective glass material, so it mirrors the sky and
  * reads unmistakably as glazing), with clear storey slabs, mullions, a glazed
  * ground-floor lobby and a rooftop plant room. Front faces +z, toward the square. */
-function modernBlock(B, night, green) {
+function modernBlock(B, night, green, ruin) {
   const H = 6.4, w = 4.4, d = 3.0, e = 0.04;
-  const frame = C('#c4c8ce'), body = C('#7a848e'), glassTint = night > 0.05 ? C('#243642') : C('#a6cfe0');
+  const frame = ruin ? C('#7a7f70') : C('#c4c8ce'), body = ruin ? C('#6a7060') : C('#7a848e'), glassTint = ruin ? C('#2a352c') : night > 0.05 ? C('#243642') : C('#a6cfe0');
   B.box(0, 0, 0, w, H, d, body);                                                       // solid mass, pale steel, never hollow
   const floors = 6, fh = H / floors;
   for (let fl = 0; fl < floors; fl++) {                                                // blue glazing on the two camera-facing sides
@@ -712,14 +725,22 @@ function modernBlock(B, night, green) {
   for (let fl = 0; fl <= floors; fl++) { const y = fl * fh; B.box(0, y, d / 2 + 0.05, w, 0.13, 0.08, frame); B.box(w / 2 + 0.05, y, 0, 0.08, 0.13, d, frame); }   // storey slabs
   for (let m = -1; m <= 1; m++) { B.box(m * w / 3, 0, d / 2 + 0.06, 0.09, H, 0.08, frame); B.box(w / 2 + 0.06, 0, m * d / 3, 0.08, H, 0.09, frame); }             // mullions
   for (const [cx, cz] of [[-w / 2, d / 2], [w / 2, d / 2], [w / 2, -d / 2]]) B.box(cx, 0, cz, 0.16, H + 0.06, 0.16, frame);   // corner columns
-  B.box(0, H, 0, w + 0.24, 0.34, d + 0.24, frame);                                     // parapet cap
-  if (green) {                                                                          // 2050 retrofit: a rooftop garden with solar, and a vertical garden up the front
-    for (let i = -1; i <= 1; i++) { B.box(i * w * 0.3, H + 0.34, -d * 0.24, w * 0.24, 0.05, d * 0.4, C('#0e1b34')); B.box(i * w * 0.3, H + 0.39, -d * 0.24, w * 0.22, 0.02, d * 0.36, C('#24406e')); }   // roof solar
-    for (let i = 0; i < 3; i++) { const px = -w * 0.3 + i * w * 0.3; B.box(px, H + 0.34, d * 0.28, w * 0.24, 0.18, d * 0.34, C('#5a4636')); B.blob(px, H + 0.66, d * 0.28, 0.26, C('#5f8f4b')); }   // roof planters
-    for (let g = 0; g < 8; g++) B.blob(-w / 2 + 0.25, 0.5 + g * (H - 1) / 8, d / 2 + 0.09, 0.2, C(['#5f8f4b', '#6d9a54', '#57853f'][g % 3]));   // vertical garden strip
-  } else B.box(0.4, H + 0.34, -0.3, w * 0.48, 1.1, d * 0.5, body);                     // otherwise a plain rooftop plant room
-  if (night > 0.05) glowGrid(B, 0, 0.3, d / 2 + 0.05, w - 0.5, 15, night);             // lit floors at night
-  B.box(0, 0, d / 2 + 0.08, w * 0.52, fh * 0.85, 0.05, night > 0.05 ? C(WARM) : C('#d4e8f0'), night > 0.05);   // bright glazed ground-floor lobby
+  if (!ruin) B.box(0, H, 0, w + 0.24, 0.34, d + 0.24, frame);                          // parapet cap (gone on the gutted ruin)
+  if (ruin) {                                                                           // gutted, overgrown: a jagged broken top, a tree out of it, vines cascading, black windows
+    for (let i = 0; i < 5; i++) B.box(-w / 2 + 0.3 + i * w * 0.22, H + 0.1 + (i % 2) * 0.5, (i % 2 ? d / 2 : -d / 2) + 0.1 * (i % 2 ? 1 : -1), 0.6, 0.5 + (i % 2) * 0.6, 0.4, shade('#6a7060', 0.9));   // broken parapet stubs
+      B.at((0.2) * w, H + 0.1, -0.2); B.cyl(0, 0, 0, 0.24, 1.4, 6, C('#5a4a30'), false, 0.18); B.anim(4, 1.2, 0); B.blob(0, 2.1, 0, 1.1, C('#4a7a30')); B.blob(-0.6, 2.5, 0.3, 0.8, C('#5f8f3a')); B.blob(0.6, 2.3, -0.3, 0.8, C('#3f6a26')); B.anim(0, 0, 0); B.pop();   // roof tree
+    const gr = ['#4a7a30', '#5f8f3a', '#3f6a26'];
+    for (let g = 0; g < 16; g++) { const t = g / 16; B.blob(-w / 2 + 0.2 + (g % 4) * w / 4, t * H, d / 2 + 0.1, 0.2 + (g % 3) * 0.06, C(gr[g % 3])); B.blob(w / 2 + 0.1, t * H, -d / 2 + 0.2 + (g % 4) * d / 5, 0.2, C(gr[(g + 1) % 3])); }   // cascading vines on both faces
+    for (let i = 0; i < 4; i++) B.box(-w / 2 + 0.4 + (i % 2) * w * 0.5, fh * (1 + i) + 0.1, d / 2 + 0.03, 0.7, 0.7, 0.04, C('#101208'));   // black empty windows
+  } else {
+    if (green) {                                                                        // 2050 retrofit: a rooftop garden with solar, and a vertical garden up the front
+      for (let i = -1; i <= 1; i++) { B.box(i * w * 0.3, H + 0.34, -d * 0.24, w * 0.24, 0.05, d * 0.4, C('#0e1b34')); B.box(i * w * 0.3, H + 0.39, -d * 0.24, w * 0.22, 0.02, d * 0.36, C('#24406e')); }   // roof solar
+      for (let i = 0; i < 3; i++) { const px = -w * 0.3 + i * w * 0.3; B.box(px, H + 0.34, d * 0.28, w * 0.24, 0.18, d * 0.34, C('#5a4636')); B.blob(px, H + 0.66, d * 0.28, 0.26, C('#5f8f4b')); }   // roof planters
+      for (let g = 0; g < 8; g++) B.blob(-w / 2 + 0.25, 0.5 + g * (H - 1) / 8, d / 2 + 0.09, 0.2, C(['#5f8f4b', '#6d9a54', '#57853f'][g % 3]));   // vertical garden strip
+    } else B.box(0.4, H + 0.34, -0.3, w * 0.48, 1.1, d * 0.5, body);                     // otherwise a plain rooftop plant room
+    if (night > 0.05) glowGrid(B, 0, 0.3, d / 2 + 0.05, w - 0.5, 15, night);             // lit floors at night
+    B.box(0, 0, d / 2 + 0.08, w * 0.52, fh * 0.85, 0.05, night > 0.05 ? C(WARM) : C('#d4e8f0'), night > 0.05);   // bright glazed ground-floor lobby
+  }
 }
 /* a timber scaffold cage hugging the two camera-facing faces of a tower under
  * construction: standards (verticals), ledgers (horizontals) and a couple of
@@ -888,6 +909,26 @@ function prop(B, kind, rng, night) {
       for (let i = 0; i < 3; i++) B.box(-0.55 + i * 0.55, 1.5, 0.56, 0.05, 0.6, 0.03, C(['#2bd6ff', '#4dff9e', '#b98cff'][i]), true);
       B.box(0, 2.5, 0.2, 0.08, 1.0, 0.08, C('#2a3550')); B.box(0, 3.0, 0.2, 0.5, 0.5, 0.05, C('#2bd6ff'), true); break;
     }
+    case 'wild-tree': {                                                                             // a colossal tree that has heaved up through the cracked plaza (2150)
+      for (let i = 0; i < 6; i++) { const a = i / 6 * 6.2832; B.box(Math.cos(a) * 1.4, 0, Math.sin(a) * 1.4, 0.7, 0.12 + (i % 2) * 0.14, 0.7, shade('#8a8f80', 0.82 + (i % 2) * 0.2)); }   // heaved paving slabs
+      for (let i = 0; i < 8; i++) B.blob((rng() - 0.5) * 3, 0.15, (rng() - 0.5) * 3, 0.2, C(['#5f8f3a', '#4a7a30'][i % 2]));   // grass through the cracks
+      B.cyl(0, 0, 0, 0.5, 3.0, 8, C('#5a4a30'), false, 0.4); B.anim(4, rng() * 6.283, 0);
+      B.blob(0, 4.4, 0, 2.2, C('#4a7a30')); B.blob(-1.5, 5.0, 0.6, 1.4, C('#5f8f3a')); B.blob(1.5, 4.6, -0.6, 1.4, C('#3f6a26')); B.blob(0.3, 5.6, 0, 1.2, C('#5f8f3a')); B.blob(-0.7, 3.8, -1.3, 1.0, C('#4a7a30')); B.blob(1.0, 3.9, 1.1, 0.9, C('#3f6a26')); B.anim(0, 0, 0); break;
+    }
+    case 'dead-drone': {                                                                            // a crashed drone in the weeds
+      B.at(0, 0.06, 0, 0, 1); B.push(new THREE.Matrix4().makeRotationZ(0.32));
+      B.box(0, 0, 0, 0.4, 0.14, 0.4, C('#2a2e30')); for (const [dx, dz] of [[.3, .3], [-.3, .3], [.3, -.3], [-.3, -.3]]) B.box(dx, 0.05, dz, 0.22, 0.03, 0.22, C('#33383a'));
+      B.pop(); B.pop(); B.blob(0.12, 0.2, 0.1, 0.18, C('#5f8f3a')); break;
+    }
+    case 'dead-holo': {                                                                             // a dark dead holo-sign, leaning
+      B.box(0, 0, 0, 0.1, 2.0, 0.1, C('#3a3f42')); B.at(0, 2.2, 0); B.push(new THREE.Matrix4().makeRotationZ(-0.16)); B.box(0, 0, 0, 1.0, 0.9, 0.06, C('#26302a')); B.pop(); B.pop(); B.blob(0, 0.2, 0.05, 0.16, C('#5f8f3a')); break;
+    }
+    case 'wreck-car': {                                                                             // a rusted car swallowed by moss and weeds
+      const rust = C('#6a5040'); B.box(0, 0.24, 0, 2.0, 0.44, 0.9, rust); B.box(0.05, 0.64, 0, 1.1, 0.38, 0.82, shade('#6a5040', 1.12));
+      for (const [wx, wz] of [[0.7, 0.46], [0.7, -0.46], [-0.7, 0.46], [-0.7, -0.46]]) B.cyl(wx, 0, wz, 0.22, 0.14, 8, C('#2a2622'));
+      for (let i = 0; i < 6; i++) B.blob(-0.8 + i * 0.32, 0.9 + (i % 2) * 0.12, (i % 2 ? 0.3 : -0.3), 0.18, C(['#5f8f3a', '#4a7a30', '#3f6a26'][i % 3])); break;
+    }
+    case 'weeds': for (let i = 0; i < 5; i++) B.blob((rng() - 0.5) * 1.3, 0.12 + rng() * 0.1, (rng() - 0.5) * 1.3, 0.14 + rng() * 0.08, C(['#5f8f3a', '#4a7a30', '#6f9a3a'][(rng() * 3) | 0])); break;
     case 'bollard': B.cyl(0, 0, 0, 0.09, 0.7, 8, C('#3a4046')); B.cyl(0, 0.7, 0, 0.1, 0.06, 8, C('#2ac6e0'), true); break;
     case 'cenotaph': {                                                                              // a war memorial: stepped stone plinth, tall pylon, cross of sacrifice, a wreath
       B.boxT('stone', 0, 0, 0, 1.9, 0.3, 1.9, WHITE); B.boxT('stone', 0, 0.3, 0, 1.45, 0.3, 1.45, WHITE); B.boxT('stone', 0, 0.6, 0, 1.05, 0.28, 1.05, WHITE);
@@ -1196,6 +1237,24 @@ function cyberpunkContent(B, era, rng, night) {
   B.at(10.0, 0, 4.0, Math.PI / 2); prop(B, 'car', rng, night); B.pop();
 }
 
+/* the reclaimed city (2150): the cyberpunk town abandoned and taken back by the
+ * wild. A colossal tree has heaved up through the cracked plaza at the heart, dead
+ * tech lies where it fell (a crashed drone, a dark holo-board, a rusted overgrown
+ * car), and dense wild vegetation and weeds have swallowed the rest. A few
+ * survivors move through it. */
+function reclaimedContent(B, era, rng, night) {
+  B.at(0.5, 0, 1.0); prop(B, 'wild-tree', rng, night); B.pop();                                     // the colossal tree at the heart
+  B.at(-2.6, 0, 4.4, 0.4); prop(B, 'dead-drone', rng, night); B.pop();                              // dead tech where it fell
+  B.at(3.4, 0, -0.6); prop(B, 'dead-holo', rng, night); B.pop();
+  B.at(-4.2, 0, 6.0, 0.3); prop(B, 'wreck-car', rng, night); B.pop();
+  for (const [x, z] of [[-3.4, -2.4], [3.2, -2.0], [-4.6, 2.4], [4.4, 3.0], [1.4, 5.6], [-1.6, 4.2], [2.6, 4.6]]) { B.at(x, 0, z); prop(B, 'tree', rng, night); B.pop(); }   // wild dense vegetation
+  for (const [x, z] of [[-3.6, 3.6], [2.4, 2.0], [-1.0, -1.4], [4.0, -3.0], [-4.4, -3.2], [0.5, 6.2], [3.6, 5.4], [-2.2, 6.4]]) { B.at(x, 0, z); prop(B, 'weeds', rng, night); B.pop(); }
+  B.at(-2.0, 0, -2.6); prop(B, 'farmbed', rng, night); B.pop();                                     // beds gone feral
+  B.at(2.8, 0, 4.0); prop(B, 'farmbed', rng, night); B.pop();
+  B.at(-3.8, 0, 0.4, Math.PI / 2); prop(B, 'bench', rng, night); B.pop();
+  for (const [x, z] of [[-1.0, 2.6], [1.6, 3.6], [3.0, 1.0]]) { B.at(x, 0, z, rng() * 6.28); person(B, rng); B.pop(); }   // a few survivors
+}
+
 /* --------------------------------------------------------------- townsfolk */
 const CLOTH = ['#3f4a5a', '#6b3a3a', '#4a5a3a', '#5a4a6b', '#2f3136', '#7a6a4a', '#8a4a3a', '#3a5a6a'];
 function person(B, rng) {
@@ -1322,7 +1381,7 @@ export function buildEra(era, mats) {
   place(LEFT_LOTS, (w) => { B.at(LEFTX, 0, lz + w / 2, Math.PI / 2); lz += w + 0.06; return false; });
 
   if (churchKind) { B.at(CHX, 0, CHZ, 0, 1.0); landmark(B, churchKind, night); B.pop(); }   // the church, facade to the square
-  else if (churchGone) { B.at(CHX, 0, CHZ + 0.4, 0, 1.0); modernBlock(B, night, !!spec.green); B.pop(); }   // a modern glass building on the razed cathedral's footprint, greened in the garden-city era
+  else if (churchGone) { B.at(CHX, 0, CHZ + 0.4, 0, 1.0); modernBlock(B, night, !!spec.green, !!spec.ruin); B.pop(); }   // a modern glass building on the razed cathedral's footprint: greened by 2050, a gutted overgrown ruin by 2150
 
   /* the square's contents. The village (to 1150) is a curated rural scene; from
    * 1200 the era's prop list fills fixed stations, then a per-phase dressing. */
@@ -1335,6 +1394,7 @@ export function buildEra(era, mats) {
   if (y <= 2000) { plazaContent(B, era, rng, night); return finishEra(B, era, rng, mats); }
   if (y <= 2050) { gardenCityContent(B, era, rng, night); return finishEra(B, era, rng, mats); }
   if (y <= 2100) { cyberpunkContent(B, era, rng, night); return finishEra(B, era, rng, mats); }
+  if (y <= 2150) { reclaimedContent(B, era, rng, night); return finishEra(B, era, rng, mats); }
 
   const street = era.street || [];
   let si = 0, ti = 0, li = 0, bi = 0, vi = 0, ci = 0, fi = 0, gi = 0, misc = 0;
