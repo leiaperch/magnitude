@@ -364,10 +364,15 @@ function house(B, w, spec, rng, night, lot) {
   }
   const bodyH = y, front = depth / 2 + growMax;
   const rw = w + 0.5 + growMax, rd = depth + 0.5 + growMax, eave = C('#241a12');
-  if (mat === 'stone' || mat === 'brick' || mat === 'render') cornice(B, w, bodyH, front, mat);   // projecting eaves moulding
+  if ((mat === 'stone' || mat === 'brick' || mat === 'render') && !spec.modern) cornice(B, w, bodyH, front, mat);   // projecting eaves moulding (not on the flat modern block)
 
   if (roof === 'green') greenRoof(B, w, depth, bodyH, spec, rng);
-  else if (roof === 'flat') { B.boxT('concrete', 0, bodyH, 0, w + 0.05, 0.12, depth + 0.05, tint); B.box(0, bodyH, front - 0.05, w + 0.05, 0.4, 0.12, shade('#a8a49a', 0.9)); }
+  else if (roof === 'flat') {
+    B.boxT('concrete', 0, bodyH, 0, w + 0.05, 0.12, depth + 0.05, tint);
+    const para = spec.modern ? C('#c4c8ce') : shade('#a8a49a', 0.9);
+    B.box(0, bodyH, front - 0.05, w + 0.05, 0.4, 0.12, para);                                    // front parapet
+    if (spec.modern) { B.box(0, bodyH, -depth / 2 + 0.05, w + 0.05, 0.4, 0.12, para); B.box(0.35, bodyH + 0.12, -0.3, w * 0.42, 0.85, depth * 0.42, C('#9aa0a6')); B.box(-w * 0.28, bodyH + 0.12, 0.2, 0.55, 0.55, 0.55, C('#8a9096')); }   // full parapet + rooftop plant room + lift housing
+  }
   else if (roof === 'mansard') mansardRoof(B, w, depth, bodyH, front, rw, rd, tint, mat, night, rng);
   else {
     const rh = (roof === 'thatch' ? 1.5 : 1.05) + storeys * 0.05;
@@ -462,6 +467,18 @@ function facade(B, w, h, front, y, s, storeys, spec, mat, beam, rng, night, year
   const gcol = lit ? C(WARM) : C(glassHex);
   const fz = front + 0.02;
   const masonry = mat === 'stone' || mat === 'brick' || mat === 'render';
+
+  if (spec.modern) {                                                                              // a contemporary curtain-wall storey: a horizontal glazing ribbon between pale concrete spandrels, mullions, an occasional balcony
+    const gw = w - 0.4, bandY = y + h * 0.26, bandH = h * 0.5;
+    B.box(0, y, front + 0.03, w, h * 0.2, 0.05, C('#b6babf'));                                   // spandrel / floor band below
+    B.box(0, y + h - h * 0.22, front + 0.03, w, h * 0.24, 0.05, C('#aab0b6'));                   // slab band above
+    B.qUV('glass', [-gw / 2, bandY, front + 0.05], [gw / 2, bandY, front + 0.05], [gw / 2, bandY + bandH, front + 0.05], [-gw / 2, bandY + bandH, front + 0.05], [0, 0], [1, 0], [1, 1], [0, 1], lit ? C(WARM) : C('#a8cfe0'));
+    if (lit) B.box(0, bandY + bandH / 2, front + 0.055, gw, bandH, 0.02, C(WARM), true);
+    const cols = Math.max(3, Math.round(w / 0.8));
+    for (let m = 0; m <= cols; m++) B.box(-gw / 2 + gw * m / cols, bandY, front + 0.07, 0.05, bandH, 0.05, C('#ccd0d4'));   // mullions
+    if (s >= 1 && (s + (w > 2.5 ? 0 : 1)) % 2 === 0) railing(B, 0, bandY - 0.16, front, w * 0.66);   // an occasional balcony
+    return;
+  }
 
   if (mat === 'timber' || mat === 'wood') {
     const t = 0.16;
@@ -1089,15 +1106,15 @@ function civicContent(B, era, rng, night) {
  * a glass block on its footprint, so the square reads as modernity taking over. */
 function plazaContent(B, era, rng, night) {
   B.at(0.5, 0, 1.2); prop(B, 'sculpture', rng, night); B.pop();                                     // one clear focus, on open paving
-  B.at(-3.6, 0, -1.4); prop(B, 'glass-pavilion', rng, night); B.pop();                              // a single café pavilion anchors the back-left
-  B.at(-1.2, 0, 5.4); prop(B, 'screen-pylon', rng, night); B.pop();                                 // two screens, on opposite sides
-  B.at(4.4, 0, 1.4, -0.4); prop(B, 'screen-pylon', rng, night); B.pop();
+  B.at(3.5, 0, 0.6); prop(B, 'glass-pavilion', rng, night); B.pop();                                // the café sits on the right, under the glass tower
+  B.at(-1.4, 0, 5.4); prop(B, 'screen-pylon', rng, night); B.pop();                                 // two screens, on opposite sides
+  B.at(-4.0, 0, 1.4); prop(B, 'screen-pylon', rng, night); B.pop();
   for (let i = 0; i < 6; i++) { B.at(-4.2 + i * 1.7, 0, 7.4); prop(B, 'bollard', rng, night); B.pop(); }   // LED edge, car-free
   for (let i = 0; i < 3; i++) { B.at(7.2, 0, 0.4 + i * 2.4); prop(B, 'bollard', rng, night); B.pop(); }
   B.at(-4.6, 0, 5.2); prop(B, 'bike-rack', rng, night); B.pop();
-  B.at(3.9, 0, 6.4); prop(B, 'kiosk', rng, night); B.pop();
-  for (const [x, z, r] of [[0.5, 5.4, Math.PI], [2.8, 3.2, -Math.PI / 2]]) { B.at(x, 0, z, r); prop(B, 'bench', rng, night); B.pop(); }
-  for (const [x, z] of [[-4.6, -3.0], [4.7, 4.4], [4.6, -1.0]]) { B.at(x, 0, z); prop(B, 'tree-box', rng, night); B.pop(); }   // greenery at the corners, centre kept open
+  B.at(4.2, 0, 6.4); prop(B, 'kiosk', rng, night); B.pop();
+  for (const [x, z, r] of [[0.5, 5.4, Math.PI], [-2.8, 3.4, Math.PI / 2]]) { B.at(x, 0, z, r); prop(B, 'bench', rng, night); B.pop(); }
+  for (const [x, z] of [[-4.6, -3.0], [-4.9, 3.6], [5.2, 3.4]]) { B.at(x, 0, z); prop(B, 'tree-box', rng, night); B.pop(); }   // greenery at the corners, centre kept open
   for (const [x, z] of [[-2.4, 2.6], [1.6, -0.6]]) { B.at(x, 0, z, rng() * 6.28); person(B, rng); B.pop(); }
   B.at(0.5, 0, 10.0); prop(B, 'tram-modern', rng, night); B.pop();                                  // modern transit and a rare car, out on the road
   B.at(-4.5, 0, 9.9, 0.05); prop(B, 'car', rng, night); B.pop();

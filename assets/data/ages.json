@@ -924,12 +924,12 @@
         "station"
       ],
       "house": {
-        "material": "brick",
+        "material": "render",
         "storeys": 4,
-        "roof": "mansard",
-        "window": "sash",
-        "shutter": true,
-        "sign": true
+        "roof": "flat",
+        "window": "picture",
+        "sign": true,
+        "modern": true
       },
       "street": [
         "fountain",
