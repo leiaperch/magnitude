@@ -828,14 +828,7 @@ function prop(B, kind, rng, night) {
       B.box(-0.24, 0, 0, 0.28, 3.4, 0.7, steel); B.box(0.12, 0, 0.02, 0.3, 3.1, 0.66, glass, night > .1); B.box(0.44, 0, 0, 0.24, 2.7, 0.6, steel);
       B.pop(); B.pop(); break;
     }
-    case 'glass-pavilion': {                                                                        // a sleek glass café pavilion with outdoor tables
-      const glass = night > .05 ? C('#3a5a6a') : C('#bfe0e8'), frame = C('#8a929a');
-      B.box(0, 0, 0, 2.4, 1.1, 1.8, glass);
-      for (const [sx, sz] of [[-1.2, -0.9], [1.2, -0.9], [-1.2, 0.9], [1.2, 0.9]]) B.box(sx, 0, sz, 0.08, 1.15, 0.08, frame);
-      B.box(0, 1.12, 0, 2.6, 0.12, 2.0, frame);
-      if (night > .05) B.box(0, 0.55, 0, 2.2, 0.9, 1.6, C(WARM), true);
-      for (const tx of [-0.7, 0.7]) { B.cyl(tx, 0, 1.35, 0.05, 0.7, 6, C('#7a8088'), false, 0.05); B.cyl(tx, 0.7, 1.35, 0.34, 0.05, 10, C('#d8dce0'), false, 0.34); } break;
-    }
+    case 'glass-pavilion': glassCafe(B, night); break;
     case 'screen-pylon': {                                                                          // a digital advertising pylon with a lit screen
       B.box(0, 0, 0, 0.24, 2.6, 0.18, C('#2a2e33')); B.box(0, 1.4, 0.11, 0.9, 1.2, 0.06, C('#101418'));
       B.box(0, 1.4, 0.15, 0.8, 1.05, 0.03, C(rng() < 0.5 ? '#2ac6e0' : '#e02a8a'), true); break;
@@ -929,10 +922,36 @@ function animal(B, hex, s) {
 }
 function lamp(B, night, hex) { B.cyl(0, 0, 0, 0.1, 2.6, 8, C('#3a3f46'), false, 0.08); B.box(0, 2.6, 0, 0.34, 0.34, 0.34, C('#2a2e33')); B.box(0, 2.66, 0, 0.24, 0.24, 0.24, night > 0.02 ? C(hex) : C('#c9c2a8'), night > 0.02); }
 function tram(B, modern, night) {
+  for (const rz of [0.5, -0.5]) B.box(0, 0.03, rz, 9, 0.06, 0.07, C('#9aa0a6'));                 // two steel rails along the run
+  for (let s = -4; s <= 4; s += 1.2) B.box(s, 0.015, 0, 0.16, 0.05, 1.3, C('#4a4438'));          // sleepers
   B.box(0, 0.4, 0, 3.2, 1.4, 1.1, C(modern ? '#c23a3a' : '#3a6a4a')); B.box(0, 0.1, 0, 3.0, 0.3, 1.15, C('#2a2e33'));
   for (let i = -2; i <= 2; i++) B.box(i * 0.6, 1.0, 0.56, 0.42, 0.5, 0.04, night > .05 ? C(WARM) : C('#bcd0d8'), night > .05);
   for (const wx of [1.1, -1.1]) { B.cyl(wx, 0, 0.4, 0.22, 0.1, 8, C('#20242a')); B.cyl(wx, 0, -0.4, 0.22, 0.1, 8, C('#20242a')); }
-  B.box(0, 1.8, 0, 0.06, 0.7, 0.06, C('#39424c'));
+  const wy = 3.1;
+  B.box(0, wy, 0, 9, 0.035, 0.035, C('#2a2e33'));                                                // overhead contact wire
+  B.box(-3.4, 0, -1.5, 0.12, wy + 0.2, 0.12, C('#4a4f56')); B.box(-3.4, wy, -0.75, 0.09, 0.07, 1.6, C('#4a4f56'));   // catenary pole + bracket arm
+  if (modern) { B.box(0, 1.78, 0, 0.5, 0.05, 0.06, C('#39424c')); for (const s of [-0.2, 0.2]) B.box(s, 2.42, 0, 0.05, 1.3, 0.05, C('#5a616a')); B.box(0, wy - 0.06, 0, 0.7, 0.05, 0.06, C('#39424c')); }   // pantograph
+  else { B.box(0, 2.42, 0, 0.05, 1.3, 0.05, C('#39424c')); B.box(0, wy - 0.06, 0, 0.3, 0.05, 0.06, C('#39424c')); }   // trolley pole
+}
+/* a small glass café pavilion: glazed box with a striped awning and fascia sign,
+ * a couple of terrace tables and chairs out front, warm interior at night. The
+ * awning and terrace are the clear "café" read the bare glass box was missing. */
+function glassCafe(B, night) {
+  const glassCol = night > .05 ? C('#243a44') : C('#bfe0e8'), frame = C('#b4bac0');
+  const gw = 1.9, gh = 2.0, gd = 1.5, e = 0.03;
+  B.box(0, 0, 0, gw, gh, gd, frame);
+  B.qUV('glass', [-gw / 2 + 0.12, 0.12, gd / 2 + e], [gw / 2 - 0.12, 0.12, gd / 2 + e], [gw / 2 - 0.12, gh - 0.45, gd / 2 + e], [-gw / 2 + 0.12, gh - 0.45, gd / 2 + e], [0, 0], [1, 0], [1, 1], [0, 1], glassCol);
+  B.qUV('glass', [gw / 2 + e, 0.12, gd / 2 - 0.12], [gw / 2 + e, 0.12, -gd / 2 + 0.12], [gw / 2 + e, gh - 0.45, -gd / 2 + 0.12], [gw / 2 + e, gh - 0.45, gd / 2 - 0.12], [0, 0], [1, 0], [1, 1], [0, 1], glassCol);
+  for (const px of [-gw / 2, 0, gw / 2]) B.box(px, 0, gd / 2, 0.06, gh - 0.35, 0.06, frame);
+  B.box(0, gh, 0, gw + 0.3, 0.12, gd + 0.3, frame);
+  if (night > .05) B.box(0, 0.9, 0, gw * 0.8, 1.0, gd * 0.8, C(WARM), true);
+  B.box(0, gh - 0.42, gd / 2 + 0.06, gw, 0.28, 0.06, C('#2f3a44'));                               // fascia signboard
+  for (let i = 0; i < 5; i++) B.quad([-gw / 2 + i * (gw / 5), gh - 0.5, gd / 2 + 0.06], [-gw / 2 + (i + 1) * (gw / 5), gh - 0.5, gd / 2 + 0.06], [-gw / 2 + (i + 1) * (gw / 5), gh - 0.85, gd / 2 + 0.66], [-gw / 2 + i * (gw / 5), gh - 0.85, gd / 2 + 0.66], C(i % 2 ? '#c94a4a' : '#e8e4d8'));   // striped awning
+  for (const px of [-gw / 2, gw / 2]) B.box(px, gh - 1.35, gd / 2 + 0.62, 0.05, 0.5, 0.05, C('#8a8f96'));   // awning posts
+  for (const [tx, tz] of [[-1.2, 1.35], [1.2, 1.55]]) {
+    B.cyl(tx, 0, tz, 0.05, 0.7, 8, C('#8a8f96'), false, 0.05); B.cyl(tx, 0.7, tz, 0.34, 0.05, 10, C('#e8e4d8'), false, 0.34);
+    for (const dx of [0.4, -0.4]) { B.box(tx + dx, 0, tz, 0.2, 0.38, 0.2, C('#4a4f56')); B.box(tx + dx + (dx > 0 ? -0.08 : 0.08), 0.38, tz, 0.05, 0.32, 0.2, C('#4a4f56')); }
+  }
 }
 function car(B, rng, night) {
   const hex = ['#3a6ab2', '#b23a3a', '#e8e4d8', '#39424c', '#3a8a6a'][(rng() * 5) | 0];
