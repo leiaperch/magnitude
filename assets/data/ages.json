@@ -924,7 +924,7 @@
         "station"
       ],
       "house": {
-        "material": "render",
+        "material": "concrete",
         "storeys": 4,
         "roof": "flat",
         "window": "picture",

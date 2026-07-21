@@ -369,9 +369,10 @@ function house(B, w, spec, rng, night, lot) {
   if (roof === 'green') greenRoof(B, w, depth, bodyH, spec, rng);
   else if (roof === 'flat') {
     B.boxT('concrete', 0, bodyH, 0, w + 0.05, 0.12, depth + 0.05, tint);
-    const para = spec.modern ? C('#c4c8ce') : shade('#a8a49a', 0.9);
-    B.box(0, bodyH, front - 0.05, w + 0.05, 0.4, 0.12, para);                                    // front parapet
-    if (spec.modern) { B.box(0, bodyH, -depth / 2 + 0.05, w + 0.05, 0.4, 0.12, para); B.box(0.35, bodyH + 0.12, -0.3, w * 0.42, 0.85, depth * 0.42, C('#9aa0a6')); B.box(-w * 0.28, bodyH + 0.12, 0.2, 0.55, 0.55, 0.55, C('#8a9096')); }   // full parapet + rooftop plant room + lift housing
+    if (spec.modern) {
+      B.boxT('concrete', 0, bodyH, front - 0.05, w + 0.05, 0.4, 0.12, [0.86, 0.86, 0.84]); B.boxT('concrete', 0, bodyH, -depth / 2 + 0.05, w + 0.05, 0.4, 0.12, [0.86, 0.86, 0.84]);   // concrete parapet
+      B.boxT('concrete', 0.35, bodyH + 0.12, -0.3, w * 0.42, 0.85, depth * 0.42, [0.82, 0.82, 0.8]); B.box(-w * 0.28, bodyH + 0.12, 0.2, 0.55, 0.55, 0.55, C('#8a9096'));   // rooftop plant room + lift housing
+    } else B.box(0, bodyH, front - 0.05, w + 0.05, 0.4, 0.12, shade('#a8a49a', 0.9));            // front parapet
   }
   else if (roof === 'mansard') mansardRoof(B, w, depth, bodyH, front, rw, rd, tint, mat, night, rng);
   else {
@@ -434,7 +435,7 @@ function shopfront(B, w, h, front, spec, rng, night, lot) {
   B.box(0, h - 0.19, fz + 0.05, w * 0.92, 0.26, 0.09, C('#33261a'));              // fascia (signboard)
   if (y < 1650) pentice(B, w * 0.9, front, h - 0.22);
   else if (y <= 1950) awning(B, w * 0.86, front, h - 0.24, lot.awn || 0);
-  else if (y <= 2050) B.box(0, h - 0.32, front + 0.42, w * 0.86, 0.06, 0.85, C(['#3a5a4a', '#4a4a5a', '#5a4a4a'][lot.awn % 3]));  // flat modern canopy
+  else if (y <= 2050 && !spec.modern) B.box(0, h - 0.32, front + 0.42, w * 0.86, 0.06, 0.85, C(['#3a5a4a', '#4a4a5a', '#5a4a4a'][lot.awn % 3]));  // flat modern canopy (none on the clean modern fronts)
 }
 /* plain sloped wooden shelter over a medieval/renaissance shopfront */
 function pentice(B, w, front, y) {
@@ -468,10 +469,10 @@ function facade(B, w, h, front, y, s, storeys, spec, mat, beam, rng, night, year
   const fz = front + 0.02;
   const masonry = mat === 'stone' || mat === 'brick' || mat === 'render';
 
-  if (spec.modern) {                                                                              // a contemporary curtain-wall storey: a horizontal glazing ribbon between pale concrete spandrels, mullions, an occasional balcony
+  if (spec.modern) {                                                                              // a contemporary curtain-wall storey: a horizontal glazing ribbon between concrete spandrels, mullions, an occasional balcony
     const gw = w - 0.4, bandY = y + h * 0.26, bandH = h * 0.5;
-    B.box(0, y, front + 0.03, w, h * 0.2, 0.05, C('#b6babf'));                                   // spandrel / floor band below
-    B.box(0, y + h - h * 0.22, front + 0.03, w, h * 0.24, 0.05, C('#aab0b6'));                   // slab band above
+    B.boxT('concrete', 0, y, front + 0.03, w, h * 0.2, 0.06, [0.92, 0.92, 0.9]);                 // concrete spandrel / floor band below
+    B.boxT('concrete', 0, y + h - h * 0.22, front + 0.03, w, h * 0.24, 0.06, [0.86, 0.86, 0.84]);   // concrete slab band above
     B.qUV('glass', [-gw / 2, bandY, front + 0.05], [gw / 2, bandY, front + 0.05], [gw / 2, bandY + bandH, front + 0.05], [-gw / 2, bandY + bandH, front + 0.05], [0, 0], [1, 0], [1, 1], [0, 1], lit ? C(WARM) : C('#a8cfe0'));
     if (lit) B.box(0, bandY + bandH / 2, front + 0.055, gw, bandH, 0.02, C(WARM), true);
     const cols = Math.max(3, Math.round(w / 0.8));
@@ -950,9 +951,9 @@ function tram(B, modern, night) {
   if (modern) { B.box(0, 1.78, 0, 0.5, 0.05, 0.06, C('#39424c')); for (const s of [-0.2, 0.2]) B.box(s, 2.42, 0, 0.05, 1.3, 0.05, C('#5a616a')); B.box(0, wy - 0.06, 0, 0.7, 0.05, 0.06, C('#39424c')); }   // pantograph
   else { B.box(0, 2.42, 0, 0.05, 1.3, 0.05, C('#39424c')); B.box(0, wy - 0.06, 0, 0.3, 0.05, 0.06, C('#39424c')); }   // trolley pole
 }
-/* a small glass café pavilion: glazed box with a striped awning and fascia sign,
- * a couple of terrace tables and chairs out front, warm interior at night. The
- * awning and terrace are the clear "café" read the bare glass box was missing. */
+/* a small glass café pavilion: glazed box with a flush sign band, warm interior,
+ * and a terrace of parasol tables out front (no fabric awning). The terrace is
+ * the clear "café" read the bare glass box was missing. */
 function glassCafe(B, night) {
   const glassCol = night > .05 ? C('#243a44') : C('#bfe0e8'), frame = C('#b4bac0');
   const gw = 1.9, gh = 2.0, gd = 1.5, e = 0.03;
@@ -962,12 +963,12 @@ function glassCafe(B, night) {
   for (const px of [-gw / 2, 0, gw / 2]) B.box(px, 0, gd / 2, 0.06, gh - 0.35, 0.06, frame);
   B.box(0, gh, 0, gw + 0.3, 0.12, gd + 0.3, frame);
   if (night > .05) B.box(0, 0.9, 0, gw * 0.8, 1.0, gd * 0.8, C(WARM), true);
-  B.box(0, gh - 0.42, gd / 2 + 0.06, gw, 0.28, 0.06, C('#2f3a44'));                               // fascia signboard
-  for (let i = 0; i < 5; i++) B.quad([-gw / 2 + i * (gw / 5), gh - 0.5, gd / 2 + 0.06], [-gw / 2 + (i + 1) * (gw / 5), gh - 0.5, gd / 2 + 0.06], [-gw / 2 + (i + 1) * (gw / 5), gh - 0.85, gd / 2 + 0.66], [-gw / 2 + i * (gw / 5), gh - 0.85, gd / 2 + 0.66], C(i % 2 ? '#c94a4a' : '#e8e4d8'));   // striped awning
-  for (const px of [-gw / 2, gw / 2]) B.box(px, gh - 1.35, gd / 2 + 0.62, 0.05, 0.5, 0.05, C('#8a8f96'));   // awning posts
-  for (const [tx, tz] of [[-1.2, 1.35], [1.2, 1.55]]) {
+  B.box(0, gh - 0.32, gd / 2 + 0.055, gw - 0.1, 0.26, 0.04, C('#2f3a44')); B.box(0, gh - 0.32, gd / 2 + 0.075, gw - 0.4, 0.16, 0.02, C('#d8b24a'), true);   // flush sign band, lit lettering strip
+  for (const [tx, tz] of [[-1.2, 1.35], [1.2, 1.6]]) {
     B.cyl(tx, 0, tz, 0.05, 0.7, 8, C('#8a8f96'), false, 0.05); B.cyl(tx, 0.7, tz, 0.34, 0.05, 10, C('#e8e4d8'), false, 0.34);
     for (const dx of [0.4, -0.4]) { B.box(tx + dx, 0, tz, 0.2, 0.38, 0.2, C('#4a4f56')); B.box(tx + dx + (dx > 0 ? -0.08 : 0.08), 0.38, tz, 0.05, 0.32, 0.2, C('#4a4f56')); }
+    B.cyl(tx, 0, tz, 0.04, 2.05, 6, C('#8a8f96'), false, 0.04);                                    // parasol pole
+    for (let i = 0; i < 6; i++) { const a = i / 6 * 6.2832; B.tri(tx, 2.05, tz, tx + Math.cos(a) * 0.8, 1.74, tz + Math.sin(a) * 0.8, tx + Math.cos(a + 1.05) * 0.8, 1.74, tz + Math.sin(a + 1.05) * 0.8, C(i % 2 ? '#4a7a5a' : '#e8e4d8')); }   // parasol
   }
 }
 function car(B, rng, night) {
