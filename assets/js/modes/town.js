@@ -664,21 +664,28 @@ function flyer(B, x0, y0, x1, y1, z, col) {
   for (let i = 0; i < steps; i++) { const t = i / steps, xa = x0 + (x1 - x0) * t, ya = y0 - (y0 - y1) * t * t; B.box(xa, ya, z, Math.abs(x1 - x0) / steps + 0.12, 0.16, 0.16, col); }
 }
 function pinnacle(B, x, y, z, r, col) { B.box(x, y, z, r * 1.6, r * 1.2, r * 1.6, col); B.cone(x, y + r * 1.2, z, r, r * 2.6, 4, col); }
-/* the modern glass-and-steel building that replaces the demolished cathedral on
- * its footprint from 2000 on: a curtain-wall block taller than the terraces,
- * with a set-back upper storey and a lit window grid. In 2000 the demolition
- * rubble still lies at its foot. Front faces +z, toward the square. */
-function modernBlock(B, night, year) {
-  const H = 6.4, w = 4.4, d = 3.0, glass = C('#2b3a44'), frame = C('#9aa2aa');
-  B.box(0, 0, 0, w, H, d, glass);
-  for (const sx of [-w / 2, 0, w / 2]) B.box(sx, 0, d / 2, 0.16, H, 0.16, frame);   // curtain-wall mullions
-  glowGrid(B, 0, 0.3, d / 2 + 0.02, w - 0.5, 16, night);
-  B.box(0, H, 0, w + 0.2, 0.26, d + 0.2, frame);                                     // parapet
-  B.box(0, H, -0.35, w * 0.66, 1.7, d * 0.66, glass);                                // set-back upper storey
-  glowGrid(B, 0, H + 0.15, d * 0.33 + 0.02, w * 0.5, 4, night);
-  B.box(0, H + 1.7, -0.35, w * 0.7, 0.14, d * 0.7, frame);
-  B.box(0, 0, d / 2 + 0.6, w * 0.55, 0.12, 1.1, frame);                              // entrance canopy
-  if (year <= 2000) for (let r = 0; r < 6; r++) { const rx = (r / 5 - 0.5) * w * 0.8; B.box(rx, 0, d / 2 + 0.5 + (r % 2) * 0.5, 0.42, 0.3 + (r % 2) * 0.3, 0.42, shade(r % 2 ? '#8a8378' : '#7a7264', 0.9)); }   // demolition rubble
+/* the modern glass-and-steel office building that replaces the demolished
+ * cathedral on its footprint from 2000 on. A pale steel mass wrapped in a blue
+ * curtain wall (the real reflective glass material, so it mirrors the sky and
+ * reads unmistakably as glazing), with clear storey slabs, mullions, a glazed
+ * ground-floor lobby and a rooftop plant room. Front faces +z, toward the square. */
+function modernBlock(B, night) {
+  const H = 6.4, w = 4.4, d = 3.0, e = 0.04;
+  const frame = C('#c4c8ce'), body = C('#7a848e'), glassTint = night > 0.05 ? C('#243642') : C('#a6cfe0');
+  B.box(0, 0, 0, w, H, d, body);                                                       // solid mass, pale steel, never hollow
+  const floors = 6, fh = H / floors;
+  for (let fl = 0; fl < floors; fl++) {                                                // blue glazing on the two camera-facing sides
+    const y0 = fl * fh + 0.14, gh = fh - 0.28;
+    B.qUV('glass', [-w / 2 + 0.16, y0, d / 2 + e], [w / 2 - 0.16, y0, d / 2 + e], [w / 2 - 0.16, y0 + gh, d / 2 + e], [-w / 2 + 0.16, y0 + gh, d / 2 + e], [0, 0], [1, 0], [1, 1], [0, 1], glassTint);
+    B.qUV('glass', [w / 2 + e, y0, d / 2 - 0.16], [w / 2 + e, y0, -d / 2 + 0.16], [w / 2 + e, y0 + gh, -d / 2 + 0.16], [w / 2 + e, y0 + gh, d / 2 - 0.16], [0, 0], [1, 0], [1, 1], [0, 1], glassTint);
+  }
+  for (let fl = 0; fl <= floors; fl++) { const y = fl * fh; B.box(0, y, d / 2 + 0.05, w, 0.13, 0.08, frame); B.box(w / 2 + 0.05, y, 0, 0.08, 0.13, d, frame); }   // storey slabs
+  for (let m = -1; m <= 1; m++) { B.box(m * w / 3, 0, d / 2 + 0.06, 0.09, H, 0.08, frame); B.box(w / 2 + 0.06, 0, m * d / 3, 0.08, H, 0.09, frame); }             // mullions
+  for (const [cx, cz] of [[-w / 2, d / 2], [w / 2, d / 2], [w / 2, -d / 2]]) B.box(cx, 0, cz, 0.16, H + 0.06, 0.16, frame);   // corner columns
+  B.box(0, H, 0, w + 0.24, 0.34, d + 0.24, frame);                                     // parapet cap
+  B.box(0.4, H + 0.34, -0.3, w * 0.48, 1.1, d * 0.5, body);                            // rooftop plant room
+  if (night > 0.05) glowGrid(B, 0, 0.3, d / 2 + 0.05, w - 0.5, 15, night);             // lit floors at night
+  B.box(0, 0, d / 2 + 0.08, w * 0.52, fh * 0.85, 0.05, night > 0.05 ? C(WARM) : C('#d4e8f0'), night > 0.05);   // bright glazed ground-floor lobby
 }
 function scaffold(B, x, h, z) { for (let i = 0; i <= 3; i++) B.box(x, i * (h / 3), z + 0.85, 1.7, 0.08, 0.08, C('#9a854a')); for (const sx of [-0.8, 0.8]) B.box(x + sx, 0, z + 0.85, 0.08, h, 0.08, C('#9a854a')); }
 function windmillSails(B) { B.at(0, 4.6, 1.1); for (let k = 0; k < 4; k++) { B.push(new THREE.Matrix4().makeRotationZ(k * Math.PI / 2)); B.box(0, 1.4, 0, 0.18, 2.8, 0.1, C('#6b4f34')); B.box(0.35, 1.4, 0.02, 0.5, 2.4, 0.04, C('#d8d2c2')); B.pop(); } B.pop(); }
@@ -1187,7 +1194,7 @@ export function buildEra(era, mats) {
   place(LEFT_LOTS, (w) => { B.at(LEFTX, 0, lz + w / 2, Math.PI / 2); lz += w + 0.06; return false; });
 
   if (churchKind) { B.at(CHX, 0, CHZ, 0, 1.0); landmark(B, churchKind, night); B.pop(); }   // the church, facade to the square
-  else if (churchGone) { B.at(CHX, 0, CHZ + 0.4, 0, 1.0); modernBlock(B, night, era.year); B.pop(); }   // a modern glass block on the razed cathedral's footprint
+  else if (churchGone) { B.at(CHX, 0, CHZ + 0.4, 0, 1.0); modernBlock(B, night); B.pop(); }   // a modern glass building on the razed cathedral's footprint
 
   /* the square's contents. The village (to 1150) is a curated rural scene; from
    * 1200 the era's prop list fills fixed stations, then a per-phase dressing. */
