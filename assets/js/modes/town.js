@@ -789,9 +789,9 @@ function prop(B, kind, rng, night) {
       break;
     }
     case 'stall': stall(B, rng); break;
-    case 'cart': cart(B, false, false); break;
-    case 'loadcart': cart(B, true, false); break;
-    case 'carriage': cart(B, false, true); break;
+    case 'cart': cart(B, false); break;
+    case 'loadcart': cart(B, true); break;
+    case 'carriage': carriage(B); break;
     case 'horse': animal(B, '#6b4f34', 1); break;
     case 'pig': animal(B, '#d69a9a', 0.6); break;
     case 'dog': animal(B, '#8a6a44', 0.5); break;
@@ -1002,12 +1002,24 @@ function stall(B, rng) {
   for (let i = -2; i <= 1; i++) B.gable(i * 0.42 + 0.21, 1.5, 0, 0.44, 0.35, 1.5, C(two[(i + 2) % 2]));
   for (let i = 0; i < 3; i++) B.box(-0.5 + i * 0.5, 0.87, 0.5, 0.16, 0.16, 0.16, C(['#c94a3a', '#e0902a', '#4a7a2a'][i]));
 }
-function cart(B, loaded, cab) {
+function cart(B, loaded) {
   B.boxT('wood', 0, 0.4, 0, 1.4, 0.25, 0.8, WHITE);
   for (const [wx, wz] of [[0.5, 0.45], [0.5, -0.45], [-0.5, 0.45], [-0.5, -0.45]]) B.cyl(wx, 0, wz, 0.3, 0.12, 8, C('#4a3826'));
   B.box(0.9, 0.3, 0, 0.9, 0.08, 0.12, C('#6b4f34'));
   if (loaded) for (let i = 0; i < 3; i++) B.boxT('wood', -0.4 + i * 0.4, 0.55, 0, 0.34, 0.34, 0.6, WHITE);
-  if (cab) { B.box(0, 0.55, 0, 0.9, 0.9, 0.75, C('#3a2f4a')); B.box(0, 0.9, 0.38, 0.5, 0.4, 0.05, C('#8fb4c8')); }
+}
+/* a proper horse-drawn coach: a horse in the traces, shafts, tall back wheels
+ * and small front ones, a panelled cabin with a roof and door windows, a driver's
+ * box up front. Faces +x (its direction of travel). */
+function carriage(B) {
+  B.at(1.75, 0, 0); animal(B, '#5a4030', 1.05); B.pop();                         // the horse, ahead in the traces
+  for (const sz of [-0.22, 0.22]) B.box(1.15, 0.52, sz, 1.3, 0.05, 0.05, C('#4a3826'));   // shafts
+  for (const wz of [0.46, -0.46]) { B.cyl(-0.55, 0, wz, 0.42, 0.1, 10, C('#33251a')); B.cyl(0.62, 0, wz, 0.28, 0.1, 10, C('#33251a')); }   // tall back, small front wheels
+  B.boxT('wood', 0, 0.5, 0, 1.3, 0.4, 0.86, WHITE);                              // lower body
+  B.box(-0.05, 0.9, 0, 1.05, 0.66, 0.8, C('#3a2f4a'));                           // cabin
+  for (const sz of [0.41, -0.41]) B.box(-0.05, 1.02, sz, 0.5, 0.4, 0.04, C('#8fb4c8'));   // door windows
+  B.box(-0.05, 1.28, 0, 1.16, 0.1, 0.9, C('#241d30'));                           // roof
+  B.box(0.66, 0.82, 0, 0.42, 0.3, 0.78, C('#4a3826'));                           // driver's box
 }
 function animal(B, hex, s) {
   B.at(0, 0, 0, 0, s);
@@ -1300,19 +1312,20 @@ const CROWD_KNOTS = [[-3.7, 1.0], [-1.85, 1.1], [0, 0.9], [1.85, 1.1], [3.7, 1.0
 /* the street around the near edges of the square, from a dirt cart track to a
  * marked asphalt road with a pedestrian crossing and, by 2050, a cycle lane */
 function road(B, era) {
-  const y = era.year, asphalt = y >= 1950, dirt = y < 1200;
+  const y = era.year, ruin = !!(era.house && era.house.ruin), asphalt = y >= 1950, dirt = y < 1200;
   const rk = asphalt ? 'concrete' : 'cobble';
-  const col = dirt ? [0.52, 0.45, 0.34] : asphalt ? [0.34, 0.34, 0.36] : [0.82, 0.78, 0.7];
+  const col = dirt ? [0.52, 0.45, 0.34] : ruin ? [0.3, 0.32, 0.28] : asphalt ? [0.34, 0.34, 0.36] : [0.82, 0.78, 0.7];
   const F = 8.4, R = 8.4, W = 3.4, E = 13;
   B.boxT(rk, 0, 0.015, F + W / 2, 2 * E, 0.03, W, col);
   B.boxT(rk, R + W / 2, 0.015, 0, W, 0.03, 2 * E, col);
-  if (!dirt) { B.box(0, 0.02, F - 0.08, 2 * E, 0.18, 0.14, C('#b2ac9e')); B.box(R - 0.08, 0.02, 0, 0.14, 0.18, 2 * E, C('#b2ac9e')); }
-  if (asphalt) {
+  if (!dirt) { B.box(0, 0.02, F - 0.08, 2 * E, 0.18, 0.14, C(ruin ? '#5a5c4e' : '#b2ac9e')); B.box(R - 0.08, 0.02, 0, 0.14, 0.18, 2 * E, C(ruin ? '#5a5c4e' : '#b2ac9e')); }
+  if (asphalt && !ruin) {
     for (let x = -E + 1; x < E; x += 1.7) B.box(x, 0.035, F + W / 2, 0.8, 0.02, 0.12, C('#d8d2c2'));
     for (let z = -E + 1; z < E; z += 1.7) B.box(R + W / 2, 0.035, z, 0.12, 0.02, 0.8, C('#d8d2c2'));
     for (let i = 0; i < 7; i++) B.box(-1.5 + i * 0.5, 0.04, F + W / 2, 0.3, 0.02, W * 0.86, C('#ece7db'));   // crossing
     if (y >= 2050) { B.box(0, 0.03, F + 0.55, 2 * E, 0.02, 0.8, C('#33608f')); B.box(R + 0.55, 0.03, 0, 0.8, 0.02, 2 * E, C('#33608f')); }  // cycle lane
   }
+  if (ruin) { for (let x = -E + 2; x < E; x += 2.3) B.blob(x, 0.05, F + W / 2 + Math.sin(x * 2) * 0.9, 0.15 + Math.abs(Math.sin(x)) * 0.08, C('#5f8f3a')); for (let z = -E + 2; z < E; z += 2.3) B.blob(R + W / 2 + Math.sin(z * 2) * 0.9, 0.05, z, 0.15, C('#4a7a30')); }   // weeds cracking through the abandoned road
   if (y >= 1700) { for (let x = -E + 1.5; x < E; x += 2.6) B.cyl(x, 0, F - 0.35, 0.09, 0.55, 6, C('#2f333a'), false, 0.07); for (let z = -E + 1.5; z < E; z += 2.6) B.cyl(R - 0.35, 0, z, 0.09, 0.55, 6, C('#2f333a'), false, 0.07); }
 }
 

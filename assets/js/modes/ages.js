@@ -223,12 +223,26 @@ export class Ages {
   /* Day dims to night as the town approaches 2050, so the neon has a dark
    * ground to burn against. One sun for every era, so the two sides of a seam
    * share a single dusk — which reads as the sun going down, not as an error. */
+  /* a lighting profile per era so the key light suits the mood: warm and low for
+   * the early centuries, dim and desaturated under industrial smog, a flat muted
+   * overcast over the reclaimed ruin, cool and dark for the neon night. */
+  lightProfile(era) {
+    const night = era.night || 0, haze = era.haze || 0, y = era.year;
+    let i = 2.3, c = new THREE.Color(0xfff2dd), h = 0.28, e = 0.92;
+    if (y <= 1150) { c.set(0xffe4bc); i = 2.2; h = 0.34; }                        // soft, warm early light
+    else if (y <= 1750) { c.set(0xfff0d6); i = 2.35; }                            // clear and warm
+    if (haze > 0) { i -= haze * 0.7; h += haze * 0.16; c.lerp(new THREE.Color(0xb6b4aa), haze * 0.55); e -= haze * 0.05; }   // smog: dimmer, flatter, desaturated
+    if (era.ruin) { c.set(0xdde2d6); i = 1.75; h = 0.52; e = 0.86; }              // overcast, flat, muted green-grey
+    if (night > 0) { i = 2.3 - night * 2.0; c.set(0xfff2dd).lerp(new THREE.Color(0x9fb4e0), night); h = 0.28 - night * 0.2; e = 0.92 - night * 0.12; }   // cool, dark neon night
+    return { i, c, h, e };
+  }
   setLight(a, b, u) {
-    const night = (a.night || 0) * (1 - u) + (b.night || 0) * u;
-    this.sun.intensity = 2.3 - night * 2.0;        // the sky env now fills shadows, so the sun can be the clear key
-    this.sun.color.set(0xfff2dd).lerp(new THREE.Color(0x9fb4e0), night);
-    this.hemi.intensity = 0.28 - night * 0.2;      // low: env map carries the ambient
-    this.scene.userData.night = night;
+    const pa = this.lightProfile(a), pb = this.lightProfile(b);
+    this.sun.intensity = pa.i * (1 - u) + pb.i * u;
+    this.sun.color.copy(pa.c).lerp(pb.c, u);
+    this.hemi.intensity = pa.h * (1 - u) + pb.h * u;
+    this.renderer.toneMappingExposure = pa.e * (1 - u) + pb.e * u;
+    this.scene.userData.night = (a.night || 0) * (1 - u) + (b.night || 0) * u;
   }
 
   /* progress: 0..1 across the whole track. Returns the era now being read. */
