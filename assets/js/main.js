@@ -36,6 +36,7 @@ const state = {
 const renderer = new Renderer(el.stage);
 const ages = new Ages(el.agesRoot);
 window.__ages = ages;
+window.__renderer = renderer;
 const drone = new Drone();
 let UI = {}, CARDS = {}, LANDMARKS = {};
 

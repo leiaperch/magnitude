@@ -19,7 +19,7 @@ const SRC = {
 export class Renderer {
   constructor(canvas) {
     this.canvas = canvas;
-    this.gl = canvas.getContext('webgl2', { antialias: false, alpha: false });
+    this.gl = canvas.getContext('webgl2', { antialias: false, alpha: false, preserveDrawingBuffer: true });
     this.ok = false;
     this.post = null;
   }

@@ -617,39 +617,51 @@ vec3 scWeb(vec2 uv, float t) {
   return col;
 }
 
-/* ---------- time-mode epochs (uE is log10 seconds after the Big Bang) ---------- */
-vec3 scPlasma(vec2 uv, float t, float e) {
-  float cool = smoothstep(-12.5, -4.5, e);
-  vec2 p = uv * 2.4;
-  vec2 w = vec2(fbm(p * 2.2 + t * 0.9), fbm(p * 2.2 - t * 0.8 + 5.0));
-  float f = fbm(p * 3.5 + w * 1.8 + t * 0.6);
-  vec3 hot = mix(vec3(1.0, 0.95, 0.88), vec3(1.0, 0.55, 0.22), cool);
-  vec3 col = hot * (0.22 + f * f * 1.5);
-  col += vec3(1.0, 0.8, 0.9) * pow(ridge(p * 2.5 + w + t * 0.5), 7.0) * (1.0 - cool * 0.5);
-  col += vec3(0.9, 0.95, 1.0) * pow(noise(p * 14.0 + t * 2.0), 9.0) * 2.0;
-  return col * (1.0 - cool * 0.3);
+/* ---------- temperature mode (uE is log10 kelvin): a hyper-precise water
+   surface as the hero, later reshaped by heat (frozen → liquid → boiling) ---------- */
+vec3 tSky(vec3 rd) {
+  float up = clamp(rd.y * 1.5, 0.0, 1.0);
+  vec3 sky = mix(vec3(0.60, 0.75, 0.97), vec3(0.11, 0.27, 0.62), up);
+  sky = mix(vec3(0.98, 0.90, 0.78), sky, smoothstep(0.0, 0.20, rd.y + 0.05));   // warm haze at the horizon
+  vec3 sun = normalize(vec3(0.32, 0.40, -0.86));
+  float s = max(dot(rd, sun), 0.0);
+  sky += vec3(1.0, 0.92, 0.72) * pow(s, 1400.0) * 14.0;    // sun disc
+  sky += vec3(1.0, 0.86, 0.62) * pow(s, 7.0) * 0.30;       // glow around it
+  sky += vec3(1.0) * pow(s, 60.0) * 0.6;
+  return sky;
 }
-vec3 scCMB(vec2 uv, float t, float e) {
-  float prog = smoothstep(-4.0, 13.0, e);                   // blackbody fog, cooling
-  vec3 bb = mix(vec3(1.0, 0.88, 0.66), vec3(0.72, 0.24, 0.08), prog);
-  vec2 p = uv * 2.0;
-  float fog = fbm(p * 2.0 + t * 0.06) * 0.55 + fbm(p * 5.0 - t * 0.04) * 0.3;
-  float lift = smoothstep(12.5, 13.15, e);                  // recombination: the fog clears
-  vec3 col = bb * (0.30 + fog) * (1.0 - lift * 0.94);
-  float aniso = fbm(uv * 3.2 + 17.0) - 0.5;                 // ...revealing the CMB map
-  col += lift * mix(vec3(0.11, 0.15, 0.40), vec3(0.62, 0.27, 0.13), smoothstep(-0.16, 0.16, aniso)) * 0.75;
-  return col;
+float waterH(vec2 p, float t) {
+  vec2 w = vec2(fbm(p * 0.55 + t * 0.05), fbm(p * 0.55 - t * 0.04 + 4.0));
+  float h = fbm(p * 1.1 + w * 0.8 + vec2(t * 0.13, t * 0.05));
+  h += 0.5 * fbm(p * 2.4 + w + vec2(-t * 0.11, t * 0.08));
+  h += 0.22 * ridge(p * 4.0 + w * 1.3 + t * 0.22);          // sharper capillary crests
+  return h;
 }
-vec3 scDarkAges(vec2 uv, float t) {
-  vec3 col = vec3(0.008, 0.010, 0.020) * (0.5 + fbm(uv * 2.0 + t * 0.01));
-  col += vec3(0.045, 0.04, 0.08) * fbm(uv * 1.2 + 31.0) * 0.5;
-  return col;
-}
-vec3 scFirstStars(vec2 uv, float t) {
-  vec3 col = vec3(0.010, 0.012, 0.026);
-  col += vec3(0.10, 0.08, 0.20) * fbm(uv * 2.6 + t * 0.02) * 0.6;
-  col += starLayer(uv * 20.0 + 3.0, 0.985, t) * vec3(0.75, 0.85, 1.25) * 1.5;
-  col += vec3(0.22, 0.32, 0.65) * pow(noise(uv * 4.0 + 9.0), 6.0) * 1.4;   // reionized bubbles
+vec3 scWater(vec2 uv, float t, float e) {
+  vec3 cam = vec3(0.0, 0.9, 0.0);
+  vec3 rd = normalize(vec3(uv.x * 1.32, uv.y - 0.16, -1.0));   // horizon near uv.y = 0.16
+  vec3 sun = normalize(vec3(0.32, 0.40, -0.86));
+  if (rd.y > -0.004) return tSky(rd);                         // above the waterline → sky
+  float s = -cam.y / rd.y;                                    // distance to the plane y = 0
+  vec3 hit = cam + s * rd;
+  vec2 wp = hit.xz + vec2(0.0, t * 0.55);                     // flowing toward the camera
+  float lod = clamp(s * 0.12, 0.5, 4.0), eps = 0.05 * lod;
+  float hC = waterH(wp, t), hX = waterH(wp + vec2(eps, 0.0), t), hZ = waterH(wp + vec2(0.0, eps), t);
+  float amp = 0.5 / (1.0 + s * 0.16);                         // ripples flatten toward the horizon
+  vec3 nrm = normalize(vec3(-(hX - hC) / eps * amp, 1.0, -(hZ - hC) / eps * amp));
+  vec3 vdir = -rd, rref = reflect(rd, nrm);
+  vec3 refl = tSky(rref);
+  vec3 rrfr = refract(rd, nrm, 0.752);
+  vec2 bed = wp + rrfr.xz * 1.2;
+  float caust = pow(ridge(bed * 2.0 + t * 0.3), 3.0) + pow(ridge(bed * 3.6 - t * 0.22 + 3.0), 4.0) * 0.6;
+  vec3 deep = mix(vec3(0.015, 0.11, 0.17), vec3(0.04, 0.32, 0.40), fbm(bed * 1.4));
+  deep += vec3(0.45, 0.9, 0.85) * caust * 0.4;               // caustics on the bed
+  float fres = 0.02 + 0.98 * pow(1.0 - max(dot(vdir, nrm), 0.0), 5.0);
+  vec3 col = mix(deep, refl, fres);
+  col += vec3(1.0, 0.92, 0.72) * pow(max(dot(rref, sun), 0.0), 300.0) * 4.0;   // sun glitter
+  float foam = smoothstep(0.80, 0.97, hC + 0.28 * ridge(wp * 5.0 + t));
+  col = mix(col, vec3(0.92, 0.96, 1.0), foam * 0.55 * smoothstep(3.5, 0.6, s));
+  col = mix(col, vec3(0.72, 0.82, 0.96), smoothstep(0.09, 0.16, uv.y) * 0.7);  // aerial haze toward the horizon
   return col;
 }
 
@@ -678,15 +690,7 @@ void main() {
   w = wband(e,  19.4,  23.2); if (w > 0.002) col += w * scGalaxy(uv, t);
   w = wband(e,  23.2,  26.9); if (w > 0.002) col += w * scWeb(uv, t);
   } else {
-  w = wbandR(e, -13.6,  -4.0, 0.7);   if (w > 0.002) col += w * scPlasma(uv, t, e);
-  w = wbandR(e,  -4.6,   2.6, 0.7);   if (w > 0.002) { gE = mix(-15.3, -13.9, (e + 4.6) / 7.2); col += w * scNucleus(uv, t); }
-  w = wbandR(e,  -5.0,  13.2, 0.7);   if (w > 0.002) col += w * scCMB(uv, t, e);
-  w = wbandR(e,  13.0,  15.7, 0.5);   if (w > 0.002) col += w * scDarkAges(uv, t);
-  w = wbandR(e,  15.4,  16.75, 0.35); if (w > 0.002) col += w * scFirstStars(uv, t);
-  w = wbandR(e,  16.55, 17.30, 0.2);  if (w > 0.002) { gE = mix(20.3, 21.6, (e - 16.55) / 0.75); col += w * scGalaxy(uv, t); }
-  w = wbandR(e,  17.20, 17.50, 0.08); if (w > 0.002) { gE = mix(10.4, 12.0, (e - 17.20) / 0.30); col += w * scSystem(uv, t); }
-  w = wbandR(e,  17.42, 17.62, 0.05); if (w > 0.002) { gE = mix(6.2, 7.2, (e - 17.42) / 0.20); col += w * scPlanet(uv, t); }
-  w = wbandR(e,  17.55, 17.80, 0.035); if (w > 0.002) { gE = uE; col += w * scHuman(uv, t); }
+  col = scWater(uv, t, e);   // preview: the water hero across the whole temperature axis (bands to come)
   }
 
   // sonar ping on click
