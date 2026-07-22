@@ -637,30 +637,119 @@ float waterH(vec2 p, float t) {
   h += 0.22 * ridge(p * 4.0 + w * 1.3 + t * 0.22);          // sharper capillary crests
   return h;
 }
-vec3 scWater(vec2 uv, float t, float e) {
+/* blackbody colour along the temperature spine, by log10 kelvin */
+vec3 bbColor(float logT) {
+  vec3 c = vec3(1.0, 0.22, 0.04);                          // ~1000 K deep red
+  c = mix(c, vec3(1.0, 0.48, 0.13), smoothstep(3.0, 3.35, logT));
+  c = mix(c, vec3(1.0, 0.72, 0.34), smoothstep(3.35, 3.68, logT));
+  c = mix(c, vec3(1.0, 0.86, 0.55), smoothstep(3.68, 3.85, logT));   // ~5800 K sun: warm yellow-white, not grey
+  c = mix(c, vec3(0.78, 0.85, 1.0), smoothstep(4.1, 4.7, logT));     // hotter → blue-white
+  return c;
+}
+/* a frozen surface where the water was: a sheet of blue ice, fracture lines,
+   snow patches, under a cold pale sky */
+vec3 scIce(vec2 uv, float t) {
+  vec3 rd = normalize(vec3(uv.x * 1.32, uv.y - 0.16, -1.0));
+  if (rd.y > -0.004) {
+    float up = clamp(rd.y * 1.5, 0.0, 1.0);
+    vec3 sky = mix(vec3(0.82, 0.88, 0.96), vec3(0.46, 0.62, 0.86), up);
+    sky = mix(vec3(0.96, 0.94, 0.98), sky, smoothstep(0.0, 0.16, rd.y + 0.05));   // pale cold haze
+    return sky;
+  }
+  vec3 cam = vec3(0.0, 0.9, 0.0);
+  float s = -cam.y / rd.y;
+  vec2 wp = (cam + s * rd).xz + vec2(0.0, t * 0.03);        // ice barely drifts
+  float crack = smoothstep(0.84, 0.99, ridge(wp * 1.5));
+  float crack2 = smoothstep(0.9, 1.0, ridge(wp * 3.2 + 7.0));
+  float snow = smoothstep(0.5, 0.78, fbm(wp * 2.0 + 3.0));
+  vec3 col = mix(vec3(0.60, 0.73, 0.85), vec3(0.87, 0.93, 0.99), snow);   // blue ice → white snow
+  col = mix(col, vec3(0.24, 0.5, 0.70), crack * 0.7);                     // deep blue open cracks
+  col = mix(col, vec3(0.96, 0.99, 1.0), crack2 * 0.55);                   // bright fracture rims
+  float glint = pow(max(fbm(wp * 9.0) - 0.55, 0.0) * 2.2, 3.0);
+  col += vec3(0.9, 0.96, 1.0) * glint * 0.25 * smoothstep(3.2, 0.4, s);   // frost sparkle
+  col = mix(col, vec3(0.86, 0.90, 0.97), smoothstep(0.02, 0.16, uv.y));   // haze to horizon
+  return col * (0.72 + 0.3 * snow);
+}
+/* incandescent matter: a turbulent emissive field coloured by its blackbody
+   temperature. A dark cracked crust at lava heat, boiling granulation at star
+   heat, blue plasma with rising loops when hotter still. */
+vec3 scGlow(vec2 uv, float t, float logT) {
+  vec3 bb = bbColor(logT);
+  vec2 p = uv * 2.2;
+  vec2 w = vec2(fbm(p * 1.6 + t * 0.3), fbm(p * 1.6 - t * 0.25 + 5.0));
+  float f = fbm(p * 2.4 + w * 1.6 + t * 0.35);
+  float hot = smoothstep(3.7, 4.5, logT);                  // tame the blowout as it whitens
+  vec3 col = bb * (0.16 + f * (1.15 - hot * 0.5));
+  float crust = smoothstep(3.35, 2.95, logT);              // lava: dark crust, glowing cracks
+  float cracks = pow(ridge(p * 2.8 + w + t * 0.15), 4.0);
+  col = mix(col, bb * 1.7, cracks * crust);
+  col *= mix(1.0, 0.22 + 1.0 * cracks, crust);
+  float star = smoothstep(3.55, 3.85, logT) * (1.0 - smoothstep(4.5, 5.0, logT));
+  float gran = fbm(p * 7.0 + w * 2.0 - t * 0.2);           // convective granulation
+  col *= mix(1.0, 0.45 + gran * 1.2, star * 0.85);         // granulation lanes give the surface contrast
+  col += bb * pow(gran, 3.0) * 0.5 * star;                 // bright cell centres
+  float loop = pow(ridge(vec2(p.x * 1.8, p.y * 3.5 + t * 0.3) + 3.0), 5.0) * smoothstep(-0.2, 0.7, uv.y);
+  col += bb * loop * (star + smoothstep(4.2, 4.7, logT)) * 0.4;   // prominences / magnetic loops
+  col += bb * starLayer(p * 6.0 + t * 0.4, 0.94, t * 2.0) * (0.35 + star * 0.5);   // hot flecks (no square noise)
+  col *= 1.0 - hot * 0.18;                                 // hold the very hot end back from clipping
+  return col;
+}
+/* rising bubbles pocking the surface as it comes to the boil */
+float boilBubbles(vec2 wp, float t, float amt) {
+  if (amt < 0.01) return 0.0;
+  float b = 0.0;
+  vec2 g = wp * 3.0; vec2 base = floor(g), fp = fract(g);
+  for (int j = -1; j <= 1; j++)
+  for (int i = -1; i <= 1; i++) {
+    vec2 o = vec2(float(i), float(j)), id = base + o;
+    float h = hash(id);
+    if (h > amt * 0.9 + 0.1) continue;
+    float ph = fract(t * (0.6 + h * 1.4) + h * 7.0);
+    vec2 c = o + 0.5 + (vec2(hash(id + 1.0), hash(id + 2.0)) - 0.5) * 0.7;
+    float r = (0.06 + 0.14 * h) * smoothstep(0.0, 0.4, ph) * smoothstep(1.0, 0.7, ph);
+    float d = length(fp - c);
+    b += smoothstep(r, r * 0.4, d) * smoothstep(1.0, 0.82, ph);
+  }
+  return clamp(b, 0.0, 1.0);
+}
+/* heat: 0 = just frozen, 0.5 = calm liquid, 1 = a rolling boil. Below/above the
+   liquid band this hands off to ice and steam. Front faces the low sun. */
+vec3 scWater(vec2 uv, float t, float heat) {
+  float boil = smoothstep(0.72, 1.0, heat);                  // agitation as it nears the boil
+  float chop = smoothstep(0.4, 1.0, heat);
   vec3 cam = vec3(0.0, 0.9, 0.0);
   vec3 rd = normalize(vec3(uv.x * 1.32, uv.y - 0.16, -1.0));   // horizon near uv.y = 0.16
   vec3 sun = normalize(vec3(0.32, 0.40, -0.86));
-  if (rd.y > -0.004) return tSky(rd);                         // above the waterline → sky
+  vec3 steam = vec3(0.0);
+  if (rd.y > -0.004) {
+    vec3 c = tSky(rd);
+    /* boiling throws up billows of steam above the water */
+    float sc = fbm(vec2(uv.x * 2.2, uv.y * 2.2 - t * 0.5) + 3.0) * 0.6 + fbm(vec2(uv.x * 5.0, uv.y * 4.0 - t * 0.8)) * 0.4;
+    float veil = smoothstep(0.45, 0.9, sc) * boil * smoothstep(0.42, 0.18, uv.y);
+    return mix(c, vec3(0.86, 0.90, 0.96), veil * 0.85);
+  }
   float s = -cam.y / rd.y;                                    // distance to the plane y = 0
   vec3 hit = cam + s * rd;
   vec2 wp = hit.xz + vec2(0.0, t * 0.55);                     // flowing toward the camera
   float lod = clamp(s * 0.12, 0.5, 4.0), eps = 0.05 * lod;
   float hC = waterH(wp, t), hX = waterH(wp + vec2(eps, 0.0), t), hZ = waterH(wp + vec2(0.0, eps), t);
-  float amp = 0.5 / (1.0 + s * 0.16);                         // ripples flatten toward the horizon
+  float amp = (0.5 + chop * 0.9) / (1.0 + s * 0.16);          // hotter water is choppier
   vec3 nrm = normalize(vec3(-(hX - hC) / eps * amp, 1.0, -(hZ - hC) / eps * amp));
+  float bub = boilBubbles(wp, t, boil) * smoothstep(4.5, 0.5, s);
+  nrm = normalize(nrm + vec3((hash(floor(wp * 3.0)) - 0.5), 0.0, (hash(floor(wp * 3.0) + 9.0) - 0.5)) * bub * 1.2);
   vec3 vdir = -rd, rref = reflect(rd, nrm);
   vec3 refl = tSky(rref);
   vec3 rrfr = refract(rd, nrm, 0.752);
   vec2 bed = wp + rrfr.xz * 1.2;
   float caust = pow(ridge(bed * 2.0 + t * 0.3), 3.0) + pow(ridge(bed * 3.6 - t * 0.22 + 3.0), 4.0) * 0.6;
   vec3 deep = mix(vec3(0.015, 0.11, 0.17), vec3(0.04, 0.32, 0.40), fbm(bed * 1.4));
-  deep += vec3(0.45, 0.9, 0.85) * caust * 0.4;               // caustics on the bed
+  deep += vec3(0.45, 0.9, 0.85) * caust * 0.4 * (1.0 - boil * 0.6);   // caustics wash out as it boils
   float fres = 0.02 + 0.98 * pow(1.0 - max(dot(vdir, nrm), 0.0), 5.0);
   vec3 col = mix(deep, refl, fres);
   col += vec3(1.0, 0.92, 0.72) * pow(max(dot(rref, sun), 0.0), 300.0) * 4.0;   // sun glitter
-  float foam = smoothstep(0.80, 0.97, hC + 0.28 * ridge(wp * 5.0 + t));
-  col = mix(col, vec3(0.92, 0.96, 1.0), foam * 0.55 * smoothstep(3.5, 0.6, s));
+  col = mix(col, vec3(0.95, 0.97, 1.0), bub * 0.7);                 // bright bubble caps
+  float foam = smoothstep(0.80 - boil * 0.3, 0.97, hC + 0.28 * ridge(wp * 5.0 + t));
+  col = mix(col, vec3(0.92, 0.96, 1.0), foam * (0.55 + boil * 0.4) * smoothstep(3.5, 0.6, s));
   col = mix(col, vec3(0.72, 0.82, 0.96), smoothstep(0.09, 0.16, uv.y) * 0.7);  // aerial haze toward the horizon
   return col;
 }
@@ -690,7 +779,9 @@ void main() {
   w = wband(e,  19.4,  23.2); if (w > 0.002) col += w * scGalaxy(uv, t);
   w = wband(e,  23.2,  26.9); if (w > 0.002) col += w * scWeb(uv, t);
   } else {
-  col = scWater(uv, t, e);   // preview: the water hero across the whole temperature axis (bands to come)
+  if (e < -3.0) col = scIce(uv, t);
+  else if (e < 3.5) col = scWater(uv, t, clamp((e + 3.0) / 6.5, 0.0, 1.2));
+  else col = scGlow(uv, t, mix(3.0, 4.7, clamp((e - 3.5) / 9.0, 0.0, 1.0)));   // preview: e sweeps ice → water → glow (real Kelvin bands to come)
   }
 
   // sonar ping on click
