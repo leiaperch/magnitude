@@ -1,20 +1,20 @@
 /* MAGNITUDE — the three axes, and the constants they share. */
 
 export const PX_PER_DECADE = 900;
+export const PX_PER_HOUR = 340;
 
-/* Space and time are logarithmic: `min`/`max` are exponents, and scrolling one
- * decade always costs the same pixels. Ages is not — it is a flat run of
- * 50-year slices, so it measures itself in slices instead. */
+/* Space is logarithmic: `min`/`max` are exponents, scrolling one decade always
+ * costs the same pixels. Time is now a clock — one day at the beach, from
+ * midnight to midnight, measured in hours. Ages is a flat run of 50-year slices. */
 export const AXES = {
   e: { kind: 'log', unit: 'm', min: -16.5, max: 26.9 },
-  t: { kind: 'log', unit: 's', min: -12.7, max: 17.70 },
+  t: { kind: 'clock', unit: 'h', min: 0, max: 24 },
   a: { kind: 'slices', pxPerSlice: 820 },
 };
 
-for (const k of ['e', 't']) {
-  const ax = AXES[k];
-  ax.span = ax.max - ax.min;
-  ax.trackH = Math.round(ax.span * PX_PER_DECADE);
+{
+  const e = AXES.e; e.span = e.max - e.min; e.trackH = Math.round(e.span * PX_PER_DECADE);
+  const t = AXES.t; t.span = t.max - t.min; t.trackH = Math.round(t.span * PX_PER_HOUR);
 }
 
 export const MODE_ORDER = ['e', 't', 'a'];
@@ -22,12 +22,12 @@ export const nextMode = m => MODE_ORDER[(MODE_ORDER.indexOf(m) + 1) % MODE_ORDER
 
 export const MODE_LABEL = {
   e: { en: 'Meters', fr: 'Mètres' },
-  t: { en: 'Years', fr: 'Années' },
+  t: { en: 'Hour', fr: 'Heure' },
   a: { en: 'Ages', fr: 'Âges' },
 };
 export const MODE_HINT = {
   e: { en: 'Back to space', fr: 'Revenir à l’espace' },
-  t: { en: 'Scroll forward from the Big Bang', fr: 'Défiler depuis le Big Bang' },
+  t: { en: 'A day at the beach, hour by hour', fr: 'Une journée à la plage, heure par heure' },
   a: { en: 'Scroll back through the ages of people', fr: 'Remonter les âges humains' },
 };
 
@@ -49,15 +49,15 @@ export const SCENES = {
     ['The cosmic web', 'filaments of everything', 23.2, 26.9, '#ff7a6e', 0.7],
   ],
   t: [
-    ['Quark-gluon plasma', 'matter, not yet', -13.6, -4.0, '#ffb37a', 0.7],
-    ['Nucleosynthesis', 'the first three minutes', -4.6, 2.6, '#ff9a5c', 0.7],
-    ['The glow', 'an opaque fog, cooling', -5.0, 13.2, '#ff7a4d', 0.7],
-    ['The dark ages', 'nothing shines yet', 13.0, 15.7, '#5b6b9e', 0.5],
-    ['First stars', 'reionization', 15.4, 16.75, '#9fc0ff', 0.35],
-    ['Young galaxies', 'structure assembles', 16.55, 17.30, '#b7c6ff', 0.2],
-    ['A disk of dust', 'the Sun ignites', 17.20, 17.50, '#ffd166', 0.08],
-    ['The Earth', 'life, almost immediately', 17.42, 17.62, '#6fb7ff', 0.05],
-    ['Now', 'the latest moment there has been', 17.55, 17.80, '#ffd9a0', 0.035],
+    ['Deep night', 'the tide breathes in the dark', 0.0, 4.5, '#4a5ba0', 1.4],
+    ['Dawn', 'the sky bruises to rose', 4.0, 7.0, '#ff9a6a', 1.2],
+    ['Morning', 'cool light, long shadows', 6.5, 11.0, '#7fc8ff', 1.4],
+    ['High noon', 'the sun stands still', 10.5, 14.0, '#ffe08a', 1.4],
+    ['Afternoon', 'warm and slow', 13.5, 17.0, '#ffcf8a', 1.4],
+    ['Golden hour', 'the light turns to honey', 16.5, 18.5, '#ffab4a', 1.0],
+    ['Sunset', 'the sea swallows the sun', 18.0, 19.8, '#ff5a3a', 0.9],
+    ['Dusk', 'the first stars, the last colour', 19.5, 21.5, '#a06ac0', 1.1],
+    ['Nightfall', 'salt, and a sky full of stars', 21.0, 24.0, '#4a5ba0', 1.3],
   ],
 };
 export const SCENES_FR = {
@@ -77,15 +77,15 @@ export const SCENES_FR = {
     ['La toile cosmique', 'les filaments de tout'],
   ],
   t: [
-    ['Plasma quark-gluon', 'la matière, pas encore'],
-    ['Nucléosynthèse', 'les trois premières minutes'],
-    ['La lueur', 'un brouillard opaque qui refroidit'],
-    ['Les âges sombres', 'rien ne brille encore'],
-    ['Premières étoiles', 'la réionisation'],
-    ['Jeunes galaxies', 'les structures s’assemblent'],
-    ['Un disque de poussière', 'le Soleil s’allume'],
-    ['La Terre', 'la vie, presque aussitôt'],
-    ['Maintenant', 'l’instant le plus tardif qui ait existé'],
+    ['Nuit profonde', 'la marée respire dans le noir'],
+    ['Aube', 'le ciel se teinte de rose'],
+    ['Matinée', 'lumière fraîche, ombres longues'],
+    ['Plein midi', 'le soleil s’arrête'],
+    ['Après-midi', 'chaud et lent'],
+    ['Heure dorée', 'la lumière devient miel'],
+    ['Coucher', 'la mer avale le soleil'],
+    ['Crépuscule', 'les premières étoiles, la dernière couleur'],
+    ['Tombée de la nuit', 'du sel, et un ciel plein d’étoiles'],
   ],
 };
 

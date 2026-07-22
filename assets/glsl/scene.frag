@@ -648,7 +648,16 @@ vec3 skyDome(vec3 rd, vec3 sunDir, vec3 moonDir, float el, float t) {
     col += starLayer(sp, 0.87, t) * night * 1.3 * smoothstep(0.0, 0.14, rd.y);    // stars on the dome
     float toMoon = max(dot(rd, moonDir), 0.0), mAbove = smoothstep(-0.05, 0.05, moonDir.y);
     col += vec3(0.92, 0.94, 1.0) * pow(toMoon, 4000.0) * 9.0 * night * mAbove;    // the moon
-    col += vec3(0.55, 0.62, 0.85) * pow(toMoon, 18.0) * 0.28 * night * mAbove;
+    col += vec3(0.55, 0.62, 0.85) * pow(toMoon, 18.0) * 0.30 * night * mAbove;
+  }
+  /* a drifting cloud layer, lit by the sky and warmed at sunset */
+  if (rd.y > 0.02) {
+    vec2 cp = rd.xz / (rd.y + 0.28) * 1.4 + vec2(t * 0.012, 0.0);
+    float cl = smoothstep(0.52, 0.88, fbm(cp * 1.2) * 0.7 + fbm(cp * 2.7 + 3.0) * 0.4);
+    float cover = cl * smoothstep(0.02, 0.22, rd.y);
+    vec3 cloudLit = mix(vec3(0.42, 0.47, 0.6), vec3(1.0, 0.99, 0.97), day);       // grey by night, white by day
+    cloudLit = mix(cloudLit, mix(vec3(1.0, 0.55, 0.32), vec3(1.0, 0.84, 0.6), toSun), twi * 0.7);   // warm at dawn/dusk
+    col = mix(col, cloudLit, cover * 0.7);
   }
   return col;
 }
@@ -664,9 +673,10 @@ vec3 scBeach(vec2 uv, float t, float hour) {
   if (rd.y > -0.003) return skyDome(rd, sunDir, moonDir, el, t);
   float s = -cam.y / rd.y;
   vec2 wp = (cam + s * rd).xz;
+  float depth = -s * rd.z;                              // world distance in; a flat shoreline, not a big arc
   float wash = 0.5 + 0.5 * sin(t * 0.35);
-  float shore = 3.4 + wash * 1.4;                       // the waterline sweeps in and out
-  float isSand = smoothstep(shore + 0.5, shore - 0.5, s);
+  float shore = 3.0 + wash * 1.2;                       // the waterline sweeps in and out
+  float isSand = smoothstep(shore + 0.5, shore - 0.5, depth);
   /* --- water --- */
   vec2 wq = wp + vec2(0.0, t * 0.5);
   float lod = clamp(s * 0.12, 0.5, 4.0), eps = 0.05 * lod;
@@ -683,6 +693,7 @@ vec3 scBeach(vec2 uv, float t, float hour) {
   float fres = 0.02 + 0.98 * pow(1.0 - max(dot(vdir, nrm), 0.0), 5.0);
   vec3 water = mix(deep, refl, fres);
   water += vec3(1.0, 0.92, 0.72) * pow(max(dot(rref, sunDir), 0.0), 300.0) * 5.0 * smoothstep(-0.05, 0.06, el);   // sun glitter, only when it is up
+  water += vec3(0.7, 0.78, 1.0) * pow(max(dot(rref, moonDir), 0.0), 380.0) * 1.8 * (1.0 - smoothstep(-0.04, 0.08, el)) * smoothstep(-0.03, 0.06, moonDir.y);   // a moon-glitter path at night
   float foamW = smoothstep(0.82, 0.98, hC + 0.26 * ridge(wq * 5.0 + t));
   water = mix(water, vec3(0.9, 0.95, 1.0) * amb, foamW * 0.5 * smoothstep(3.5, 0.6, s));
   /* --- sand --- */
@@ -690,11 +701,11 @@ vec3 scBeach(vec2 uv, float t, float hour) {
   float rip = 0.5 + 0.5 * sin(wp.x * 9.0 + fbm(wp * 3.0) * 4.0);                    // ripples along the shore
   vec3 drySand = vec3(0.80, 0.70, 0.52) * (0.82 + 0.20 * grain) * (0.92 + 0.10 * rip);
   vec3 wetSand = vec3(0.42, 0.35, 0.27) * (0.85 + 0.2 * grain);
-  float wet = smoothstep(shore - 1.8, shore - 0.2, s);
+  float wet = smoothstep(shore - 1.6, shore - 0.15, depth);
   vec3 sand = mix(drySand, wetSand, wet);
   sand = mix(sand, skyDome(reflect(rd, vec3(0.0, 1.0, 0.0)), sunDir, moonDir, el, t) * 0.55, wet * 0.4);   // wet sand mirrors the sky
   sand *= amb;
-  float edge = smoothstep(0.7, 0.0, abs(s - shore));
+  float edge = smoothstep(0.6, 0.0, abs(depth - shore));
   float foam = edge * (0.5 + 0.5 * fbm(wp * 7.0 + vec2(0.0, t * 1.5)));            // the foam line at the water's edge
   vec3 col = mix(water, sand, isSand);
   col = mix(col, vec3(0.95, 0.97, 1.0) * amb, foam * 0.7);
@@ -727,7 +738,7 @@ void main() {
   w = wband(e,  19.4,  23.2); if (w > 0.002) col += w * scGalaxy(uv, t);
   w = wband(e,  23.2,  26.9); if (w > 0.002) col += w * scWeb(uv, t);
   } else {
-  col = scBeach(uv, t, mod(e, 24.0));   // preview: the slider is the hour of the day (axis rewiring to come)
+  col = scBeach(uv, t, clamp(e, 0.0, 24.0));   // the slider is the hour of the day, 0–24
   }
 
   // sonar ping on click

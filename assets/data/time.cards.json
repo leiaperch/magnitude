@@ -1,156 +1,142 @@
 [
   {
-    "at": -11.0,
+    "at": 3,
     "side": "r",
     "en": {
-      "title": "Electroweak era",
-      "meas": "t ≈ 10⁻¹¹ s",
-      "body": "The universe is a trillionth of a second old and hotter than 10¹⁵ K. The four forces have just finished separating; everything that exists is <b>a plasma of quarks, gluons and light</b>."
+      "title": "The small hours",
+      "meas": "03:00",
+      "body": "The sun is at its lowest, far under the far side of the Earth. Only starlight and the moon reach the water; the sand still gives back the day’s warmth to a cooling sky."
     },
     "fr": {
-      "title": "Ère électrofaible",
-      "meas": "t ≈ 10⁻¹¹ s",
-      "body": "L’univers a un billionième de seconde et dépasse 10¹⁵ K. Les quatre forces viennent de finir de se séparer ; tout ce qui existe est <b>un plasma de quarks, de gluons et de lumière</b>."
+      "title": "Le cœur de la nuit",
+      "meas": "03:00",
+      "body": "Le soleil est au plus bas, loin sous l’autre face de la Terre. Seuls la lune et les étoiles atteignent l’eau ; le sable rend encore au ciel la chaleur du jour."
     }
   },
   {
-    "at": -4.8,
-    "side": "l",
-    "en": {
-      "title": "Confinement",
-      "meas": "t ≈ 10 µs",
-      "body": "Cooling below two trillion kelvin, quarks lock together three by three. The first protons and neutrons appear — <b>nothing since has ever been hot enough to unbind them</b>."
-    },
-    "fr": {
-      "title": "Confinement",
-      "meas": "t ≈ 10 µs",
-      "body": "En passant sous deux mille milliards de kelvins, les quarks se verrouillent trois par trois. Les premiers protons et neutrons apparaissent : <b>rien, depuis, n’a jamais été assez chaud pour les défaire</b>."
-    }
-  },
-  {
-    "at": 0.1,
-    "side": "r",
-    "en": {
-      "title": "One second",
-      "meas": "t + 1 s",
-      "body": "Neutrinos stop interacting and fly free. They are still passing through you — about <b>60 billion per square centimeter per second</b>, almost unchanged since this moment."
-    },
-    "fr": {
-      "title": "Une seconde",
-      "meas": "t + 1 s",
-      "body": "Les neutrinos cessent d’interagir et filent, libres. Ils vous traversent encore, environ <b>60 milliards par centimètre carré et par seconde</b>, presque inchangés depuis cet instant."
-    }
-  },
-  {
-    "at": 2.26,
-    "side": "l",
-    "en": {
-      "title": "Three minutes",
-      "meas": "t + 180 s",
-      "body": "In about a quarter of an hour the universe forges the hydrogen and helium of everything that will ever exist: three quarters, one quarter. <b>The recipe has not changed since.</b>"
-    },
-    "fr": {
-      "title": "Trois minutes",
-      "meas": "t + 180 s",
-      "body": "En un quart d’heure environ, l’univers forge l’hydrogène et l’hélium de tout ce qui existera : trois quarts, un quart. <b>La recette n’a pas changé depuis.</b>"
-    }
-  },
-  {
-    "at": 12.2,
-    "side": "r",
-    "en": {
-      "title": "Matter takes over",
-      "meas": "t + 50,000 yr",
-      "body": "Until here, light outweighed matter. From this crossover on, matter rules gravity and can begin, <b>slowly, to clump</b>."
-    },
-    "fr": {
-      "title": "La matière l’emporte",
-      "meas": "t + 50 000 ans",
-      "body": "Jusqu’ici, la lumière pesait plus lourd que la matière. À partir de ce croisement, la matière gouverne la gravité et peut commencer, <b>lentement, à s’agglutiner</b>."
-    }
-  },
-  {
-    "at": 13.08,
+    "at": 5.6,
     "side": "l",
     "en": {
       "title": "First light",
-      "meas": "t + 380,000 yr",
-      "body": "The fog of electrons clears; photons fly free. That first light is still everywhere — stretched a thousandfold into microwaves, <b>the oldest thing you can observe</b>."
+      "meas": "05:36",
+      "body": "The sun is still below the horizon, but the sky is already bruising rose. Blue light scatters away through the long slanted air and only the reds get through — <b>the dawn is a sunset run backwards</b>."
     },
     "fr": {
-      "title": "Première lumière",
-      "meas": "t + 380 000 ans",
-      "body": "Le brouillard d’électrons se dissipe ; les photons filent, libres. Cette première lumière est encore partout, étirée mille fois en micro-ondes : <b>la chose la plus ancienne que l’on puisse observer</b>."
+      "title": "Les premières lueurs",
+      "meas": "05:36",
+      "body": "Le soleil est encore sous l’horizon, mais le ciel se teinte déjà de rose. La lumière bleue se disperse dans l’air rasant, seuls les rouges passent — <b>l’aube est un coucher à l’envers</b>."
     }
   },
   {
-    "at": 15.1,
+    "at": 6.3,
     "side": "r",
     "en": {
-      "title": "The dark ages",
-      "meas": "t + ~40 Myr",
-      "body": "For tens of millions of years there is not a single star. The universe is a slowly cooling cloud of neutral hydrogen — <b>completely dark, everywhere</b>."
+      "title": "Sunrise",
+      "meas": "06:18",
+      "body": "The disc clears the sea. It looks flattened — the atmosphere bends its lower edge up more than its top. Shadows run the whole length of the beach."
     },
     "fr": {
-      "title": "Les âges sombres",
-      "meas": "t + ~40 Ma",
-      "body": "Pendant des dizaines de millions d’années, pas une seule étoile. L’univers est un nuage d’hydrogène neutre qui refroidit lentement : <b>entièrement noir, partout</b>."
+      "title": "Le lever",
+      "meas": "06:18",
+      "body": "Le disque quitte la mer. Il paraît aplati : l’atmosphère relève son bord bas plus que son sommet. Les ombres courent sur toute la longueur de la plage."
     }
   },
   {
-    "at": 16.0,
+    "at": 9,
     "side": "l",
     "en": {
-      "title": "First stars",
-      "meas": "t + ~300 Myr",
-      "body": "The first stars are monsters, a hundred solar masses, dead within a few million years. Their ashes are the first elements heavier than lithium — <b>every atom of carbon in your body included</b>."
+      "title": "Mid-morning",
+      "meas": "09:00",
+      "body": "The sun climbs and the sky deepens to blue as the air shortens. The water turns from grey to turquoise as more light gets down into it and back out."
     },
     "fr": {
-      "title": "Premières étoiles",
-      "meas": "t + ~300 Ma",
-      "body": "Les premières étoiles sont des monstres, cent masses solaires, mortes en quelques millions d’années. Leurs cendres sont les premiers éléments plus lourds que le lithium : <b>chaque atome de carbone de votre corps compris</b>."
+      "title": "La matinée",
+      "meas": "09:00",
+      "body": "Le soleil monte, le ciel se fait plus bleu à mesure que l’air raccourcit. L’eau passe du gris au turquoise, davantage de lumière y plonge et en ressort."
     }
   },
   {
-    "at": 16.6,
+    "at": 12,
     "side": "r",
     "en": {
-      "title": "Young galaxies",
-      "meas": "t + 1 Gyr",
-      "body": "Gravity has braided matter into filaments; galaxies light up at the crossings. Reionization completes — <b>the universe becomes transparent for good</b>."
+      "title": "High noon",
+      "meas": "12:00",
+      "body": "The sun stands at its highest and shadows are at their shortest. The light passes through the least air, so it is at its whitest — and its most punishing."
     },
     "fr": {
-      "title": "Jeunes galaxies",
-      "meas": "t + 1 Ga",
-      "body": "La gravité a tressé la matière en filaments ; les galaxies s’allument aux croisements. La réionisation s’achève : <b>l’univers devient transparent pour de bon</b>."
+      "title": "Plein midi",
+      "meas": "12:00",
+      "body": "Le soleil est au plus haut, les ombres au plus court. La lumière traverse le moins d’air : elle est au plus blanc — et au plus dur."
     }
   },
   {
-    "at": 17.46,
+    "at": 15.5,
     "side": "l",
     "en": {
-      "title": "The Sun ignites",
-      "meas": "t + 9.2 Gyr",
-      "body": "In a recycled cloud enriched by generations of dead stars, a disk collapses: the Sun ignites and planets accrete from the leftovers, <b>in barely 100 million years</b>."
+      "title": "Afternoon",
+      "meas": "15:30",
+      "body": "The sun tips west and the light warms again. A sea breeze has picked up as the land heated faster than the water; the chop grows and the glitter path lengthens."
     },
     "fr": {
-      "title": "Le Soleil s’allume",
-      "meas": "t + 9,2 Ga",
-      "body": "Dans un nuage recyclé, enrichi par des générations d’étoiles mortes, un disque s’effondre : le Soleil s’allume et les planètes s’accrètent dans les restes, <b>en à peine 100 millions d’années</b>."
+      "title": "L’après-midi",
+      "meas": "15:30",
+      "body": "Le soleil bascule à l’ouest, la lumière se réchauffe. La brise de mer s’est levée, la terre ayant chauffé plus vite que l’eau ; le clapot grossit et le chemin de lumière s’allonge."
     }
   },
   {
-    "at": 17.5,
+    "at": 17.7,
     "side": "r",
     "en": {
-      "title": "Life",
-      "meas": "t + 10 Gyr",
-      "body": "Barely 200 million years after the oceans condense, chemistry starts copying itself. It has not stopped since — <b>you are the current draft</b>."
+      "title": "Golden hour",
+      "meas": "17:42",
+      "body": "Low sun, long shadows, honey light. The colour temperature drops toward warm — the same scattering that will redden the sunset is already at work."
     },
     "fr": {
-      "title": "La vie",
-      "meas": "t + 10 Ga",
-      "body": "À peine 200 millions d’années après la condensation des océans, la chimie se met à se copier elle-même. Elle n’a jamais cessé depuis : <b>vous êtes le brouillon en cours</b>."
+      "title": "L’heure dorée",
+      "meas": "17:42",
+      "body": "Soleil bas, ombres longues, lumière de miel. La température de couleur glisse vers le chaud — la diffusion qui rougira le coucher est déjà à l’œuvre."
+    }
+  },
+  {
+    "at": 18.7,
+    "side": "l",
+    "en": {
+      "title": "Sunset",
+      "meas": "18:42",
+      "body": "The sun sinks into the sea. Its light now crosses the most air of the whole day, so almost only red survives. For a second, as the last sliver goes, the top edge can flash green."
+    },
+    "fr": {
+      "title": "Le coucher",
+      "meas": "18:42",
+      "body": "Le soleil s’enfonce dans la mer. Sa lumière traverse alors le plus d’air de toute la journée : presque seul le rouge survit. Une seconde, quand le dernier éclat disparaît, le bord supérieur peut virer au vert."
+    }
+  },
+  {
+    "at": 19.9,
+    "side": "r",
+    "en": {
+      "title": "Dusk",
+      "meas": "19:54",
+      "body": "The sun is gone but the sky still glows — sunlight is lighting the high air from below the horizon. The first stars come out, then the planets. This is the blue hour."
+    },
+    "fr": {
+      "title": "Le crépuscule",
+      "meas": "19:54",
+      "body": "Le soleil est parti mais le ciel luit encore : la lumière éclaire l’air haut par-dessous l’horizon. Les premières étoiles sortent, puis les planètes. C’est l’heure bleue."
+    }
+  },
+  {
+    "at": 22,
+    "side": "l",
+    "en": {
+      "title": "Nightfall",
+      "meas": "22:00",
+      "body": "Full dark. The sky fills with stars and, some nights, the water answers — plankton lighting up blue-green where the waves break. The tide keeps its own slow clock, indifferent to ours."
+    },
+    "fr": {
+      "title": "La tombée de la nuit",
+      "meas": "22:00",
+      "body": "Nuit pleine. Le ciel se remplit d’étoiles et, certaines nuits, l’eau répond — du plancton s’allume en bleu-vert là où les vagues se brisent. La marée suit sa propre horloge lente, indifférente à la nôtre."
     }
   }
 ]

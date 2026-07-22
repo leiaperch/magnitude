@@ -1,61 +1,271 @@
 {
   "e": [
-    [-14.77, "a proton", "un proton"],
-    [-13.85, "a gold nucleus", "un noyau d’or"],
-    [-10.00, "a hydrogen atom", "un atome d’hydrogène"],
-    [-9.55, "a water molecule", "une molécule d’eau"],
-    [-8.70, "the width of DNA", "la largeur de l’ADN"],
-    [-7.00, "a flu virus", "un virus de la grippe"],
-    [-5.70, "an E. coli bacterium", "un colibacille"],
-    [-5.11, "a red blood cell", "un globule rouge"],
-    [-4.15, "the width of a hair", "l’épaisseur d’un cheveu"],
-    [-3.52, "a grain of salt", "un grain de sel"],
-    [-2.40, "an ant", "une fourmi"],
-    [-1.82, "a honeybee", "une abeille"],
-    [-1.10, "a mouse", "une souris"],
-    [-0.30, "a cat", "un chat"],
-    [0.23, "a human", "un humain"],
-    [0.74, "a giraffe", "une girafe"],
-    [1.48, "a blue whale", "une baleine bleue"],
-    [1.85, "a Boeing 747", "un Boeing 747"],
-    [2.52, "the Eiffel Tower", "la tour Eiffel"],
-    [3.60, "Central Park", "Central Park"],
-    [3.94, "Mount Everest", "l’Everest"],
-    [4.00, "Paris", "Paris"],
-    [5.26, "Corsica", "la Corse"],
-    [6.00, "France", "la France"],
-    [6.54, "the Moon", "la Lune"],
-    [7.11, "Earth", "la Terre"],
-    [8.15, "Jupiter", "Jupiter"],
-    [8.89, "the Moon’s orbit", "l’orbite de la Lune"],
-    [9.14, "the Sun", "le Soleil"],
-    [11.175, "one astronomical unit", "une unité astronomique"],
-    [12.95, "Neptune’s orbit", "l’orbite de Neptune"],
-    [13.55, "the heliosphere", "l’héliosphère"],
-    [15.98, "one light-year", "une année-lumière"],
-    [16.60, "the trip to Proxima", "le trajet vers Proxima"],
-    [17.36, "the Orion Nebula", "la nébuleuse d’Orion"],
-    [20.39, "the trip to the galactic core", "le trajet vers le centre galactique"],
-    [20.98, "the Milky Way", "la Voie lactée"],
-    [22.37, "the trip to Andromeda", "le trajet vers Andromède"],
-    [22.97, "the Local Group", "le Groupe local"],
-    [24.69, "Laniakea", "Laniakea"],
-    [25.97, "the Hercules Great Wall", "la Grande Muraille d’Hercule"],
-    [26.94, "the observable universe", "l’univers observable"]
+    [
+      -14.77,
+      "a proton",
+      "un proton"
+    ],
+    [
+      -13.85,
+      "a gold nucleus",
+      "un noyau d’or"
+    ],
+    [
+      -10,
+      "a hydrogen atom",
+      "un atome d’hydrogène"
+    ],
+    [
+      -9.55,
+      "a water molecule",
+      "une molécule d’eau"
+    ],
+    [
+      -8.7,
+      "the width of DNA",
+      "la largeur de l’ADN"
+    ],
+    [
+      -7,
+      "a flu virus",
+      "un virus de la grippe"
+    ],
+    [
+      -5.7,
+      "an E. coli bacterium",
+      "un colibacille"
+    ],
+    [
+      -5.11,
+      "a red blood cell",
+      "un globule rouge"
+    ],
+    [
+      -4.15,
+      "the width of a hair",
+      "l’épaisseur d’un cheveu"
+    ],
+    [
+      -3.52,
+      "a grain of salt",
+      "un grain de sel"
+    ],
+    [
+      -2.4,
+      "an ant",
+      "une fourmi"
+    ],
+    [
+      -1.82,
+      "a honeybee",
+      "une abeille"
+    ],
+    [
+      -1.1,
+      "a mouse",
+      "une souris"
+    ],
+    [
+      -0.3,
+      "a cat",
+      "un chat"
+    ],
+    [
+      0.23,
+      "a human",
+      "un humain"
+    ],
+    [
+      0.74,
+      "a giraffe",
+      "une girafe"
+    ],
+    [
+      1.48,
+      "a blue whale",
+      "une baleine bleue"
+    ],
+    [
+      1.85,
+      "a Boeing 747",
+      "un Boeing 747"
+    ],
+    [
+      2.52,
+      "the Eiffel Tower",
+      "la tour Eiffel"
+    ],
+    [
+      3.6,
+      "Central Park",
+      "Central Park"
+    ],
+    [
+      3.94,
+      "Mount Everest",
+      "l’Everest"
+    ],
+    [
+      4,
+      "Paris",
+      "Paris"
+    ],
+    [
+      5.26,
+      "Corsica",
+      "la Corse"
+    ],
+    [
+      6,
+      "France",
+      "la France"
+    ],
+    [
+      6.54,
+      "the Moon",
+      "la Lune"
+    ],
+    [
+      7.11,
+      "Earth",
+      "la Terre"
+    ],
+    [
+      8.15,
+      "Jupiter",
+      "Jupiter"
+    ],
+    [
+      8.89,
+      "the Moon’s orbit",
+      "l’orbite de la Lune"
+    ],
+    [
+      9.14,
+      "the Sun",
+      "le Soleil"
+    ],
+    [
+      11.175,
+      "one astronomical unit",
+      "une unité astronomique"
+    ],
+    [
+      12.95,
+      "Neptune’s orbit",
+      "l’orbite de Neptune"
+    ],
+    [
+      13.55,
+      "the heliosphere",
+      "l’héliosphère"
+    ],
+    [
+      15.98,
+      "one light-year",
+      "une année-lumière"
+    ],
+    [
+      16.6,
+      "the trip to Proxima",
+      "le trajet vers Proxima"
+    ],
+    [
+      17.36,
+      "the Orion Nebula",
+      "la nébuleuse d’Orion"
+    ],
+    [
+      20.39,
+      "the trip to the galactic core",
+      "le trajet vers le centre galactique"
+    ],
+    [
+      20.98,
+      "the Milky Way",
+      "la Voie lactée"
+    ],
+    [
+      22.37,
+      "the trip to Andromeda",
+      "le trajet vers Andromède"
+    ],
+    [
+      22.97,
+      "the Local Group",
+      "le Groupe local"
+    ],
+    [
+      24.69,
+      "Laniakea",
+      "Laniakea"
+    ],
+    [
+      25.97,
+      "the Hercules Great Wall",
+      "la Grande Muraille d’Hercule"
+    ],
+    [
+      26.94,
+      "the observable universe",
+      "l’univers observable"
+    ]
   ],
   "t": [
-    [-12.0, "the electroweak era", "l’ère électrofaible"],
-    [-5.0, "quarks lock into protons", "les quarks se figent en protons"],
-    [0.0, "the first second", "la première seconde"],
-    [2.26, "the first three minutes", "les trois premières minutes"],
-    [12.2, "matter takes over", "la matière prend le dessus"],
-    [13.08, "the first free light", "la première lumière libre"],
-    [15.0, "the dark ages", "les âges sombres"],
-    [16.0, "the first stars", "les premières étoiles"],
-    [16.6, "young galaxies", "les jeunes galaxies"],
-    [17.46, "the Sun ignites", "le Soleil s’allume"],
-    [17.50, "first life on Earth", "la première vie sur Terre"],
-    [17.632, "the dinosaurs", "les dinosaures"],
-    [17.639, "now", "maintenant"]
+    [
+      0,
+      "midnight",
+      "minuit"
+    ],
+    [
+      3,
+      "the small hours",
+      "le cœur de la nuit"
+    ],
+    [
+      5.5,
+      "first light",
+      "les premières lueurs"
+    ],
+    [
+      6.3,
+      "sunrise",
+      "le lever du soleil"
+    ],
+    [
+      9,
+      "mid-morning",
+      "la matinée"
+    ],
+    [
+      12,
+      "noon",
+      "midi"
+    ],
+    [
+      15,
+      "afternoon",
+      "l’après-midi"
+    ],
+    [
+      17.6,
+      "golden hour",
+      "l’heure dorée"
+    ],
+    [
+      18.6,
+      "sunset",
+      "le coucher du soleil"
+    ],
+    [
+      19.8,
+      "dusk",
+      "le crépuscule"
+    ],
+    [
+      22,
+      "deep night",
+      "la nuit noire"
+    ]
   ]
 }

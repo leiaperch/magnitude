@@ -61,11 +61,17 @@ function scaleLine(v) {
   const n = ratio < 10 ? (fr ? ratio.toFixed(1).replace('.', ',') : ratio.toFixed(1)) : String(Math.round(ratio));
   return `${frame} ≈ ${n} × ${name}`;
 }
-function epochLine(v) {
+/* the hour axis reads as a clock and a sun angle rather than powers of ten */
+function clockStr(v) {
+  const h = ((v % 24) + 24) % 24, hh = Math.floor(h), mm = Math.floor((h - hh) * 60);
+  return String(hh).padStart(2, '0') + ':' + String(mm).padStart(2, '0');
+}
+function sunElev(v) { return Math.sin((v - 6) / 12 * Math.PI); }   // -1..1 over the day
+function momentLine(v) {
   const fr = state.lang === 'fr';
   let best = LANDMARKS.t[0];
   for (const o of LANDMARKS.t) { if (o[0] <= v + 0.05) best = o; else break; }
-  return (fr ? 'époque : ' : 'epoch: ') + (fr ? best[2] : best[1]);
+  return (fr ? 'moment : ' : 'moment: ') + (fr ? best[2] : best[1]);
 }
 
 function readouts(v) {
@@ -83,17 +89,23 @@ function readouts(v) {
     el.roObj.textContent = (L === 'fr' ? 'tranche : ' : 'slice: ') + (L === 'fr' ? slice.era.fr.name : slice.era.en.name);
     return;
   }
+  if (state.mode === 't') {                       // the hour axis: a clock, the sun's angle, the moment of day
+    const fr = L === 'fr';
+    el.roExp.textContent = clockStr(v);
+    const elv = sunElev(v);
+    el.roPretty.textContent = elv > 0.02 ? (fr ? 'le soleil est levé' : 'the sun is up')
+                                         : (fr ? 'le soleil est couché' : 'the sun is down');
+    const deg = Math.round(Math.asin(Math.max(-1, Math.min(1, elv))) * 180 / Math.PI);
+    el.roLight.textContent = elv > -0.02 ? (fr ? `${deg}° sur l’horizon` : `${deg}° above the horizon`)
+                                         : (fr ? `${-deg}° sous l’horizon` : `${-deg}° below the horizon`);
+    el.roObj.textContent = momentLine(v);
+    return;
+  }
   const sign = v < 0 ? '−' : '+';
   el.roExp.innerHTML = `10<sup>${sign}${Math.abs(v).toFixed(1)}</sup> ${axis().unit}`;
-  if (state.mode === 't') {
-    el.roPretty.textContent = '≈ ' + F.humanizeSeconds(Math.pow(10, v), L) + (L === 'fr' ? ' après le Big Bang' : ' after the Big Bang');
-    el.roLight.textContent = F.tempStr(v, L);
-    el.roObj.textContent = epochLine(v);
-  } else {
-    el.roPretty.textContent = F.prettyMeters(v, L);
-    el.roLight.textContent = F.prettyLightTime(v, L);
-    el.roObj.textContent = scaleLine(v);
-  }
+  el.roPretty.textContent = F.prettyMeters(v, L);
+  el.roLight.textContent = F.prettyLightTime(v, L);
+  el.roObj.textContent = scaleLine(v);
 }
 
 function sceneFor(v) {
@@ -141,7 +153,7 @@ function updateHUD() {
    * intro. In the log modes its band sits decades into the track; ages had it
    * on slice 0 — which is exactly where the intro still is. */
   el.human.style.opacity = (
-    state.mode === 't' ? weightOf(v, 17.55, 17.80, 0.035) :
+    state.mode === 't' ? 0 :
     state.mode === 'a' ? weightOf(v, 0.4, 2.0, 0.5) :
                          weightOf(v, -2.4, 1.6)).toFixed(3);
 }
@@ -220,6 +232,17 @@ function buildRuler() {
     });
     return;
   }
+  if (ax.kind === 'clock') {
+    for (let hh = 0; hh <= 24; hh += 2) {
+      const t = document.createElement('div');
+      const major = hh % 6 === 0;
+      t.className = major ? 'tick major' : 'tick';
+      t.style.left = ((hh - ax.min) / ax.span * 100) + '%';
+      if (major) t.innerHTML = `<span>${hh}h</span>`;
+      el.ruler.appendChild(t);
+    }
+    return;
+  }
   const step = 5;
   for (let d = Math.ceil(ax.min); d <= Math.floor(ax.max); d++) {
     const t = document.createElement('div');
@@ -244,13 +267,13 @@ function buildGoto() {
   const fr = state.lang === 'fr';
   const rows = state.mode === 'a'
     ? ages.eras.map((e, i) => [i, fr ? e.fr.name : e.en.name, String(e.year)])
-    : LANDMARKS[state.mode].map(o => [o[0], fr ? o[2] : o[1], '10' + F.supNum(Math.round(o[0])) + ' ' + axis().unit]);
+    : LANDMARKS[state.mode].map(o => [o[0], fr ? o[2] : o[1], state.mode === 't' ? clockStr(o[0]) : '10' + F.supNum(Math.round(o[0])) + ' ' + axis().unit]);
   for (const [at, name, meta] of rows) {
     const b = document.createElement('button');
     b.innerHTML = `<span></span><small></small>`;
     b.firstChild.textContent = name;
     b.lastChild.textContent = meta;
-    b.addEventListener('click', () => goTo(clamp(at + (state.mode === 'e' ? 0.35 : state.mode === 't' ? 0.02 : 0), axis().min, axis().max)));
+    b.addEventListener('click', () => goTo(clamp(at + (state.mode === 'e' ? 0.35 : 0), axis().min, axis().max)));
     el.gotoList.appendChild(b);
   }
   el.gotoTitle.textContent =

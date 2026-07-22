@@ -3,7 +3,20 @@
     "en": {
       "over": "An instrument for one journey",
       "sub": "The observable universe fits in one scrollbar. This page is <b>43 powers of ten</b> long — it begins inside a proton and ends at the edge of everything that light has had time to show us.",
-      "rules": [["SCALE", "10⁻¹⁶ → 10²⁷ m"], ["EXCHANGE RATE", "~900 px per ×10"], ["RENDERING", "live, nothing recorded"]],
+      "rules": [
+        [
+          "SCALE",
+          "10⁻¹⁶ → 10²⁷ m"
+        ],
+        [
+          "EXCHANGE RATE",
+          "~900 px per ×10"
+        ],
+        [
+          "RENDERING",
+          "live, nothing recorded"
+        ]
+      ],
       "cue": "Scroll to zoom out",
       "wordmark": "<b>MAGNITUDE</b> / 43 DECADES",
       "lightLabel": "light crosses this frame in",
@@ -19,7 +32,20 @@
     "fr": {
       "over": "Un instrument pour un seul voyage",
       "sub": "L’univers observable tient dans une barre de défilement. Cette page mesure <b>43 puissances de dix</b> : elle commence à l’intérieur d’un proton et s’achève au bord de tout ce que la lumière a eu le temps de nous montrer.",
-      "rules": [["ÉCHELLE", "10⁻¹⁶ → 10²⁷ m"], ["TAUX DE CHANGE", "~900 px par ×10"], ["RENDU", "en direct, rien d’enregistré"]],
+      "rules": [
+        [
+          "ÉCHELLE",
+          "10⁻¹⁶ → 10²⁷ m"
+        ],
+        [
+          "TAUX DE CHANGE",
+          "~900 px par ×10"
+        ],
+        [
+          "RENDU",
+          "en direct, rien d’enregistré"
+        ]
+      ],
       "cue": "Défilez pour dézoomer",
       "wordmark": "<b>MAGNITUDE</b> / 43 DÉCADES",
       "lightLabel": "la lumière traverse ce cadre en",
@@ -35,35 +61,61 @@
   },
   "t": {
     "en": {
-      "over": "An instrument for one journey",
-      "sub": "The universe is 13.8 billion years old. In this mode the page is <b>30 powers of ten of seconds</b> long: it begins in the plasma of the first trillionth of a second and ends now, at the moment you are reading it.",
-      "rules": [["SPAN", "10⁻¹² s → 13.8 Gyr"], ["EXCHANGE RATE", "~900 px per ×10"], ["RENDERING", "live, nothing recorded"]],
-      "cue": "Scroll forward from the Big Bang",
-      "wordmark": "<b>MAGNITUDE</b> / 30 DECADES OF TIME",
-      "lightLabel": "the universe’s temperature:",
-      "humanHalo": "This is now",
-      "humanBody": "t + 13.8 billion years. Of every epoch on this page, this is the only one in which someone can read it.",
-      "humanFn": "the thirty decades before this one had no witnesses",
-      "outroH2": "The scrollbar<br>ends now",
-      "outroBig": "t + 4.35 × 10¹⁷ s · 13,800,000,000 years",
-      "outroLede": "You just scrolled through all of time. The logarithm works the other way here: <b>the last 900 pixels hold 90% of the universe’s entire history, and all of human existence fits in the final six thousandths of a pixel.</b>",
-      "outroStats": "That last part is why this page has a third mode. Counting forward from the Big Bang, everything people have ever done is thinner than a hair on this scrollbar.",
+      "over": "One instrument, one long day",
+      "sub": "In this mode the page is <b>a single day at the beach</b>, from midnight to midnight. Scroll and the sun and moon arc across the sky, the light turns, the sea answers. Nothing is recorded — every hour is drawn live.",
+      "rules": [
+        [
+          "SPAN",
+          "00:00 → 24:00"
+        ],
+        [
+          "RATE",
+          "~340 px per hour"
+        ],
+        [
+          "RENDER",
+          "live, nothing recorded"
+        ]
+      ],
+      "cue": "Scroll through the day",
+      "wordmark": "<b>MAGNITUDE</b> / ONE DAY, HOUR BY HOUR",
+      "lightLabel": "Sun",
+      "humanHalo": "",
+      "humanBody": "",
+      "humanFn": "",
+      "outroH2": "The sun comes back tomorrow",
+      "outroBig": "24 h",
+      "outroLede": "One turn of the Earth, drawn hour by hour, in a single scroll.",
+      "outroStats": "<span><b>1</b> day</span><span><b>1</b> sun</span><span><b>∞</b> tides</span>",
       "fine": "Magnitude · three.js and nothing else ·<a href=\"#top\">back to the first trillionth of a second</a>"
     },
     "fr": {
-      "over": "Un instrument pour un seul voyage",
-      "sub": "L’univers a 13,8 milliards d’années. Dans ce mode, la page mesure <b>30 puissances de dix de secondes</b> : elle commence dans le plasma du premier billionième de seconde et s’achève maintenant, à l’instant où vous la lisez.",
-      "rules": [["ÉTENDUE", "10⁻¹² s → 13,8 Ga"], ["TAUX DE CHANGE", "~900 px par ×10"], ["RENDU", "en direct, rien d’enregistré"]],
-      "cue": "Défilez depuis le Big Bang",
-      "wordmark": "<b>MAGNITUDE</b> / 30 DÉCADES DE TEMPS",
-      "lightLabel": "température de l’univers :",
-      "humanHalo": "C’est maintenant",
-      "humanBody": "t + 13,8 milliards d’années. De toutes les époques de cette page, celle-ci est la seule où quelqu’un peut la lire.",
-      "humanFn": "les trente décades précédentes n’avaient pas de témoins",
-      "outroH2": "La barre de défilement<br>s’arrête maintenant",
-      "outroBig": "t + 4,35 × 10¹⁷ s · 13 800 000 000 ans",
-      "outroLede": "Vous venez de faire défiler tout le temps. Le logarithme joue ici dans l’autre sens : <b>les 900 derniers pixels contiennent 90 % de toute l’histoire de l’univers, et l’existence humaine entière tient dans les six derniers millièmes de pixel.</b>",
-      "outroStats": "C’est précisément pour cela que cette page a un troisième mode. Compté depuis le Big Bang, tout ce que les humains ont jamais fait est plus fin qu’un cheveu sur cette barre.",
+      "over": "Un instrument, une longue journée",
+      "sub": "Dans ce mode, la page est <b>une seule journée à la plage</b>, de minuit à minuit. Défilez et le soleil et la lune arquent le ciel, la lumière tourne, la mer répond. Rien n’est enregistré — chaque heure est dessinée en direct.",
+      "rules": [
+        [
+          "ÉTENDUE",
+          "00:00 → 24:00"
+        ],
+        [
+          "TAUX",
+          "~340 px par heure"
+        ],
+        [
+          "RENDU",
+          "en direct, rien d’enregistré"
+        ]
+      ],
+      "cue": "Défilez à travers la journée",
+      "wordmark": "<b>MAGNITUDE</b> / UNE JOURNÉE, HEURE PAR HEURE",
+      "lightLabel": "Soleil",
+      "humanHalo": "",
+      "humanBody": "",
+      "humanFn": "",
+      "outroH2": "Le soleil revient demain",
+      "outroBig": "24 h",
+      "outroLede": "Un tour de la Terre, dessiné heure par heure, en un seul défilement.",
+      "outroStats": "<span><b>1</b> jour</span><span><b>1</b> soleil</span><span><b>∞</b> marées</span>",
       "fine": "Magnitude · three.js et rien d’autre ·<a href=\"#top\">revenir au premier billionième de seconde</a>"
     }
   },
@@ -71,7 +123,20 @@
     "en": {
       "over": "One square, every fifty years",
       "sub": "The other two modes crush human history into nothing. So this one drops the logarithm: <b>one slice every 50 years</b>, from the year 1000 to 2050, always the same town square, built in real 3D. The camera never moves. Only the town does.",
-      "rules": [["SLICES", "22 · one per 50 years"], ["CAMERA", "one angle, a thousand years"], ["THE SEAM", "a clipping plane, not a fade"]],
+      "rules": [
+        [
+          "SLICES",
+          "22 · one per 50 years"
+        ],
+        [
+          "CAMERA",
+          "one angle, a thousand years"
+        ],
+        [
+          "THE SEAM",
+          "a clipping plane, not a fade"
+        ]
+      ],
       "cue": "Scroll to age the town",
       "wordmark": "<b>MAGNITUDE</b> / 22 SLICES OF ONE SQUARE",
       "lightLabel": "",
@@ -87,7 +152,20 @@
     "fr": {
       "over": "Une place, tous les cinquante ans",
       "sub": "Les deux autres modes écrasent l’histoire humaine jusqu’à la faire disparaître. Celui-ci abandonne donc le logarithme : <b>une tranche tous les 50 ans</b>, de l’an 1000 à 2050, toujours la même place, bâtie en vraie 3D. La caméra ne bouge jamais. La ville, si.",
-      "rules": [["TRANCHES", "22 · une par 50 ans"], ["CAMÉRA", "un seul angle, mille ans"], ["LE JOINT", "un plan de coupe, pas un fondu"]],
+      "rules": [
+        [
+          "TRANCHES",
+          "22 · une par 50 ans"
+        ],
+        [
+          "CAMÉRA",
+          "un seul angle, mille ans"
+        ],
+        [
+          "LE JOINT",
+          "un plan de coupe, pas un fondu"
+        ]
+      ],
       "cue": "Défilez pour vieillir la ville",
       "wordmark": "<b>MAGNITUDE</b> / 22 TRANCHES D’UNE PLACE",
       "lightLabel": "",
