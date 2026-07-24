@@ -650,14 +650,17 @@ vec3 skyDome(vec3 rd, vec3 sunDir, vec3 moonDir, float el, float t) {
     col += vec3(0.92, 0.94, 1.0) * pow(toMoon, 4000.0) * 9.0 * night * mAbove;    // the moon
     col += vec3(0.55, 0.62, 0.85) * pow(toMoon, 18.0) * 0.30 * night * mAbove;
   }
-  /* a drifting cloud layer, lit by the sky and warmed at sunset */
+  /* a drifting cloud layer on a cloud plane, domain-warped for puffy organic
+     shapes, feathered edges, brighter tops than undersides */
   if (rd.y > 0.02) {
-    vec2 cp = rd.xz / (rd.y + 0.28) * 1.4 + vec2(t * 0.012, 0.0);
-    float cl = smoothstep(0.52, 0.88, fbm(cp * 1.2) * 0.7 + fbm(cp * 2.7 + 3.0) * 0.4);
-    float cover = cl * smoothstep(0.02, 0.22, rd.y);
-    vec3 cloudLit = mix(vec3(0.42, 0.47, 0.6), vec3(1.0, 0.99, 0.97), day);       // grey by night, white by day
-    cloudLit = mix(cloudLit, mix(vec3(1.0, 0.55, 0.32), vec3(1.0, 0.84, 0.6), toSun), twi * 0.7);   // warm at dawn/dusk
-    col = mix(col, cloudLit, cover * 0.7);
+    vec2 cp = rd.xz / max(rd.y, 0.05) * 0.5 + vec2(t * 0.02, 0.0);                 // project onto the cloud plane
+    vec2 warp = vec2(fbm(cp * 0.7 + 1.3), fbm(cp * 0.7 + 8.1));
+    float d = fbm(cp * 1.0 + warp * 1.3) * 0.6 + fbm(cp * 2.3 + warp) * 0.3 + fbm(cp * 5.4 + warp * 0.5) * 0.15;
+    float cover = smoothstep(0.50, 0.82, d) * smoothstep(0.02, 0.14, rd.y);
+    float thick = smoothstep(0.52, 0.96, d);                                       // dense cores read as billows
+    vec3 lit = mix(vec3(0.40, 0.45, 0.58), vec3(1.0, 0.99, 0.97), day);            // grey by night, white by day
+    lit = mix(lit, mix(vec3(1.0, 0.5, 0.28), vec3(1.0, 0.84, 0.6), toSun), twi * 0.72);   // warm at dawn/dusk
+    col = mix(col, lit * (0.55 + 0.45 * thick), cover * (0.55 + 0.35 * thick));
   }
   return col;
 }
@@ -696,19 +699,24 @@ vec3 scBeach(vec2 uv, float t, float hour) {
   water += vec3(0.7, 0.78, 1.0) * pow(max(dot(rref, moonDir), 0.0), 380.0) * 1.8 * (1.0 - smoothstep(-0.04, 0.08, el)) * smoothstep(-0.03, 0.06, moonDir.y);   // a moon-glitter path at night
   float foamW = smoothstep(0.82, 0.98, hC + 0.26 * ridge(wq * 5.0 + t));
   water = mix(water, vec3(0.9, 0.95, 1.0) * amb, foamW * 0.5 * smoothstep(3.5, 0.6, s));
-  /* --- sand --- */
-  float grain = fbm(wp * 9.0) * 0.5 + fbm(wp * 24.0) * 0.3;
-  float rip = 0.5 + 0.5 * sin(wp.x * 9.0 + fbm(wp * 3.0) * 4.0);                    // ripples along the shore
-  vec3 drySand = vec3(0.80, 0.70, 0.52) * (0.82 + 0.20 * grain) * (0.92 + 0.10 * rip);
-  vec3 wetSand = vec3(0.42, 0.35, 0.27) * (0.85 + 0.2 * grain);
-  float wet = smoothstep(shore - 1.6, shore - 0.15, depth);
+  /* --- sand: fine grain, wind ripples parallel to the shore with sun-lit relief,
+     wet darkening near the water, and a pale line of dried foam --- */
+  float grain = fbm(wp * 26.0) * 0.6 + fbm(wp * 72.0) * 0.4;
+  float ripH = 0.5 + 0.5 * sin(depth * 6.5 + fbm(wp * 2.2 + 5.0) * 3.2);           // ripple crests run parallel to the water
+  ripH *= smoothstep(0.1, 1.7, depth);                                            // combed harder near the tideline
+  float ripShade = 0.86 + 0.26 * (ripH - 0.5) * (0.5 + clamp(el, 0.0, 1.0));      // a low sun shades the ripple troughs
+  vec3 drySand = vec3(0.83, 0.73, 0.55) * (0.78 + 0.32 * grain) * ripShade;
+  vec3 wetSand = vec3(0.40, 0.33, 0.26) * (0.85 + 0.25 * grain);
+  float wet = smoothstep(shore - 1.7, shore - 0.15, depth);
   vec3 sand = mix(drySand, wetSand, wet);
-  sand = mix(sand, skyDome(reflect(rd, vec3(0.0, 1.0, 0.0)), sunDir, moonDir, el, t) * 0.55, wet * 0.4);   // wet sand mirrors the sky
+  sand = mix(sand, skyDome(reflect(rd, vec3(0.0, 1.0, 0.0)), sunDir, moonDir, el, t) * 0.6, wet * 0.45);   // wet sand mirrors the sky
+  float foamStain = smoothstep(0.34, 0.0, abs(depth - (shore - 0.85))) * (1.0 - wet);
+  sand = mix(sand, vec3(0.90, 0.88, 0.83), foamStain * 0.4);                      // a stain of dried foam above the tideline
   sand *= amb;
-  float edge = smoothstep(0.6, 0.0, abs(depth - shore));
-  float foam = edge * (0.5 + 0.5 * fbm(wp * 7.0 + vec2(0.0, t * 1.5)));            // the foam line at the water's edge
+  float edge = smoothstep(0.55, 0.0, abs(depth - shore));
+  float foam = edge * (0.45 + 0.55 * fbm(wp * 6.5 + vec2(0.0, t * 1.5)));         // the moving foam line at the water's edge
   vec3 col = mix(water, sand, isSand);
-  col = mix(col, vec3(0.95, 0.97, 1.0) * amb, foam * 0.7);
+  col = mix(col, vec3(0.95, 0.97, 1.0) * amb, foam * 0.75);
   col = mix(col, skyDome(vec3(0.0, 0.008, -1.0), sunDir, moonDir, el, t), smoothstep(0.02, 0.13, uv.y) * 0.55);   // aerial haze to the horizon
   return col;
 }
